@@ -1,0 +1,21 @@
+[package]
+name = "terra-rust-api"
+version = "0.1.0"
+authors = ["Pete's Fan Club <petes-fan-club@protonmail.com>"]
+edition = "2018"
+license = "Apache-2.0"
+description="Terra Rust API"
+readme = "README.md"
+homepage = "https://github.com/petes-fan-club/terraRust/tree/master/terra-rust-api"
+repository = "https://github.com/petes-fan-club/terraRust/"
+keywords = ["terra", "blockchain"]
+categories = ["api-bindings"]
+
+[dependencies]
+error-chain = "0.12.4"
+reqwest = { version ="0.11", features=["json"]}
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+chrono= "0.4"
+bech32 = "0.8.0"
+bip39 = "1.0.1"

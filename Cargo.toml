@@ -1,0 +1,23 @@
+[package]
+name = "terra-rust"
+version = "0.1.0"
+authors = ["Pete's Fan Club <petes-fan-club@protonmail.com>"]
+edition = "2018"
+readme = "README.md"
+homepage = "https://github.com/petes-fan-club/terraRust/"
+repository = "https://github.com/petes-fan-club/terraRust/"
+keywords = ["terra", "blockchain"]
+categories = ["cli"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+members = [
+    "terra-rust-api",
+]
+exclude = [
+
+]
+[dependencies]
+terra-rust-api = { path = "./terra-rust-api", version = "0.1.0" }
+error-chain = "0.12.2"
+tokio = { version = "1.4", features = ["full"] }
