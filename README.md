@@ -4,11 +4,17 @@ This is a WIP.
 
 no security audit has been performed.
 
+This may steal your money.
+
+This is not investment advice.
+
+Do you own research
+
 ## Why?
 
 2 reasons.
 1. There was no easy way for me to get the default terra-cli to work on windows
-2. I wanted a RUST api to use in other things. The CLI is just cream on top.
+1. I wanted a RUST api to use in other things. The CLI is just cream on top.
 
 # Environment Varibles
 **TERRARUST_LCD** sets the LCD URL. eg https://tequila-lcd.terra.dev 
