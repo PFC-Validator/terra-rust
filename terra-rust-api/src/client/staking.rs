@@ -10,15 +10,17 @@ impl Staking<'_> {
         Staking { terra }
     }
     pub async fn validator(&self, key: &str) -> Result<ValidatorResult> {
-        let url = self.terra.url.to_owned() + "/staking/validators/" + key;
-        let req = self.terra.client.get(url);
-        let response = req.send().await?;
-        Ok(response.json::<ValidatorResult>().await?)
+        //   let url = self.terra.url.to_owned() + "/staking/validators/" + key;
+        self.terra
+            .send_cmd::<ValidatorResult>("/staking/validators/", Some(key))
+            .await
+        //  let req = self.terra.client.get(url);
+        //let response = req.send().await?;
+        //Ok(response.json::<ValidatorResult>().await?)
     }
     pub async fn validators(&self) -> Result<ValidatorListResult> {
-        let url = self.terra.url.to_owned() + "/staking/validators";
-        let req = self.terra.client.get(url);
-        let response = req.send().await?;
-        Ok(response.json::<ValidatorListResult>().await?)
+        self.terra
+            .send_cmd::<ValidatorListResult>("/staking/validators", None)
+            .await
     }
 }

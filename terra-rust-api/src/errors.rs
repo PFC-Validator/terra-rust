@@ -32,5 +32,6 @@ error_chain! { foreign_links {
             description("Bech32 Address Decode Error")
             display("Bech32 Address Decode Error")
         }
+
     }
 }

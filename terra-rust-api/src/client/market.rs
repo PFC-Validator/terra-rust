@@ -12,17 +12,17 @@ impl Market<'_> {
         Market { terra }
     }
     pub async fn swap(&self, offer: &Coin, ask_denom: &str) -> Result<SwapResult> {
-        let url = format!(
-            "{}/market/swap?offer_coin={}&ask_denom={}",
-            self.terra.url.to_owned(),
-            offer.to_string(),
-            ask_denom
-        );
-
-        let req = self.terra.client.get(url);
-        let response = req.send().await?;
-        let json = response.json::<SwapResult>().await?;
-
-        Ok(json)
+        let response = self
+            .terra
+            .send_cmd::<SwapResult>(
+                "/market/swap",
+                Some(&format!(
+                    "?offer_coin={}&ask_denom={}",
+                    offer.to_string(),
+                    ask_denom
+                )),
+            )
+            .await?;
+        Ok(response)
     }
 }

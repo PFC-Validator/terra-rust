@@ -1,5 +1,7 @@
-use crate::errors::Result;
+use crate::errors::{ErrorKind, Result};
+use log::debug;
 use reqwest::Client;
+use serde::Deserialize;
 
 pub mod client_types;
 pub mod core_types;
@@ -9,8 +11,8 @@ mod staking;
 pub mod staking_types;
 
 pub struct Terra<'a> {
-    pub client: Client,
-    pub url: &'a str,
+    client: Client,
+    url: &'a str,
     pub chain_id: &'a str,
 }
 impl<'a> Terra<'_> {
@@ -27,5 +29,27 @@ impl<'a> Terra<'_> {
     }
     pub fn market(&self) -> market::Market {
         market::Market::create(&self)
+    }
+    pub async fn send_cmd<T: for<'de> Deserialize<'de>>(
+        &self,
+        path: &str,
+        args: Option<&str>,
+    ) -> Result<T> {
+        let request_url = match args {
+            Some(a) => format!("{}{}{}", self.url.to_owned(), path, a),
+            None => format!("{}{}", self.url.to_owned(), path),
+        };
+
+        debug!("URL={}", request_url);
+        let req = self.client.get(request_url);
+        let response = req.send().await?;
+
+        if !response.status().is_success() {
+            let status_text = response.text().await?;
+            Err(ErrorKind::Terra(status_text).into())
+        } else {
+            let struct_response: T = response.json::<T>().await?;
+            Ok(struct_response)
+        }
     }
 }

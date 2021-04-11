@@ -218,6 +218,7 @@ mod tst {
         let v2 = a1.unwrap();
         eprintln!("{:#?}", v2.data);
     }
+
     #[test]
     pub fn from_pubkey() -> Result<()> {
         let pubkey: [u8; 1] = [0x0];
