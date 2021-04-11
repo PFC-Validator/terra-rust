@@ -14,6 +14,8 @@ no security audit has been performed.
 **TERRARUST_LCD** sets the LCD URL. eg https://tequila-lcd.terra.dev 
 **TERRARUST_CHAIN** set the CHAIN to use eg. tequila-0004
 
+you can also set these in a file called '.env' if you prefer
+
 # Help ?
 $ terra-rust --help
 
