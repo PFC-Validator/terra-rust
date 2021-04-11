@@ -1,5 +1,5 @@
 use crate::errors::{ErrorKind, Result};
-use bech32::{decode, encode, Variant};
+use bech32::{decode, encode, ToBase32, Variant};
 
 fn check_prefix_and_length(prefix: &str, data: &str, length: usize) -> Result<bool> {
     let (hrp, _decoded, variant) = decode(data)?;
@@ -25,6 +25,11 @@ impl AccAddress {
     pub fn validate(&self) -> Result<bool> {
         check_prefix_and_length("terra", &self.data, 44)
     }
+    pub fn from_hex(key: &[u8]) -> Result<AccAddress> {
+        let data = encode("terra", key.to_base32(), Variant::Bech32)?;
+        Ok(AccAddress { data })
+    }
+
     pub fn from_val_address(address: ValAddress) -> Result<AccAddress> {
         let (_hrp, decoded, variant) = decode(&address.data)?;
         let data = encode("terra", decoded, variant)?;
@@ -46,6 +51,10 @@ impl ValAddress {
     pub fn validate(&self) -> Result<bool> {
         check_prefix_and_length("terravaloper", &self.data, 51)
     }
+    pub fn from_hex(key: &[u8]) -> Result<ValAddress> {
+        let data = encode("terravaloper", key.to_base32(), Variant::Bech32)?;
+        Ok(ValAddress { data })
+    }
     pub fn from_acc_address(address: AccAddress) -> Result<ValAddress> {
         let (_hrp, decoded, variant) = decode(&address.data)?;
         let data = encode("terravaloper", decoded, variant)?;
@@ -58,6 +67,7 @@ Validator Consensus Address
 pub struct ValConsAddress {
     pub data: String,
 }
+
 impl ValConsAddress {
     pub fn new(data: &str) -> ValConsAddress {
         ValConsAddress {
@@ -66,6 +76,10 @@ impl ValConsAddress {
     }
     pub fn validate(&self) -> Result<bool> {
         check_prefix_and_length("terravalcons", &self.data, 51)
+    }
+    pub fn from_hex(key: &[u8]) -> Result<ValConsAddress> {
+        let data = encode("terravalcons", key.to_base32(), Variant::Bech32)?;
+        Ok(ValConsAddress { data })
     }
 }
 /*
@@ -80,6 +94,12 @@ impl AccPubKey {
             data: data.to_owned(),
         }
     }
+
+    pub fn from_hex(key: &[u8]) -> Result<AccPubKey> {
+        let data = encode("terrapub", key.to_base32(), Variant::Bech32)?;
+        Ok(AccPubKey { data })
+    }
+
     pub fn validate(&self) -> Result<bool> {
         check_prefix_and_length("terrapub", &self.data, 76)
     }
@@ -109,6 +129,10 @@ impl ValPubKey {
         let data = encode("terravaloperpub", decoded, variant)?;
         Ok(ValPubKey { data })
     }
+    pub fn from_hex(key: &[u8]) -> Result<ValPubKey> {
+        let data = encode("terravaloperpub", key.to_base32(), Variant::Bech32)?;
+        Ok(ValPubKey { data })
+    }
 }
 /*
   Validator Pub Key
@@ -125,6 +149,34 @@ impl ValConsPubKey {
     pub fn validate(&self) -> Result<bool> {
         check_prefix_and_length("terravalconspub", &self.data, 82)
     }
+    pub fn from_hex(key: &[u8]) -> Result<ValConsPubKey> {
+        let data = encode("terravalconspub", key.to_base32(), Variant::Bech32)?;
+        Ok(ValConsPubKey { data })
+    }
+}
+
+/**
+* Gets a raw address from a compressed bytes public key.
+*
+* @param publicKey raw public key
+
+*/
+
+fn address_from_public_key(public_key: &[u8]) -> Result<Vec<bech32::u5>> {
+    use ripemd160::{Digest, Ripemd160};
+
+    let sha = sha256::digest_bytes(public_key);
+    let mut hasher = Ripemd160::new();
+    hasher.update(sha);
+    let address: Vec<u8> = hasher.finalize().to_owned().to_vec();
+
+    //const message = HEX.parse(publicKey.toString('hex'));
+    //const hash = RIPEMD160(SHA256(message) as any).toString();
+    //const address = Buffer.from(hash, 'hex');
+    //return Buffer.from(bech32.toWords(address));
+    let words = address.to_base32();
+    Ok(words)
+    // let encoded = bech32::encode("terrapub", address, Variant::Bech32);
 }
 
 #[cfg(test)]
@@ -165,5 +217,27 @@ mod tst {
         assert!(a1.is_ok());
         let v2 = a1.unwrap();
         eprintln!("{:#?}", v2.data);
+    }
+    #[test]
+    pub fn from_pubkey() -> Result<()> {
+        let pubkey: [u8; 1] = [0x0];
+        let acc_pubkey = AccPubKey::from_hex(&pubkey)?;
+        assert_eq!(acc_pubkey.data, "terrapub1qquzhzzn");
+        let address = AccAddress::from_hex(&pubkey)?;
+        assert_eq!(address.data, "terra1qq2zjtpc");
+        assert_eq!(ValAddress::from_hex(&pubkey)?.data, "terravaloper1qqghypy5");
+        assert_eq!(
+            ValPubKey::from_hex(&pubkey)?.data,
+            "terravaloperpub1qqyseyxc"
+        );
+        assert_eq!(
+            ValConsAddress::from_hex(&pubkey)?.data,
+            "terravalcons1qqg8r6gt"
+        );
+        assert_eq!(
+            ValConsPubKey::from_hex(&pubkey)?.data,
+            "terravalconspub1qqcsh2nx"
+        );
+        Ok(())
     }
 }
