@@ -18,10 +18,16 @@ impl PartialEq for Error {
         false
     }
 }
+
 error_chain! { foreign_links {
     ReqwestError(::reqwest::Error);
     SerdeJsonError(serde_json::Error);
-    Bech32Error(bech32::Error);
+
+    HexError(hex::FromHexError);
+
+    ParseIntError(std::num::ParseIntError);
+    Secp256k1(bitcoin::secp256k1::Error);
+    Bip32(bitcoin::util::bip32::Error);
 }
     errors {
         Terra(err:String) {
@@ -32,6 +38,17 @@ error_chain! { foreign_links {
             description("Bech32 Address Decode Error")
             display("Bech32 Address Decode Error")
         }
-
+        Phrasing {
+           description("Mnemonic - Bad Phrase")
+           display("Mnemonic - Bad Phrase")
+        }
+        Implementation {
+            description("Bad Implementation. Missing Component")
+            display("Bad Implementation. Missing Component")
+        }
+        Conversion(err:String) {
+            description("Unable to convert into public key")
+            display("Unable to convert into public key {}",err)
+        }
     }
 }

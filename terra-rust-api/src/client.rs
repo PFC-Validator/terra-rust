@@ -3,6 +3,8 @@ use log::debug;
 use reqwest::Client;
 use serde::Deserialize;
 
+mod auth;
+mod auth_types;
 pub mod client_types;
 pub mod core_types;
 mod market;
@@ -23,6 +25,9 @@ impl<'a> Terra<'_> {
             url,
             chain_id,
         })
+    }
+    pub fn auth(&self) -> auth::Auth {
+        auth::Auth::create(&self)
     }
     pub fn staking(&self) -> staking::Staking {
         staking::Staking::create(&self)

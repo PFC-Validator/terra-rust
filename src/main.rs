@@ -40,6 +40,8 @@ enum Command {
     Validator(Validator),
     // Market Operations
     Market(Market),
+    // Auth operations
+    Auth(Auth),
 }
 #[derive(StructOpt)]
 enum Keys {
@@ -74,6 +76,14 @@ enum Market {
         ask: String,
     },
 }
+#[derive(StructOpt)]
+enum Auth {
+    #[structopt(name = "account")]
+    Account {
+        #[structopt(name = "address", help = "the address to query")]
+        address: String,
+    },
+}
 mod errors;
 use crate::errors::Result;
 
@@ -106,6 +116,13 @@ async fn run() -> Result<bool> {
             Market::Swap { denom, ask, amount } => {
                 let coin = Coin::create(&denom, amount);
                 let sw = t.market().swap(&coin, &ask).await?;
+
+                println!("{:#?}", sw);
+            }
+        },
+        Command::Auth(authcmd) => match authcmd {
+            Auth::Account { address } => {
+                let sw = t.auth().account(&address).await?;
 
                 println!("{:#?}", sw);
             }

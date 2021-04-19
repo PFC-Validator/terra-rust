@@ -155,30 +155,6 @@ impl ValConsPubKey {
     }
 }
 
-/**
-* Gets a raw address from a compressed bytes public key.
-*
-* @param publicKey raw public key
-
-*/
-
-fn address_from_public_key(public_key: &[u8]) -> Result<Vec<bech32::u5>> {
-    use ripemd160::{Digest, Ripemd160};
-
-    let sha = sha256::digest_bytes(public_key);
-    let mut hasher = Ripemd160::new();
-    hasher.update(sha);
-    let address: Vec<u8> = hasher.finalize().to_owned().to_vec();
-
-    //const message = HEX.parse(publicKey.toString('hex'));
-    //const hash = RIPEMD160(SHA256(message) as any).toString();
-    //const address = Buffer.from(hash, 'hex');
-    //return Buffer.from(bech32.toWords(address));
-    let words = address.to_base32();
-    Ok(words)
-    // let encoded = bech32::encode("terrapub", address, Variant::Bech32);
-}
-
 #[cfg(test)]
 mod tst {
     use super::*;

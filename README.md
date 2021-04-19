@@ -3,6 +3,11 @@
 This is a WIP.
 
 no security audit has been performed.
+## Randomness
+The API is currently using random numbers via     
+`
+let mut rng = rand::thread_rng();
+`
 
 This may steal your money.
 
