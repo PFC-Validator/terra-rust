@@ -152,6 +152,7 @@ impl PublicKey {
             None => Err(ErrorKind::Implementation.into()),
         }
     }
+    #[allow(non_snake_case)]
     pub fn TerraPub(&self) -> Result<String> {
         match &self.raw_pub_key {
             Some(raw) => {
@@ -164,6 +165,7 @@ impl PublicKey {
             None => Err(ErrorKind::Implementation.into()),
         }
     }
+    #[allow(non_snake_case)]
     pub fn TerraValOperPub(&self) -> Result<String> {
         match &self.raw_pub_key {
             Some(raw) => {
@@ -177,6 +179,7 @@ impl PublicKey {
         }
     }
     // TODO verify if this is dervied from 'raw_address' or 'raw_pubkey'
+    #[allow(non_snake_case)]
     pub fn ValConsAddress(&self) -> Result<String> {
         match &self.raw_address {
             Some(raw) => {
@@ -189,6 +192,7 @@ impl PublicKey {
             None => Err(ErrorKind::Implementation.into()),
         }
     }
+    #[allow(non_snake_case)]
     pub fn ValConsPub(&self) -> Result<String> {
         match &self.raw_pub_key {
             Some(raw) => {

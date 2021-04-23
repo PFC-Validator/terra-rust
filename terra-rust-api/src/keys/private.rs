@@ -9,6 +9,7 @@ use crypto::sha2::Sha256;
 
 use crypto::digest::Digest;
 use hkd32::mnemonic::{Phrase, Seed};
+
 use rand_core::OsRng;
 
 pub static LUNA_COIN_TYPE: u32 = 330;
@@ -18,7 +19,7 @@ pub struct PrivateKey {
     pub index: u32,
     pub coin_type: u32,
     mnemonic: Option<Phrase>,
-
+    #[allow(dead_code)]
     root_private_key: ExtendedPrivKey,
     private_key: ExtendedPrivKey,
 }
@@ -28,13 +29,31 @@ impl PrivateKey {
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
         //let seed = phrase.to_seed("");
 
-        PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE)
+        PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, "")
+    }
+    pub fn new_seed<'a>(secp: &Secp256k1<All>, seed_phrase: &str) -> Result<PrivateKey> {
+        let phrase =
+            hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
+        //let seed = phrase.to_seed("");
+
+        PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, seed_phrase)
     }
     pub fn from_words(secp: &Secp256k1<All>, words: &str) -> Result<PrivateKey> {
         match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
             Ok(phrase) => {
-                //      let seed = phrase.to_seed("");
-                PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE)
+                PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, "")
+            }
+            Err(_) => Err(ErrorKind::Phrasing.into()),
+        }
+    }
+    pub fn from_words_seed(
+        secp: &Secp256k1<All>,
+        words: &str,
+        seed_pass: &str,
+    ) -> Result<PrivateKey> {
+        match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
+            Ok(phrase) => {
+                PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, seed_pass)
             }
             Err(_) => Err(ErrorKind::Phrasing.into()),
         }
@@ -50,8 +69,9 @@ impl PrivateKey {
         account: u32,
         index: u32,
         coin_type: u32,
+        seed_phrase: &str,
     ) -> Result<PrivateKey> {
-        let seed = phrase.to_seed("");
+        let seed = phrase.to_seed(seed_phrase);
         let root_private_key =
             ExtendedPrivKey::new_master(Network::Bitcoin, &seed.as_bytes()).unwrap();
         let path = format!("m/44'/{}'/{}'/0/{}", coin_type, account, index);
@@ -63,19 +83,12 @@ impl PrivateKey {
             index,
             coin_type,
             mnemonic: Some(phrase),
-
             root_private_key,
             private_key,
         })
     }
 
-    pub(crate) fn seed(&self, passwd: &str) -> Option<Seed> {
-        match &self.mnemonic {
-            Some(phrase) => Some(phrase.to_seed(passwd)),
-            None => None,
-        }
-    }
-    pub(crate) fn words(&self) -> Option<&str> {
+    pub fn words(&self) -> Option<&str> {
         match &self.mnemonic {
             Some(phrase) => Some(phrase.phrase()),
             None => None,
@@ -92,9 +105,16 @@ impl PrivateKey {
         let message: Message = Message::from_slice(&sha_result)?;
         let signature = secp.sign(&message, &priv_k);
 
-        eprintln!("SIG:{}", hex::encode(&signature.serialize_compact()));
+        //eprintln!("SIG:{}", hex::encode(&signature.serialize_compact()));
         let sig: StdSignature = StdSignature::create(&signature.serialize_compact(), pub_k);
         Ok(sig)
+    }
+    #[allow(dead_code)]
+    pub(crate) fn seed(&self, passwd: &str) -> Option<Seed> {
+        match &self.mnemonic {
+            Some(phrase) => Some(phrase.to_seed(passwd)),
+            None => None,
+        }
     }
 }
 
@@ -160,7 +180,7 @@ mod tst {
     }
     #[test]
     pub fn test_sign() -> Result<()> {
-        let str_1 =  "island relax shop such yellow opinion find know caught erode blue dolphin behind coach tattoo light focus snake common size analyst imitate employ walnut";
+        let str_1 =  "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius";
         let secp = Secp256k1::new();
         let pk = PrivateKey::from_words(&secp, str_1)?;
         let pub_k = pk.public_key(&secp);
@@ -169,7 +189,7 @@ mod tst {
         let send = MsgSend::create_single(
             pub_k.account()?,
             dest_addr.to_string(),
-            Coin::create("uluna", 100_000_000),
+            Coin::create("uluna", 5_000),
         );
         let messages: Vec<Box<dyn Msg>> = vec![Box::new(send)];
         let std_fee = StdFee::create_single(Coin::create("uluna", 2098), 156472);
@@ -183,12 +203,15 @@ mod tst {
             memo: "".to_string(),
         };
         println!("{}", &serde_json::to_string_pretty(&std_sign_msg).unwrap());
-        let sig = pk.sign(&secp, &serde_json::to_string(&std_sign_msg).unwrap())?;
-        assert_eq!(sig.signature, "YIiScdnJtUk0JrqYk99+Yy5D9QkI7XnIgl2GZazEFZBoXgY6MExv8LRWoY42IFqNmIA008+Y06IW33GoFXWLSw==");
+        let sig = pk.sign(&secp, "{\"type\":\"core/StdTx\",\"value\":{\"msg\":[{\"type\":\"bank/MsgSend\",\"value\":{\"from_address\":\"terra1x46rqay4d3cssq8gxxvqz8xt6nwlz4td20k38v\",\"to_address\":\"terra1wg2mlrxdmnnkkykgqg4znky86nyrtc45q336yv\",\"amount\":[{\"denom\":\"uluna\",\"amount\":\"5000\"}]}}],\"fee\":{\"amount\":[{\"denom\":\"uluna\",\"amount\":\"2098\"}],\"gas\":\"156472\"},\"memo\":\"\"}}")?;
+
+        //let sig = pk.sign(&secp, &serde_json::to_string(&std_sign_msg).unwrap())?;
         assert_eq!(
             sig.pub_key.value,
-            "AiMzHaA2bvnDXfHzkjMM+vkSE/p0ymBtAFKUnUtQAeXe"
+            "AjszqFJDRAYbEjZMuiD+ChqzbUSGq/RRu3zr0R6iJB5b"
         );
+        assert_eq!(sig.signature, "VUkzCFXpkUkjGN1Gt5vf6dxXPvhdJBufGzXctngzj6c9OQxhMtrQLI0fz2Ix1E1k7nIMYXEDHZLE2x6Sa0v3Ew==");
+
         println!("{}", serde_json::to_string_pretty(&sig).unwrap());
         Ok(())
     }

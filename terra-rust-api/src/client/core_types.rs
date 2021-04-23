@@ -80,3 +80,53 @@ impl StdSignature {
         }
     }
 }
+
+#[derive(Serialize)]
+pub struct StdTxInner<'a> {
+    pub msg: &'a Vec<Box<dyn Msg>>,
+    pub fee: &'a StdFee,
+    pub signatures: &'a Vec<StdSignature>,
+    pub memo: &'a str,
+}
+
+#[derive(Serialize)]
+pub struct StdTx<'a> {
+    // #[serde(rename = "type")]
+    pub tx: StdTxInner<'a>,
+    pub mode: &'a str,
+}
+impl<'a> StdTx<'a> {
+    pub fn create(
+        msg: &'a Vec<Box<dyn Msg>>,
+        fee: &'a StdFee,
+        signatures: &'a Vec<StdSignature>,
+        memo: &'a str,
+        mode: &'a str,
+    ) -> StdTx<'a> {
+        StdTx {
+            mode,
+            tx: StdTxInner {
+                msg,
+                fee,
+                signatures,
+                memo,
+            },
+        }
+    }
+    #[allow(non_snake_case)]
+    pub fn from_StdSignMsg(
+        std_sign_msg: &'a StdSignMsg,
+        signatures: &'a Vec<StdSignature>,
+        mode: &'a str,
+    ) -> StdTx<'a> {
+        StdTx {
+            mode,
+            tx: StdTxInner {
+                msg: &std_sign_msg.msgs,
+                fee: &std_sign_msg.fee,
+                signatures,
+                memo: &std_sign_msg.memo,
+            },
+        }
+    }
+}

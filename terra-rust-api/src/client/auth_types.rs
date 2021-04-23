@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct AuthAccount {
     pub address: String,
     pub coins: Vec<Coin>,
-    pub public_key: PubKeySig,
+    pub public_key: Option<PubKeySig>,
     #[serde(with = "terra_u64_format")]
     pub account_number: u64,
     #[serde(with = "terra_u64_format")]

@@ -3,9 +3,19 @@
 // use std::io::BufWriter;
 use dotenv::dotenv;
 use log::{debug, error, info};
-use serde::{Deserialize, Serialize};
-use std::env;
+// use serde::{Deserialize, Serialize};
+// use std::env;
 use structopt::StructOpt;
+mod bank;
+mod errors;
+mod keys;
+
+use crate::errors::Result;
+
+use crate::bank::{bank_cmd_parse, BankCommand};
+use crate::keys::{key_cmd_parse, KeysCommand};
+use terra_rust_api::core_types::Coin;
+use terra_rust_api::Terra;
 
 #[derive(StructOpt)]
 struct Cli {
@@ -28,29 +38,42 @@ struct Cli {
         help = "tequilla-0004 is testnet, columbus-4 is mainnet"
     )]
     chain_id: String,
+    // Wallet name
+    #[structopt(
+        name = "wallet",
+        env = "TERRARUST_WALLET",
+        default_value = "default",
+        short,
+        long = "wallet",
+        help = "the default wallet to look for keys in"
+    )]
+    wallet: String,
+    #[structopt(
+        name = "seed",
+        env = "TERRARUST_SEEDPHRASE",
+        default_value = "",
+        short,
+        long = "seed",
+        help = "the seed phrase to use with this private key"
+    )]
+    seed: String,
     #[structopt(subcommand)]
     cmd: Command,
 }
 #[derive(StructOpt)]
 enum Command {
-    #[structopt(name = "keys")]
-    // Key Operations
-    Keys(Keys),
-    // validator operations
+    /// Key Operations
+    Keys(KeysCommand),
+    /// validator operations
     Validator(Validator),
-    // Market Operations
+    /// Market Operations
     Market(Market),
-    // Auth operations
+    /// Auth operations
     Auth(Auth),
-}
-#[derive(StructOpt)]
-enum Keys {
-    #[structopt(name = "parse")]
-    Parse {
-        #[structopt(name = "hex")]
-        // hex public key to convert
-        hex: String,
-    },
+    /// wallet ops
+    Wallets(Wallets),
+    /// Bank Transactions
+    Bank(BankCommand),
 }
 #[derive(StructOpt)]
 enum Validator {
@@ -84,52 +107,79 @@ enum Auth {
         address: String,
     },
 }
-mod errors;
-use crate::errors::Result;
+#[derive(StructOpt)]
+enum Wallets {
+    #[structopt(name = "create", help = "create a wallet")]
+    Create {
+        #[allow(dead_code)]
+        #[structopt(name = "name", help = "name of the wallet")]
+        name: String,
+    },
+    #[structopt(name = "list", help = "List available wallets")]
+    List,
+    #[structopt(name = "delete", help = "delete a wallet")]
+    Delete {
+        #[structopt(name = "name", help = "name of the wallet")]
+        #[allow(dead_code)]
+        name: String,
+    },
+}
 
-use terra_rust_api::core_types::Coin;
-use terra_rust_api::Terra;
-
-async fn run() -> Result<bool> {
+async fn run() -> Result<()> {
     let cli = Cli::from_args();
     let t = Terra::lcd_client(&cli.lcd, &cli.chain_id).await?;
+    let seed: Option<&str> = if cli.seed == "" {
+        None
+    } else {
+        Some(&cli.seed)
+    };
     match cli.cmd {
-        Command::Keys(keycmd) => match keycmd {
-            Keys::Parse { hex } => {
-                println!("{}", hex)
-            }
-        },
-        Command::Validator(valcmd) => match valcmd {
+        Command::Keys(key_cmd) => key_cmd_parse(&t, &cli.wallet, seed, key_cmd),
+        Command::Bank(bank_cmd) => bank_cmd_parse(&t, &cli.wallet, seed, bank_cmd).await,
+        Command::Validator(val_cmd) => match val_cmd {
             Validator::List => {
                 let list = t.staking().validators().await?;
                 if !list.result.is_empty() {
                     let v1 = list.result.get(0).unwrap();
                     println!("{:#?}", v1);
                 }
+                Ok(())
             }
             Validator::Describe { validator } => {
                 let v = t.staking().validator(&validator).await?;
                 println!("{:#?}", v);
+                Ok(())
             }
         },
-        Command::Market(marketcmd) => match marketcmd {
+        Command::Market(market_cmd) => match market_cmd {
             Market::Swap { denom, ask, amount } => {
                 let coin = Coin::create(&denom, amount);
                 let sw = t.market().swap(&coin, &ask).await?;
 
                 println!("{:#?}", sw);
+                Ok(())
             }
         },
-        Command::Auth(authcmd) => match authcmd {
+        Command::Auth(auth_cmd) => match auth_cmd {
             Auth::Account { address } => {
                 let sw = t.auth().account(&address).await?;
 
                 println!("{:#?}", sw);
+                Ok(())
+            }
+        },
+        Command::Wallets(wallet_cmd) => match wallet_cmd {
+            Wallets::Create { .. } => {
+                todo!()
+            }
+            Wallets::List => {
+                todo!()
+            }
+            Wallets::Delete { .. } => {
+                todo!()
             }
         },
     }
-
-    Ok(true)
 }
 #[tokio::main]
 async fn main() {
