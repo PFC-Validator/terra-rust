@@ -121,8 +121,6 @@ impl PrivateKey {
 #[cfg(test)]
 mod tst {
     use super::*;
-    use crate::bank::MsgSend;
-    use crate::core_types::{Coin, Msg, StdFee, StdSignMsg};
 
     #[test]
     pub fn tst_gen_mnemonic() -> Result<()> {
@@ -180,39 +178,21 @@ mod tst {
     }
     #[test]
     pub fn test_sign() -> Result<()> {
-        let str_1 =  "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius";
+        // This test is using message from python SDK.. so these keys generate same sigs as they do.
+        let str_1 =  "island relax shop such yellow opinion find know caught erode blue dolphin behind coach tattoo light focus snake common size analyst imitate employ walnut";
         let secp = Secp256k1::new();
         let pk = PrivateKey::from_words(&secp, str_1)?;
-        let pub_k = pk.public_key(&secp);
+        let _pub_k = pk.public_key(&secp);
+        let to_sign = r#"{"account_number":"45","chain_id":"columbus-3-testnet","fee":{"amount":[{"amount":"698","denom":"uluna"}],"gas":"46467"},"memo":"","msgs":[{"type":"bank/MsgSend","value":{"amount":[{"amount":"100000000","denom":"uluna"}],"from_address":"terra1n3g37dsdlv7ryqftlkef8mhgqj4ny7p8v78lg7","to_address":"terra1wg2mlrxdmnnkkykgqg4znky86nyrtc45q336yv"}}],"sequence":"0"}"#;
 
-        let dest_addr = "terra1wg2mlrxdmnnkkykgqg4znky86nyrtc45q336yv";
-        let send = MsgSend::create_single(
-            pub_k.account()?,
-            dest_addr.to_string(),
-            Coin::create("uluna", 5_000),
-        );
-        let messages: Vec<Box<dyn Msg>> = vec![Box::new(send)];
-        let std_fee = StdFee::create_single(Coin::create("uluna", 2098), 156472);
+        let sig = pk.sign(&secp, to_sign)?;
 
-        let std_sign_msg = StdSignMsg {
-            chain_id: "tequila-0004".to_string(),
-            account_number: 43045,
-            sequence: 0,
-            fee: std_fee,
-            msgs: messages,
-            memo: "".to_string(),
-        };
-        println!("{}", &serde_json::to_string_pretty(&std_sign_msg).unwrap());
-        let sig = pk.sign(&secp, "{\"type\":\"core/StdTx\",\"value\":{\"msg\":[{\"type\":\"bank/MsgSend\",\"value\":{\"from_address\":\"terra1x46rqay4d3cssq8gxxvqz8xt6nwlz4td20k38v\",\"to_address\":\"terra1wg2mlrxdmnnkkykgqg4znky86nyrtc45q336yv\",\"amount\":[{\"denom\":\"uluna\",\"amount\":\"5000\"}]}}],\"fee\":{\"amount\":[{\"denom\":\"uluna\",\"amount\":\"2098\"}],\"gas\":\"156472\"},\"memo\":\"\"}}")?;
-
-        //let sig = pk.sign(&secp, &serde_json::to_string(&std_sign_msg).unwrap())?;
         assert_eq!(
             sig.pub_key.value,
-            "AjszqFJDRAYbEjZMuiD+ChqzbUSGq/RRu3zr0R6iJB5b"
+            "AiMzHaA2bvnDXfHzkjMM+vkSE/p0ymBtAFKUnUtQAeXe"
         );
-        assert_eq!(sig.signature, "VUkzCFXpkUkjGN1Gt5vf6dxXPvhdJBufGzXctngzj6c9OQxhMtrQLI0fz2Ix1E1k7nIMYXEDHZLE2x6Sa0v3Ew==");
+        assert_eq!(sig.signature, "FJKAXRxNB5ruqukhVqZf3S/muZEUmZD10fVmWycdVIxVWiCXXFsUy2VY2jINEOUGNwfrqEZsT2dUfAvWj8obLg==");
 
-        println!("{}", serde_json::to_string_pretty(&sig).unwrap());
         Ok(())
     }
 }
