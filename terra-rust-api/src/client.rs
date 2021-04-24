@@ -14,6 +14,7 @@ mod staking;
 pub mod staking_types;
 pub mod tx;
 pub mod tx_types;
+const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 
 pub struct Terra<'a> {
     client: Client,
@@ -44,7 +45,12 @@ impl<'a> Terra<'_> {
     fn construct_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
 
-        headers.insert(USER_AGENT, "PFC-TerraRust".parse().unwrap());
+        headers.insert(
+            USER_AGENT,
+            format!("PFC-TerraRust/{}", VERSION.unwrap_or("-?-"))
+                .parse()
+                .unwrap(),
+        );
         headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
         headers
     }

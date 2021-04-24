@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Coin {
-    pub denom: String,
     #[serde(with = "terra_u64_format")]
     pub amount: u64,
+    pub denom: String,
 }
 
 impl Coin {
@@ -41,14 +41,16 @@ impl StdFee {
 }
 #[derive(Serialize)]
 pub struct StdSignMsg {
-    pub chain_id: String,
     #[serde(with = "terra_u64_format")]
     pub account_number: u64,
+    pub chain_id: String,
+
+    pub fee: StdFee,
+    pub memo: String,
+
+    pub msgs: Vec<Box<dyn Msg>>,
     #[serde(with = "terra_u64_format")]
     pub sequence: u64,
-    pub fee: StdFee,
-    pub msgs: Vec<Box<dyn Msg>>,
-    pub memo: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]

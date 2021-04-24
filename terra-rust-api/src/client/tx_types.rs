@@ -20,18 +20,36 @@ pub struct TXResultSync {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
     pub txhash: String,
-    pub code: usize,
+    pub code: Option<usize>,
     pub raw_log: String,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct TXResultBlockAttribute {
+    pub key: String,
+    pub value: String,
+}
+#[derive(Deserialize, Debug)]
+pub struct TXResultBlockEvent {
+    #[serde(rename = "type")]
+    pub sytpe: String,
+    pub attributes: Vec<TXResultBlockAttribute>,
+}
+#[derive(Deserialize, Debug)]
+pub struct TXResultBlockMsg {
+    pub msg_index: usize,
+    pub log: String,
+    pub events: Vec<TXResultBlockEvent>,
+}
 #[derive(Deserialize, Debug)]
 pub struct TXResultBlock {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
     pub txhash: String,
-    pub codespace: String,
-    pub code: usize,
+    pub codespace: Option<String>,
+    pub code: Option<usize>,
     pub raw_log: String,
+    pub logs: Vec<TXResultBlockMsg>,
     #[serde(with = "terra_u64_format")]
     pub gas_wanted: u64,
     #[serde(with = "terra_u64_format")]

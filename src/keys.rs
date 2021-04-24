@@ -136,6 +136,7 @@ pub fn get_private_key(
     let keyname = format!(key_format!(), wallet, name);
     let keyring = keyring::Keyring::new(&wallet, &keyname);
     let phrase = keyring.get_password()?;
+    log::error!("{}", &phrase);
     match seed {
         None => Ok(PrivateKey::from_words(secp, &phrase)?),
         Some(seed_str) => Ok(PrivateKey::from_words_seed(secp, &phrase, seed_str)?),

@@ -4,9 +4,9 @@ use crate::core_types::{Coin, Msg};
 use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug)]
 pub struct MsgSend2 {
+    pub(crate) amount: Vec<Coin>,
     pub(crate) from_address: String,
     pub(crate) to_address: String,
-    pub(crate) amount: Vec<Coin>,
 }
 #[derive(Deserialize, Serialize, Debug)]
 pub struct MsgSend {

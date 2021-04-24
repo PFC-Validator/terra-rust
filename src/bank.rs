@@ -53,18 +53,20 @@ pub async fn bank_cmd_parse(
             let std_sign_msg = StdSignMsg {
                 chain_id: terra.chain_id.to_string(),
                 account_number,
-                sequence: 0,
+                sequence: auth_result.result.value.sequence,
                 fee: std_fee,
                 msgs: messages,
                 memo: "".to_string(),
             };
 
             let js = serde_json::to_string(&std_sign_msg)?;
+            eprintln!("{}", js);
             let sig = from_key.sign(&secp, &js)?;
-
+            //      eprintln!("{}", sig.pub_key.value);
+            //   eprintln!("{}", sig.signature);
             let sigs: Vec<StdSignature> = vec![sig];
 
-            let resp = terra.tx().broadcast_sync(&std_sign_msg, &sigs).await?;
+            let resp = terra.tx().broadcast_block(&std_sign_msg, &sigs).await?;
             log::debug!("{:#?}", resp);
         }
     }
