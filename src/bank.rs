@@ -60,14 +60,22 @@ pub async fn bank_cmd_parse(
             };
 
             let js = serde_json::to_string(&std_sign_msg)?;
-            eprintln!("{}", js);
+            //  eprintln!("{}", js);
             let sig = from_key.sign(&secp, &js)?;
             //      eprintln!("{}", sig.pub_key.value);
             //   eprintln!("{}", sig.signature);
             let sigs: Vec<StdSignature> = vec![sig];
 
-            let resp = terra.tx().broadcast_block(&std_sign_msg, &sigs).await?;
-            log::debug!("{:#?}", resp);
+            let resp = terra.tx().broadcast_sync(&std_sign_msg, &sigs).await?;
+            // log::info!("{:#?}", resp);
+            match resp.code {
+                Some(code) => {
+                    eprintln!("Transaction returned a {} {}", code, resp.txhash)
+                }
+                None => {
+                    println!("{}", resp.txhash)
+                }
+            }
         }
     }
     Ok(())
