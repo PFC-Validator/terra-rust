@@ -47,6 +47,28 @@ pub struct GasOptions {
     /// used to adjust the estimate
     pub gas_adjustment: Option<f64>,
 }
+impl GasOptions {
+    /// for hard-coding of fees
+    pub fn create_with_fees(fees: &str, gas: u64) -> Result<GasOptions> {
+        Ok(GasOptions {
+            fees: Coin::parse(fees)?,
+            estimate_gas: false,
+            gas: Some(gas),
+            gas_price: None,
+            gas_adjustment: None,
+        })
+    }
+    /// for when you want the validator to give you an estimate on the amounts
+    pub fn create_with_gas_estimate(gas_price: &str, gas_adjustment: f64) -> Result<GasOptions> {
+        Ok(GasOptions {
+            fees: None,
+            estimate_gas: true,
+            gas: None,
+            gas_price: Coin::parse(gas_price)?,
+            gas_adjustment: Some(gas_adjustment),
+        })
+    }
+}
 
 /// The main structure that all API calls are generated from
 pub struct Terra<'a> {
