@@ -23,7 +23,7 @@ pub struct AuthAccount {
 }
 #[allow(missing_docs)]
 #[derive(Deserialize, Serialize, Debug)]
-pub struct AuthAccountTV {
+pub struct AuthAccountTv {
     #[serde(rename = "type")]
     pub stype: String,
     pub value: AuthAccount,
@@ -33,5 +33,5 @@ pub struct AuthAccountTV {
 pub struct AuthAccountResult {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
-    pub result: AuthAccountTV,
+    pub result: AuthAccountTv,
 }

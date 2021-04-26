@@ -3,7 +3,7 @@ use crate::errors::Result;
 use regex::Regex;
 use rustc_serialize::base64::{ToBase64, STANDARD};
 use serde::{Deserialize, Serialize};
-
+use std::fmt;
 /// The primary way to denote currency
 /// NB: Internally everything is represented by their uXXX format.
 #[derive(Deserialize, Serialize, Debug)]
@@ -38,12 +38,12 @@ impl Coin {
             None => Ok(None),
         }
     }
-    #[allow(missing_docs)]
-    pub fn to_string(&self) -> String {
-        format!("{}{}", self.amount, self.denom)
+}
+impl fmt::Display for Coin {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}{}", self.amount, self.denom)
     }
 }
-
 /// Every Message sent must implement this trait
 pub trait Msg: erased_serde::Serialize {}
 serialize_trait_object!(Msg);
@@ -105,7 +105,7 @@ impl PubKeySig {
         let v = bpub.key.serialize().to_base64(STANDARD);
         PubKeySig {
             stype: "tendermint/PubKeySecp256k1".to_string(),
-            value: v.to_string(),
+            value: v,
         }
     }
 }
@@ -130,9 +130,9 @@ impl StdSignature {
 #[allow(missing_docs)]
 #[derive(Serialize)]
 pub struct StdTxInner<'a> {
-    pub msg: &'a Vec<Box<dyn Msg>>,
+    pub msg: &'a [Box<dyn Msg>],
     pub fee: &'a StdFee,
-    pub signatures: &'a Vec<StdSignature>,
+    pub signatures: &'a [StdSignature],
     pub memo: &'a str,
 }
 
@@ -146,9 +146,9 @@ pub struct StdTx<'a> {
 impl<'a> StdTx<'a> {
     /// create the TX which is used to POST to LCD
     pub fn create(
-        msg: &'a Vec<Box<dyn Msg>>,
+        msg: &'a [Box<dyn Msg>],
         fee: &'a StdFee,
-        signatures: &'a Vec<StdSignature>,
+        signatures: &'a [StdSignature],
         memo: &'a str,
         mode: &'a str,
     ) -> StdTx<'a> {
@@ -167,7 +167,7 @@ impl<'a> StdTx<'a> {
     #[allow(non_snake_case)]
     pub fn from_StdSignMsg(
         std_sign_msg: &'a StdSignMsg,
-        signatures: &'a Vec<StdSignature>,
+        signatures: &'a [StdSignature],
         mode: &'a str,
     ) -> StdTx<'a> {
         StdTx {
@@ -187,13 +187,13 @@ mod tst {
     use super::*;
     #[test]
     pub fn test_coin() -> Result<()> {
-        let c = Coin::create("uluna", 1000);
-        assert_eq!(c.amount, 1000 as u64);
+        let c = Coin::create("uluna", 1000.0);
+        assert_eq!(c.amount, 1000.0 as f64);
         assert_eq!(c.denom, "uluna");
         let d = Coin::parse("1000uluna")?;
         match d {
             Some(c) => {
-                assert_eq!(c.amount, 1000 as u64);
+                assert_eq!(c.amount, 1000.0 as f64);
                 assert_eq!(c.denom, "uluna");
             }
             None => {

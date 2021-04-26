@@ -10,6 +10,7 @@ block: Wait for the tx to pass/fail CheckTx, DeliverTx, and be committed in a bl
 
 It's best to always use sync.
 */
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct TXResultAsync {
     /// height of the chain when submitted
@@ -18,7 +19,7 @@ pub struct TXResultAsync {
     /// Transaction hash of the transaction
     pub txhash: String,
 }
-
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct TXResultSync {
     #[serde(with = "terra_u64_format")]
@@ -29,22 +30,23 @@ pub struct TXResultSync {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct TXResultBlockAttribute {
+pub struct TxResultBlockAttribute {
     pub key: String,
     pub value: String,
 }
 #[derive(Deserialize, Debug)]
-pub struct TXResultBlockEvent {
+pub struct TxResultBlockEvent {
     #[serde(rename = "type")]
     pub sytpe: String,
-    pub attributes: Vec<TXResultBlockAttribute>,
+    pub attributes: Vec<TxResultBlockAttribute>,
 }
 #[derive(Deserialize, Debug)]
-pub struct TXResultBlockMsg {
+pub struct TxResultBlockMsg {
     pub msg_index: usize,
     pub log: String,
-    pub events: Vec<TXResultBlockEvent>,
+    pub events: Vec<TxResultBlockEvent>,
 }
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Deserialize, Debug)]
 pub struct TXResultBlock {
     #[serde(with = "terra_u64_format")]
@@ -53,7 +55,7 @@ pub struct TXResultBlock {
     pub codespace: Option<String>,
     pub code: Option<usize>,
     pub raw_log: String,
-    pub logs: Vec<TXResultBlockMsg>,
+    pub logs: Vec<TxResultBlockMsg>,
     #[serde(with = "terra_u64_format")]
     pub gas_wanted: u64,
     #[serde(with = "terra_u64_format")]
@@ -61,24 +63,24 @@ pub struct TXResultBlock {
 }
 
 #[derive(Serialize)]
-pub struct TXEstimate2<'a> {
-    pub msg: &'a Vec<Box<dyn Msg>>,
+pub struct TxEstimate2<'a> {
+    pub msg: &'a [Box<dyn Msg>],
 }
 #[derive(Serialize)]
-pub struct TXEstimate<'a> {
-    pub tx: TXEstimate2<'a>,
+pub struct TxEstimate<'a> {
+    pub tx: TxEstimate2<'a>,
     #[serde(with = "terra_f64_format")]
     pub gas_adjustment: f64,
-    pub gas_prices: &'a Vec<&'a Coin>,
+    pub gas_prices: &'a [&'a Coin],
 }
-impl<'a> TXEstimate<'a> {
+impl<'a> TxEstimate<'a> {
     pub fn create(
-        msg: &'a Vec<Box<dyn Msg>>,
+        msg: &'a [Box<dyn Msg>],
         gas_adjustment: f64,
-        gas_prices: &'a Vec<&'a Coin>,
-    ) -> TXEstimate<'a> {
-        TXEstimate {
-            tx: TXEstimate2 { msg },
+        gas_prices: &'a [&'a Coin],
+    ) -> TxEstimate<'a> {
+        TxEstimate {
+            tx: TxEstimate2 { msg },
             gas_adjustment,
             gas_prices,
         }
@@ -91,7 +93,7 @@ pub struct TxFeeBlock {
     pub gas: u64,
 }
 #[derive(Deserialize, Serialize, Debug)]
-pub struct TXFeeResult {
+pub struct TxFeeResult {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
     pub result: TxFeeBlock,

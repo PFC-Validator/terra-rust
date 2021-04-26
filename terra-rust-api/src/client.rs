@@ -1,6 +1,6 @@
 use crate::errors::{ErrorKind, Result};
 
-use crate::client::tx_types::TXFeeResult;
+use crate::client::tx_types::TxFeeResult;
 use crate::core_types::{Coin, Msg, StdFee};
 use reqwest::header::{HeaderMap, CONTENT_TYPE, USER_AGENT};
 use reqwest::{Client, RequestBuilder};
@@ -179,7 +179,7 @@ impl<'a> Terra<'_> {
     /// Generate Fee structure, either by estimation method or hardcoded
     ///
 
-    pub async fn calc_fees(&'a self, messages: &Vec<Box<dyn Msg>>) -> Result<StdFee> {
+    pub async fn calc_fees(&'a self, messages: &[Box<dyn Msg>]) -> Result<StdFee> {
         if self.gas_options.is_none() {
             return Err(ErrorKind::NoGasOpts.into());
         }
@@ -191,9 +191,9 @@ impl<'a> Terra<'_> {
                     Some(c) => c,
                     None => &default_gas_coin,
                 };
-                let res: TXFeeResult = self
+                let res: TxFeeResult = self
                     .tx()
-                    .estimate_fee(messages, gas.gas_adjustment.unwrap_or(1.0), &vec![gas_coin])
+                    .estimate_fee(messages, gas.gas_adjustment.unwrap_or(1.0), &[gas_coin])
                     .await?;
                 //  let gas_amount = gas.gas_adjustment.unwrap_or(1.0) * res.result.gas as f64;
                 //  log::info!("GAS: {} -> {}", res.result.gas, gas_amount);
@@ -205,9 +205,13 @@ impl<'a> Terra<'_> {
             }
             false => {
                 let mut fees: Vec<Coin> = vec![];
-                for fee in gas.fees.as_ref() {
-                    fees.push(Coin::create(&fee.denom, fee.amount))
+                match &gas.fees {
+                    Some(fee) => {
+                        fees.push(Coin::create(&fee.denom, fee.amount));
+                    }
+                    None => {}
                 }
+
                 StdFee::create(fees, gas.gas.unwrap_or(0))
             }
         };

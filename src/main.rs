@@ -113,7 +113,7 @@ impl Cli {
             (false, Some(*g))
         };
         let gas_price = Coin::parse(&self.gas_price)?;
-        let gas_adjustment = Some(*&self.gas_adjustment);
+        let gas_adjustment = Some(self.gas_adjustment);
         Ok(GasOptions {
             fees,
             estimate_gas,
@@ -142,7 +142,7 @@ enum Command {
     /// Block commands
     Block(BlockCommand),
     /// Transaction Commands
-    TX(TXCommand),
+    Tx(TxCommand),
 }
 
 #[derive(StructOpt)]
@@ -184,7 +184,7 @@ enum Wallets {
 }
 /// Input to the /txs/XXXX query
 #[derive(StructOpt)]
-pub struct TXCommand {
+pub struct TxCommand {
     #[structopt(name = "hash", help = "hash to inquire about")]
     /// The hash to inquire about
     hash: String,
@@ -194,7 +194,7 @@ async fn run() -> Result<()> {
     let cli: Cli = Cli::from_args();
     let gas_opts: GasOptions = cli.gas_opts()?;
     let t = Terra::lcd_client(&cli.lcd, &cli.chain_id, &gas_opts).await?;
-    let seed: Option<&str> = if cli.seed == "" {
+    let seed: Option<&str> = if cli.seed.is_empty() {
         None
     } else {
         Some(&cli.seed)
@@ -214,7 +214,7 @@ async fn run() -> Result<()> {
                 Ok(())
             }
         },
-        Command::TX(cmd) => {
+        Command::Tx(cmd) => {
             let resp = t.tx().get(&cmd.hash).await?;
             println!("{:#?}", resp);
             Ok(())

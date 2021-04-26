@@ -3,16 +3,16 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct BlockIDParts {
+pub struct BlockIdParts {
     #[serde(with = "terra_u64_format")]
     pub total: u64,
     pub hash: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct BlockID {
+pub struct BlockId {
     pub hash: String,
-    pub parts: BlockIDParts,
+    pub parts: BlockIdParts,
 }
 #[derive(Deserialize, Serialize, Debug)]
 pub struct BlockHeaderVersion {
@@ -29,7 +29,7 @@ pub struct BlockHeader {
     pub height: u64,
     #[serde(with = "terra_datetime_format")]
     pub time: DateTime<Utc>,
-    pub last_block_id: BlockID,
+    pub last_block_id: BlockId,
     pub last_commit_hash: String,
     pub data_hash: String,
     pub validators_hash: String,
@@ -58,7 +58,7 @@ pub struct BlockCommit {
     pub height: u64,
     #[serde(with = "terra_u64_format")]
     pub round: u64,
-    pub block_id: BlockID,
+    pub block_id: BlockId,
     pub signatures: Vec<BlockSignature>,
 }
 #[derive(Deserialize, Serialize, Debug)]
@@ -75,6 +75,6 @@ pub struct Block {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct BlockResult {
-    pub block_id: BlockID,
+    pub block_id: BlockId,
     pub block: Block,
 }

@@ -33,14 +33,14 @@ pub struct PrivateKey {
 }
 impl PrivateKey {
     /// Generate a new private key
-    pub fn new<'a>(secp: &Secp256k1<All>) -> Result<PrivateKey> {
+    pub fn new(secp: &Secp256k1<All>) -> Result<PrivateKey> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
 
         PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, "")
     }
     /// generate a new private key with a seed phrase
-    pub fn new_seed<'a>(secp: &Secp256k1<All>, seed_phrase: &str) -> Result<PrivateKey> {
+    pub fn new_seed(secp: &Secp256k1<All>, seed_phrase: &str) -> Result<PrivateKey> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
 

@@ -18,7 +18,7 @@ pub struct MsgAggregateExchangeRatePreVote {
 impl Msg for MsgAggregateExchangeRatePreVote {}
 impl MsgAggregateExchangeRatePreVote {
     /// Create a pre vote message
-    pub fn create<'a>(
+    pub fn create(
         hash: String,
         feeder: String,
         validator: String,
