@@ -1,6 +1,8 @@
 use crate::client::client_types::terra_u64_format;
 
-use serde::Deserialize;
+use crate::core_types::{Coin, Msg};
+use serde::{Deserialize, Serialize};
+
 /**
 sync: Wait for the tx to pass/fail CheckTx
 async: Don't wait for pass/fail CheckTx; send and return tx immediately
@@ -54,4 +56,26 @@ pub struct TXResultBlock {
     pub gas_wanted: u64,
     #[serde(with = "terra_u64_format")]
     pub gas_used: u64,
+}
+
+#[derive(Serialize)]
+pub struct TXEstimate2 {
+    pub msgs: Vec<Box<dyn Msg>>,
+}
+#[derive(Serialize)]
+pub struct TXEstimate {
+    pub tx: TXEstimate2,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct TxFeeBlock {
+    pub fees: Vec<Coin>,
+    #[serde(with = "terra_u64_format")]
+    pub gas: u64,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct TXFeeResult {
+    #[serde(with = "terra_u64_format")]
+    pub height: u64,
+    pub result: TxFeeBlock,
 }

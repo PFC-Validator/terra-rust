@@ -9,13 +9,16 @@ use serde::{Deserialize, Serialize};
 static BECH32_PUBKEY_DATA_PREFIX: [u8; 5] = [0xeb, 0x5a, 0xe9, 0x87, 0x21]; // "eb5ae98721";
 
 #[derive(Deserialize, Serialize, Debug)]
-
+/// The public key we used to generate the cosmos/tendermind/terrad addresses
 pub struct PublicKey {
+    /// This is optional as we can generate non-pub keys without
     pub raw_pub_key: Option<Vec<u8>>,
+    /// The raw bytes used to generate non-pub keys
     pub raw_address: Option<Vec<u8>>,
 }
 
 impl PublicKey {
+    /// Generate a Cosmos/Tendermint/Terrad Public Key
     pub fn from_bitcoin_public_key(bpub: &bitcoin::util::key::PublicKey) -> PublicKey {
         let bpub_bytes = bpub.key.serialize();
         //     eprintln!("B-PK-{}", hex::encode(bpub_bytes));
@@ -27,6 +30,7 @@ impl PublicKey {
             raw_address: Some(raw_address),
         }
     }
+    /// Generate from Cosmos/Tendermint/Terrad Public Key
     pub fn from_public_key(bpub: &[u8]) -> PublicKey {
         let raw_pub_key = PublicKey::pubkey_from_public_key(bpub);
         let raw_address = PublicKey::address_from_public_key(bpub);
@@ -36,6 +40,7 @@ impl PublicKey {
             raw_address: Some(raw_address),
         }
     }
+    /// Generate a Cosmos/Tendermint/Terrad Account
     pub fn from_account(acc_address: &str) -> Result<PublicKey> {
         PublicKey::check_prefix_and_length("terra", acc_address, 44).and_then(|vu5| {
             match Vec::from_base32(vu5.as_slice()) {
@@ -47,6 +52,7 @@ impl PublicKey {
             }
         })
     }
+    /// Generate a Operator address for this public key (used by the validator)
     pub fn from_operator_address(valoper_address: &str) -> Result<PublicKey> {
         PublicKey::check_prefix_and_length("terravaloper", valoper_address, 51).and_then(|vu5| {
             match Vec::from_base32(vu5.as_slice()) {
@@ -59,22 +65,14 @@ impl PublicKey {
         })
     }
 
+    /// Generate Public key from raw address
     pub fn from_raw_address(raw_address: &str) -> Result<PublicKey> {
-        // let bech32_prefix = hex::encode(BECH32_PUBKEY_DATA_PREFIX);
-        //if raw_pub_key.starts_with(&bech32_prefix) {
         let vec1 = hex::decode(raw_address)?;
-        //   let vec2 = &vec1.as_slice()[BECH32_PUBKEY_DATA_PREFIX.len()..];
-        //   eprintln!("{}", hex::encode(&vec1));
-        //   eprintln!("{}", hex::encode(vec2));
-        //    let raw_address = PublicKey::address_from_public_key(&vec2);
 
         Ok(PublicKey {
             raw_pub_key: None,
             raw_address: Some(vec1),
         })
-        //} else {
-        //    Err(ErrorKind::Conversion(String::from(raw_pub_key)).into())
-        // }
     }
     fn check_prefix_and_length(prefix: &str, data: &str, length: usize) -> Result<Vec<u5>> {
         match decode(data) {
@@ -123,11 +121,10 @@ impl PublicKey {
         hasher.input(&sha_result);
         hasher.result(&mut ripe_result);
 
-        // eprintln!("-{}", encode_hex(&ripe_result).unwrap());
-
         let address: Vec<u8> = ripe_result.to_vec();
         address
     }
+    /// The main account used in most things
     pub fn account(&self) -> Result<String> {
         match &self.raw_address {
             Some(raw) => {
@@ -140,6 +137,7 @@ impl PublicKey {
             None => Err(ErrorKind::Implementation.into()),
         }
     }
+    /// The operator address used for validators
     pub fn operator_address(&self) -> Result<String> {
         match &self.raw_address {
             Some(raw) => {
@@ -152,6 +150,7 @@ impl PublicKey {
             None => Err(ErrorKind::Implementation.into()),
         }
     }
+    #[allow(missing_docs)]
     #[allow(non_snake_case)]
     pub fn TerraPub(&self) -> Result<String> {
         match &self.raw_pub_key {
@@ -165,6 +164,7 @@ impl PublicKey {
             None => Err(ErrorKind::Implementation.into()),
         }
     }
+    #[allow(missing_docs)]
     #[allow(non_snake_case)]
     pub fn TerraValOperPub(&self) -> Result<String> {
         match &self.raw_pub_key {
@@ -178,7 +178,8 @@ impl PublicKey {
             None => Err(ErrorKind::Implementation.into()),
         }
     }
-    // TODO verify if this is dervied from 'raw_address' or 'raw_pubkey'
+    // TODO verify if this is derived from 'raw_address' or 'raw_pubkey'
+    #[allow(missing_docs)]
     #[allow(non_snake_case)]
     pub fn ValConsAddress(&self) -> Result<String> {
         match &self.raw_address {
@@ -192,6 +193,7 @@ impl PublicKey {
             None => Err(ErrorKind::Implementation.into()),
         }
     }
+    #[allow(missing_docs)]
     #[allow(non_snake_case)]
     pub fn ValConsPub(&self) -> Result<String> {
         match &self.raw_pub_key {

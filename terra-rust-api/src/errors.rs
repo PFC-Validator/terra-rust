@@ -1,3 +1,4 @@
+#[allow(missing_docs)]
 use error_chain::error_chain;
 
 impl From<Box<dyn std::error::Error>> for Error {
@@ -18,8 +19,9 @@ impl PartialEq for Error {
         false
     }
 }
+error_chain! {
 
-error_chain! { foreign_links {
+    foreign_links {
     ReqwestError(::reqwest::Error);
     SerdeJsonError(serde_json::Error);
 
@@ -28,7 +30,7 @@ error_chain! { foreign_links {
     ParseIntError(std::num::ParseIntError);
     Secp256k1(bitcoin::secp256k1::Error);
     Bip32(bitcoin::util::bip32::Error);
-}
+    }
     errors {
         Terra(err:String) {
             description("Terra CLI Error")
@@ -49,6 +51,10 @@ error_chain! { foreign_links {
         Conversion(err:String) {
             description("Unable to convert into public key")
             display("Unable to convert into public key {}",err)
+        }
+        NoGasOpts {
+            description("Can't call Transactions without some gas rules")
+            display("Can't call transactions without some gas rules")
         }
     }
 }

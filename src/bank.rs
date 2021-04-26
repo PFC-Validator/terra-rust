@@ -4,9 +4,9 @@ use terra_rust_api::Terra;
 use crate::errors::Result;
 use crate::keys::get_private_key;
 use bitcoin::secp256k1::Secp256k1;
-use terra_rust_api::auth::Auth;
 use terra_rust_api::auth_types::AuthAccountResult;
-use terra_rust_api::bank::MsgSend;
+use terra_rust_api::messages::MsgSend;
+
 use terra_rust_api::core_types::{Coin, Msg, StdFee, StdSignMsg, StdSignature};
 
 #[derive(StructOpt)]
@@ -41,13 +41,14 @@ pub async fn bank_cmd_parse(
             let from_key = get_private_key(&secp, wallet, &from, seed)?;
             let from_public_key = from_key.public_key(&secp);
             let coin: Coin = Coin::create(&denom, amount);
-            let send: MsgSend = MsgSend::create(from_public_key.account()?, to, vec![coin]);
+            let from_account = from_public_key.account()?;
+            let send: MsgSend = MsgSend::create(from_account, to, vec![coin]);
 
             let messages: Vec<Box<dyn Msg>> = vec![Box::new(send)];
             let std_fee = StdFee::create_single(Coin::create("uluna", 233471), 1156472);
 
-            let auth = Auth::create(terra);
-            let auth_result: AuthAccountResult = auth.account(&from_public_key.account()?).await?;
+            let auth_result: AuthAccountResult =
+                terra.auth().account(&from_public_key.account()?).await?;
             let account_number = auth_result.result.value.account_number;
 
             let std_sign_msg = StdSignMsg {
@@ -61,6 +62,7 @@ pub async fn bank_cmd_parse(
 
             let js = serde_json::to_string(&std_sign_msg)?;
             //  eprintln!("{}", js);
+
             let sig = from_key.sign(&secp, &js)?;
             //      eprintln!("{}", sig.pub_key.value);
             //   eprintln!("{}", sig.signature);

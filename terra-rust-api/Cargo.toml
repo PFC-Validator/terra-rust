@@ -27,4 +27,7 @@ hkd32= { version="0.5.0", features=["bip39","mnemonic","bech32"] }
 subtle-encoding="0.5.1"
 tendermint = { version = "0.19", features = ["secp256k1"] }
 bitcoin="0.26.0"
+regex="1"
+lazy_static="1.4"
+num-traits="0.2"
 # https://crates.io/crates/prost-amino

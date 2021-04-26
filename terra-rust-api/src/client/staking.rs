@@ -1,5 +1,6 @@
 use crate::client::staking_types::{ValidatorListResult, ValidatorResult};
 use crate::errors::Result;
+use crate::staking_types::Validator;
 use crate::Terra;
 
 pub struct Staking<'a> {
@@ -22,5 +23,16 @@ impl Staking<'_> {
         self.terra
             .send_cmd::<ValidatorListResult>("/staking/validators", None)
             .await
+    }
+    pub async fn validator_by_moniker(&self, moniker: &str) -> Result<Option<Validator>> {
+        let lst = self
+            .terra
+            .send_cmd::<ValidatorListResult>("/staking/validators", None)
+            .await?
+            .result;
+        match lst.iter().find(|&p| p.description.moniker == moniker) {
+            None => Ok(None),
+            Some(v) => Ok(Some(v.to_owned())),
+        }
     }
 }

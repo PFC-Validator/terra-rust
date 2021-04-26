@@ -11,6 +11,7 @@ error_chain! {
        KeyringError(keyring::KeyringError);
        Secp256k1(bitcoin::secp256k1::Error);
        SerdeJson(serde_json::Error);
+       ParseInt(std::num::ParseIntError);
     }
     errors {
 

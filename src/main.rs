@@ -1,6 +1,10 @@
+/*!
+ CLI for terrad networks
+*/
 // (Buf) Uncomment these lines to have the output buffered, this can provide
 // better performance but is not always intuitive behaviour.
 // use std::io::BufWriter;
+#![warn(missing_docs)]
 use dotenv::dotenv;
 use log::{debug, error, info};
 // use serde::{Deserialize, Serialize};
@@ -9,13 +13,19 @@ use structopt::StructOpt;
 mod bank;
 mod errors;
 mod keys;
+mod oracle;
+mod tendermint;
+mod validator;
 
 use crate::errors::Result;
 
 use crate::bank::{bank_cmd_parse, BankCommand};
 use crate::keys::{key_cmd_parse, KeysCommand};
+use crate::oracle::{oracle_cmd_parse, OracleCommand};
+use crate::tendermint::{block_cmd_parse, BlockCommand};
+use crate::validator::{validator_cmd_parse, ValidatorCommand};
 use terra_rust_api::core_types::Coin;
-use terra_rust_api::Terra;
+use terra_rust_api::{GasOptions, Terra};
 
 #[derive(StructOpt)]
 struct Cli {
@@ -57,15 +67,67 @@ struct Cli {
         help = "the seed phrase to use with this private key"
     )]
     seed: String,
+    #[structopt(
+        name = "fees",
+        default_value = "",
+        short,
+        long = "fees",
+        help = "the fees to use. This will override gas parameters if specified."
+    )]
+    fees: String,
+    #[structopt(
+        name = "gas",
+        default_value = "auto",
+        long = "gas",
+        help = "the gas amount to use 'auto' to estimate"
+    )]
+    gas: String,
+    #[structopt(
+        name = "gas-prices",
+        default_value = "",
+        long = "gas-prices",
+        help = "the gas price to use to calculate fee. format is NNNtoken eg. 1000uluna"
+    )]
+    gas_price: String,
+    #[structopt(
+        name = "gas-adjustment",
+        default_value = "1.0",
+        env = "TERRARUST_GAS_ADJUSTMENT",
+        long = "gas-adjustment",
+        help = "the adjustment to multiply the estimate to calculate the fee"
+    )]
+    gas_adjustment: f64,
+
     #[structopt(subcommand)]
     cmd: Command,
+}
+impl Cli {
+    pub fn gas_opts(&self) -> Result<GasOptions> {
+        let fees = Coin::parse(&self.fees)?;
+        let gas_str = &self.gas;
+        let (estimate_gas, gas) = if gas_str == "auto" {
+            (true, None)
+        } else {
+            let g = &self.gas.parse::<u64>()?;
+            (false, Some(*g))
+        };
+        let gas_price = Coin::parse(&self.gas_price)?;
+        let gas_adjustment = Some(*&self.gas_adjustment);
+        Ok(GasOptions {
+            fees,
+            estimate_gas,
+            gas,
+            gas_price,
+            gas_adjustment,
+        })
+    }
 }
 #[derive(StructOpt)]
 enum Command {
     /// Key Operations
     Keys(KeysCommand),
     /// validator operations
-    Validator(Validator),
+    Validator(ValidatorCommand),
     /// Market Operations
     Market(Market),
     /// Auth operations
@@ -74,19 +136,14 @@ enum Command {
     Wallets(Wallets),
     /// Bank Transactions
     Bank(BankCommand),
+    /// Oracle Transactions
+    Oracle(OracleCommand),
+    /// Block commands
+    Block(BlockCommand),
+    /// Transaction Commands
+    TX(TXCommand),
 }
-#[derive(StructOpt)]
-enum Validator {
-    #[structopt(name = "list")]
-    // list all validators. Including Jailed ones
-    List,
-    #[structopt(name = "describe")]
-    Describe {
-        #[structopt(name = "validator", help = "the validator's terravaloper address")]
-        // the validator to get more info on. hint: use the terravaloper address. try terravaloper12g4nkvsjjnl0t7fvq3hdcw7y8dc9fq69nyeu9q
-        validator: String,
-    },
-}
+
 #[derive(StructOpt)]
 enum Market {
     #[structopt(name = "swap")]
@@ -124,10 +181,18 @@ enum Wallets {
         name: String,
     },
 }
+/// Input to the /txs/XXXX query
+#[derive(StructOpt)]
+pub struct TXCommand {
+    #[structopt(name = "hash", help = "hash to inquire about")]
+    /// The hash to inquire about
+    hash: String,
+}
 
 async fn run() -> Result<()> {
-    let cli = Cli::from_args();
-    let t = Terra::lcd_client(&cli.lcd, &cli.chain_id).await?;
+    let cli: Cli = Cli::from_args();
+    let gas_opts: GasOptions = cli.gas_opts()?;
+    let t = Terra::lcd_client(&cli.lcd, &cli.chain_id, &gas_opts).await?;
     let seed: Option<&str> = if cli.seed == "" {
         None
     } else {
@@ -136,21 +201,9 @@ async fn run() -> Result<()> {
     match cli.cmd {
         Command::Keys(key_cmd) => key_cmd_parse(&t, &cli.wallet, seed, key_cmd),
         Command::Bank(bank_cmd) => bank_cmd_parse(&t, &cli.wallet, seed, bank_cmd).await,
-        Command::Validator(val_cmd) => match val_cmd {
-            Validator::List => {
-                let list = t.staking().validators().await?;
-                if !list.result.is_empty() {
-                    let v1 = list.result.get(0).unwrap();
-                    println!("{:#?}", v1);
-                }
-                Ok(())
-            }
-            Validator::Describe { validator } => {
-                let v = t.staking().validator(&validator).await?;
-                println!("{:#?}", v);
-                Ok(())
-            }
-        },
+        Command::Oracle(cmd) => oracle_cmd_parse(&t, &cli.wallet, seed, cmd).await,
+        Command::Validator(cmd) => validator_cmd_parse(&t, cmd).await,
+        Command::Block(cmd) => block_cmd_parse(&t, cmd).await,
         Command::Market(market_cmd) => match market_cmd {
             Market::Swap { denom, ask, amount } => {
                 let coin = Coin::create(&denom, amount);
@@ -160,6 +213,11 @@ async fn run() -> Result<()> {
                 Ok(())
             }
         },
+        Command::TX(cmd) => {
+            let resp = t.tx().get(&cmd.hash).await?;
+            println!("{:#?}", resp);
+            Ok(())
+        }
         Command::Auth(auth_cmd) => match auth_cmd {
             Auth::Account { address } => {
                 let sw = t.auth().account(&address).await?;

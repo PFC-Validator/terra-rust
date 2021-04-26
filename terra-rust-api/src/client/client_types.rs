@@ -1,3 +1,7 @@
+/*!
+routines used to serialize / deserialize a Cosmos / Tendermint / TerraD structure
+*/
+/// Convert a JSON date time into a rust one
 pub mod terra_datetime_format {
     use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
     use serde::{self, Deserialize, Deserializer, Serializer};
@@ -12,7 +16,8 @@ pub mod terra_datetime_format {
     //        S: Serializer
     //
     // although it may also be generic over the input types T.
-    #[allow(dead_code)]
+
+    #[allow(missing_docs)]
     pub fn serialize<S>(date: &DateTime<Utc>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -28,6 +33,7 @@ pub mod terra_datetime_format {
     //        D: Deserializer<'de>
     //
     // although it may also be generic over the output types T.
+    #[allow(missing_docs)]
     pub fn deserialize<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>
     where
         D: Deserializer<'de>,
@@ -55,6 +61,7 @@ pub mod terra_datetime_format {
     }
 }
 
+/// Convert a u64 number (which is sent as a string) into a u64 rust structure
 pub mod terra_u64_format {
     use serde::{self, Deserialize, Deserializer, Serializer};
 
@@ -65,7 +72,8 @@ pub mod terra_u64_format {
     //        S: Serializer
     //
     // although it may also be generic over the input types T.
-    #[allow(dead_code)]
+
+    #[allow(missing_docs)]
     pub fn serialize<S>(val: &u64, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -81,6 +89,7 @@ pub mod terra_u64_format {
     //        D: Deserializer<'de>
     //
     // although it may also be generic over the output types T.
+    #[allow(missing_docs)]
     pub fn deserialize<'de, D>(deserializer: D) -> Result<u64, D::Error>
     where
         D: Deserializer<'de>,
@@ -96,6 +105,7 @@ pub mod terra_u64_format {
     }
 }
 
+/// Convert a f64 number (which is sent as a string) into a f64 rust structure
 pub mod terra_f64_format {
     use serde::{self, Deserialize, Deserializer, Serializer};
 
@@ -106,8 +116,8 @@ pub mod terra_f64_format {
     //        S: Serializer
     //
     // although it may also be generic over the input types T.
-    #[allow(dead_code)]
-    pub fn serialize<S>(val: f64, serializer: S) -> Result<S::Ok, S::Error>
+    #[allow(missing_docs)]
+    pub fn serialize<S>(val: &f64, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -122,6 +132,7 @@ pub mod terra_f64_format {
     //        D: Deserializer<'de>
     //
     // although it may also be generic over the output types T.
+    #[allow(missing_docs)]
     pub fn deserialize<'de, D>(deserializer: D) -> Result<f64, D::Error>
     where
         D: Deserializer<'de>,

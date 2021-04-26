@@ -11,33 +11,42 @@ use crypto::digest::Digest;
 use hkd32::mnemonic::{Phrase, Seed};
 
 use rand_core::OsRng;
-
+/// This is the coin type used in most derivations
 pub static LUNA_COIN_TYPE: u32 = 330;
 
+/// The Private key structure that is used to generate signatures and public keys
+/// WARNING: No Security Audit has been performed
 pub struct PrivateKey {
+    #[allow(missing_docs)]
     pub account: u32,
+    #[allow(missing_docs)]
     pub index: u32,
+    #[allow(missing_docs)]
     pub coin_type: u32,
+    /// The 24 words used to generate this private key
     mnemonic: Option<Phrase>,
     #[allow(dead_code)]
+    /// This is used for testing
     root_private_key: ExtendedPrivKey,
+    /// The private key
     private_key: ExtendedPrivKey,
 }
 impl PrivateKey {
+    /// Generate a new private key
     pub fn new<'a>(secp: &Secp256k1<All>) -> Result<PrivateKey> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
-        //let seed = phrase.to_seed("");
 
         PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, "")
     }
+    /// generate a new private key with a seed phrase
     pub fn new_seed<'a>(secp: &Secp256k1<All>, seed_phrase: &str) -> Result<PrivateKey> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
-        //let seed = phrase.to_seed("");
 
         PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, seed_phrase)
     }
+    /// for private key recovery. This is also used by wallet routines to re-hydrate the structure
     pub fn from_words(secp: &Secp256k1<All>, words: &str) -> Result<PrivateKey> {
         match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
             Ok(phrase) => {
@@ -46,6 +55,7 @@ impl PrivateKey {
             Err(_) => Err(ErrorKind::Phrasing.into()),
         }
     }
+    /// for private key recovery with seed phrase
     pub fn from_words_seed(
         secp: &Secp256k1<All>,
         words: &str,
@@ -58,6 +68,7 @@ impl PrivateKey {
             Err(_) => Err(ErrorKind::Phrasing.into()),
         }
     }
+    /// generate the public key for this private key
     pub fn public_key(&self, secp: &Secp256k1<All>) -> PublicKey {
         let x = &self.private_key.private_key.public_key(secp);
         PublicKey::from_bitcoin_public_key(x)
@@ -88,12 +99,14 @@ impl PrivateKey {
         })
     }
 
+    /// the words used to generate this private key
     pub fn words(&self) -> Option<&str> {
         match &self.mnemonic {
             Some(phrase) => Some(phrase.phrase()),
             None => None,
         }
     }
+    /// signs a blob of data and returns a [StdSignature]
     pub fn sign(&self, secp: &Secp256k1<All>, blob: &str) -> Result<StdSignature> {
         let pub_k = &self.private_key.private_key.public_key(secp);
         let priv_k = self.private_key.private_key.key;
@@ -109,6 +122,8 @@ impl PrivateKey {
         let sig: StdSignature = StdSignature::create(&signature.serialize_compact(), pub_k);
         Ok(sig)
     }
+    /// used for testing
+    /// could potentially be used to recreate the private key instead of words
     #[allow(dead_code)]
     pub(crate) fn seed(&self, passwd: &str) -> Option<Seed> {
         match &self.mnemonic {
