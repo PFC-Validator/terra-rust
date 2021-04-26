@@ -1,13 +1,13 @@
 [package]
 name = "terra-rust-api"
-version = "0.1.1"
-authors = ["Pete's Fan Club <petes-fan-club@protonmail.com>"]
+version = "0.1.2"
+authors = ["PFC-Validator <PFC-Validator@protonmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
 description="Terra Rust API"
 readme = "README.md"
-homepage = "https://github.com/petes-fan-club/terraRust/tree/master/terra-rust-api"
-repository = "https://github.com/petes-fan-club/terraRust/"
+homepage = "https://github.com/PFC-Validator/terra-rust/tree/master/terra-rust-api"
+repository = "https://github.com/PFC-Validator/terra-rust/"
 keywords = ["terra", "blockchain"]
 categories = ["api-bindings"]
 
