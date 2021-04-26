@@ -1,12 +1,12 @@
 [package]
 name = "terra-rust"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["PFC-Validator <PFC-Validator@protonmail.com>"]
 edition = "2018"
 readme = "README.md"
 homepage = "https://github.com/PFC-Validator/terra-rust/"
 repository = "https://github.com/PFC-Validator/terra-rust/"
-keywords = ["terra", "blockchain"
+keywords = ["terra", "blockchain"]
 categories = ["cli"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -18,7 +18,7 @@ exclude = [
 
 ]
 [dependencies]
-terra-rust-api = { path = "./terra-rust-api", version = "0.1.0" }
+terra-rust-api = { path = "./terra-rust-api", version = "0.1" }
 error-chain = "0.12.2"
 tokio = { version = "1.4", features = ["full"] }
 structopt = "0.3"
