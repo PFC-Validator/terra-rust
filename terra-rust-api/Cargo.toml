@@ -1,6 +1,6 @@
 [package]
 name = "terra-rust-api"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["PFC-Validator <PFC-Validator@protonmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -10,6 +10,7 @@ homepage = "https://github.com/PFC-Validator/terra-rust/tree/main/terra-rust-api
 repository = "https://github.com/PFC-Validator/terra-rust/"
 keywords = ["terra", "blockchain"]
 categories = ["api-bindings"]
+documentation = "https://docs.rs/terra-rust-api"
 
 [dependencies]
 error-chain = "0.12.4"
