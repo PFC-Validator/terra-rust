@@ -1,4 +1,4 @@
-use crate::client::client_types::terra_u64_format;
+use crate::client::client_types::{terra_f64_format, terra_u64_format};
 use crate::errors::Result;
 use regex::Regex;
 use rustc_serialize::base64::{ToBase64, STANDARD};
@@ -9,15 +9,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Coin {
     #[allow(missing_docs)]
-    #[serde(with = "terra_u64_format")]
-    pub amount: u64,
+    #[serde(with = "terra_f64_format")]
+    pub amount: f64,
     /// the coin type. in uXXX format
     pub denom: String,
 }
 
 impl Coin {
     /// Standard Coin creation
-    pub fn create(denom: &str, amount: u64) -> Coin {
+    pub fn create(denom: &str, amount: f64) -> Coin {
         Coin {
             denom: denom.to_string(),
             amount,
@@ -33,7 +33,7 @@ impl Coin {
         match RE.captures(str) {
             Some(cap) => Ok(Some(Coin::create(
                 &cap[2],
-                cap.get(1).unwrap().as_str().parse::<u64>()?,
+                cap.get(1).unwrap().as_str().parse::<f64>()?,
             ))),
             None => Ok(None),
         }

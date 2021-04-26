@@ -1,10 +1,11 @@
 use crate::errors::{ErrorKind, Result};
 
+use crate::client::tx_types::TXFeeResult;
 use crate::core_types::{Coin, Msg, StdFee};
-use num_traits::cast::ToPrimitive;
 use reqwest::header::{HeaderMap, CONTENT_TYPE, USER_AGENT};
 use reqwest::{Client, RequestBuilder};
 use serde::{Deserialize, Serialize};
+
 mod auth;
 /// Structures used in account authentication
 pub mod auth_types;
@@ -175,34 +176,41 @@ impl<'a> Terra<'_> {
             Ok(struct_response)
         }
     }
-    /*
-    pub async fn calc_fees(&self, messages: Vec<Box<dyn Msg>>) -> Result<StdFee> {
-        match self.gas_options {
-            Some(gas_opts) => {
-                if gas_opts.estimate_gas {
-                    let est = &self.tx().estimate_fee(messages).await?;
-                    let mut fees: Vec<Coin> = vec![];
-                    for fee in est.result.fees {
-                        fees.push(Coin::create(&fee.denom, fee.amount))
-                    }
+    /// Generate Fee structure, either by estimation method or hardcoded
+    ///
 
-                    let gas = *&est.result.gas as f64
-                        * self.gas_options.unwrap().gas_adjustment.unwrap_or(1.0);
-
-                    Ok(StdFee::create(fees, gas.ceil().to_u64().unwrap()))
-                } else {
-                    match &gas_opts.fees {
-                        Some(fee) => Ok(StdFee::create_single(
-                            gas_opts.fees.unwrap(),
-                            gas_opts.gas.unwrap_or(0),
-                        )),
-                        None => Ok(StdFee::create(vec![], gas_opts.gas.unwrap_or(0))),
-                    }
-                }
-            }
-            None => Err(ErrorKind::NoGasOpts.into()),
+    pub async fn calc_fees(&'a self, messages: &Vec<Box<dyn Msg>>) -> Result<StdFee> {
+        if self.gas_options.is_none() {
+            return Err(ErrorKind::NoGasOpts.into());
         }
+        let gas = self.gas_options.unwrap();
+        let fee: StdFee = match &gas.estimate_gas {
+            true => {
+                let default_gas_coin = Coin::create("ukrw", 1.0);
+                let gas_coin = match &gas.gas_price {
+                    Some(c) => c,
+                    None => &default_gas_coin,
+                };
+                let res: TXFeeResult = self
+                    .tx()
+                    .estimate_fee(messages, gas.gas_adjustment.unwrap_or(1.0), &vec![gas_coin])
+                    .await?;
+                //  let gas_amount = gas.gas_adjustment.unwrap_or(1.0) * res.result.gas as f64;
+                //  log::info!("GAS: {} -> {}", res.result.gas, gas_amount);
+                let mut fees: Vec<Coin> = vec![];
+                for fee in res.result.fees {
+                    fees.push(Coin::create(&fee.denom, fee.amount))
+                }
+                StdFee::create(fees, res.result.gas as u64)
+            }
+            false => {
+                let mut fees: Vec<Coin> = vec![];
+                for fee in gas.fees.as_ref() {
+                    fees.push(Coin::create(&fee.denom, fee.amount))
+                }
+                StdFee::create(fees, gas.gas.unwrap_or(0))
+            }
+        };
+        Ok(fee)
     }
-
-     */
 }

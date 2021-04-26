@@ -32,7 +32,9 @@ some things are used often and repeatedly, so we decided to use environment vari
 
 **TERRARUST_SEEDPHRASE** the passphrase used in combination with the 24-words to generate the private key
 
-**TERRARUST_WALLET** the default wallet to use 
+**TERRARUST_WALLET** the default wallet to use
+
+**TERRARUST_GAS_PRICES** the gas price to use. eg 50ukrw
 
 **TERRARUST_GAS_ADJUSTMENT** the gas adjustment multiplier to use
 

@@ -28,6 +28,7 @@ error_chain! {
     HexError(hex::FromHexError);
 
     ParseIntError(std::num::ParseIntError);
+    ParseFloatError(std::num::ParseFloatError);
     Secp256k1(bitcoin::secp256k1::Error);
     Bip32(bitcoin::util::bip32::Error);
     }

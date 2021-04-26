@@ -1,8 +1,8 @@
 use crate::client::core_types::Msg;
 use crate::client::tx_types::{
-    TXEstimate, TXEstimate2, TXFeeResult, TXResultAsync, TXResultBlock, TXResultSync,
+    TXEstimate, TXFeeResult, TXResultAsync, TXResultBlock, TXResultSync,
 };
-use crate::core_types::{StdSignMsg, StdSignature, StdTx};
+use crate::core_types::{Coin, StdSignMsg, StdSignature, StdTx};
 use crate::errors::Result;
 use crate::Terra;
 
@@ -13,6 +13,8 @@ impl TX<'_> {
     pub fn create<'a>(terra: &'a Terra) -> TX<'a> {
         TX { terra }
     }
+    /// perform an Async submission to the blockchain. This returns the TXHash
+    /// This is not guaranteed to successfully create a transaction record, due to numerous factors
     pub async fn broadcast_async(
         &self,
         std_sign_msg: &StdSignMsg,
@@ -27,6 +29,8 @@ impl TX<'_> {
             .await?;
         Ok(response)
     }
+    /// perform a sync submission to the blockchain. This will return more validation logic than async
+    /// but you wait. It is still not guaranteed to create a blockchain transaction
     pub async fn broadcast_sync(
         &self,
         std_sign_msg: &StdSignMsg,
@@ -41,6 +45,8 @@ impl TX<'_> {
             .await?;
         Ok(response)
     }
+    /// perform a 'blocking' submission to the blockchain. This will only return once the transaction
+    /// is executed on the blockchain. This is great for debugging, but not recommended to be used otherwise
     pub async fn broadcast_block(
         &self,
         std_sign_msg: &StdSignMsg,
@@ -55,6 +61,7 @@ impl TX<'_> {
             .await?;
         Ok(response)
     }
+    /// get TX result
     pub async fn get(&self, hash: &str) -> Result<TXResultBlock> {
         let resp = self
             .terra
@@ -62,13 +69,19 @@ impl TX<'_> {
             .await?;
         Ok(resp)
     }
-    pub async fn estimate_fee(&self, msgs: Vec<Box<dyn Msg>>) -> Result<TXFeeResult> {
-        let tx_est: TXEstimate = TXEstimate {
-            tx: TXEstimate2 { msgs },
-        };
+    /// Estimate the StdFee structure based on the gas used
+    pub async fn estimate_fee(
+        &self,
+        msgs: &Vec<Box<dyn Msg>>,
+        gas_adjustment: f64,
+        gas_prices: &Vec<&Coin>,
+    ) -> Result<TXFeeResult> {
+        let tx_est = TXEstimate::create(msgs, gas_adjustment, gas_prices);
+
+        log::info!("#Messages = {}", serde_json::to_string(&tx_est)?);
         let resp = self
             .terra
-            .post_cmd::<TXEstimate, TXFeeResult>("/txs/estimate", &tx_est)
+            .post_cmd::<TXEstimate, TXFeeResult>("/txs/estimate_fee", &tx_est)
             .await?;
         Ok(resp)
     }

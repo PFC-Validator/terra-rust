@@ -1,4 +1,4 @@
-use crate::client::client_types::terra_u64_format;
+use crate::client::client_types::{terra_f64_format, terra_u64_format};
 
 use crate::core_types::{Coin, Msg};
 use serde::{Deserialize, Serialize};
@@ -10,14 +10,16 @@ block: Wait for the tx to pass/fail CheckTx, DeliverTx, and be committed in a bl
 
 It's best to always use sync.
 */
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct TXResultAsync {
+    /// height of the chain when submitted
     #[serde(with = "terra_u64_format")]
     pub height: u64,
+    /// Transaction hash of the transaction
     pub txhash: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct TXResultSync {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
@@ -26,7 +28,7 @@ pub struct TXResultSync {
     pub raw_log: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct TXResultBlockAttribute {
     pub key: String,
     pub value: String,
@@ -59,14 +61,29 @@ pub struct TXResultBlock {
 }
 
 #[derive(Serialize)]
-pub struct TXEstimate2 {
-    pub msgs: Vec<Box<dyn Msg>>,
+pub struct TXEstimate2<'a> {
+    pub msg: &'a Vec<Box<dyn Msg>>,
 }
 #[derive(Serialize)]
-pub struct TXEstimate {
-    pub tx: TXEstimate2,
+pub struct TXEstimate<'a> {
+    pub tx: TXEstimate2<'a>,
+    #[serde(with = "terra_f64_format")]
+    pub gas_adjustment: f64,
+    pub gas_prices: &'a Vec<&'a Coin>,
 }
-
+impl<'a> TXEstimate<'a> {
+    pub fn create(
+        msg: &'a Vec<Box<dyn Msg>>,
+        gas_adjustment: f64,
+        gas_prices: &'a Vec<&'a Coin>,
+    ) -> TXEstimate<'a> {
+        TXEstimate {
+            tx: TXEstimate2 { msg },
+            gas_adjustment,
+            gas_prices,
+        }
+    }
+}
 #[derive(Deserialize, Serialize, Debug)]
 pub struct TxFeeBlock {
     pub fees: Vec<Coin>,

@@ -7,7 +7,7 @@ use bitcoin::secp256k1::Secp256k1;
 use terra_rust_api::auth_types::AuthAccountResult;
 use terra_rust_api::messages::MsgSend;
 
-use terra_rust_api::core_types::{Coin, Msg, StdFee, StdSignMsg, StdSignature};
+use terra_rust_api::core_types::{Coin, Msg, StdSignMsg, StdSignature};
 
 #[derive(StructOpt)]
 pub enum BankCommand {
@@ -18,7 +18,7 @@ pub enum BankCommand {
         /// the to account in 'terra' format
         to: String,
         /// the amount
-        amount: u64,
+        amount: f64,
         /// denom
         denom: String,
     },
@@ -45,7 +45,9 @@ pub async fn bank_cmd_parse(
             let send: MsgSend = MsgSend::create(from_account, to, vec![coin]);
 
             let messages: Vec<Box<dyn Msg>> = vec![Box::new(send)];
-            let std_fee = StdFee::create_single(Coin::create("uluna", 233471), 1156472);
+            let std_fee = terra.calc_fees(&messages).await?;
+            log::info!("Fees:{:#?}", std_fee);
+            //let std_fee = StdFee::create_single(Coin::create("uluna", 233471), 1156472);
 
             let auth_result: AuthAccountResult =
                 terra.auth().account(&from_public_key.account()?).await?;
@@ -72,6 +74,7 @@ pub async fn bank_cmd_parse(
             // log::info!("{:#?}", resp);
             match resp.code {
                 Some(code) => {
+                    log::error!("{}", serde_json::to_string(&resp)?);
                     eprintln!("Transaction returned a {} {}", code, resp.txhash)
                 }
                 None => {

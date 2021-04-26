@@ -84,9 +84,10 @@ struct Cli {
     gas: String,
     #[structopt(
         name = "gas-prices",
+        env = "TERRARUST_GAS_PRICES",
         default_value = "",
         long = "gas-prices",
-        help = "the gas price to use to calculate fee. format is NNNtoken eg. 1000uluna"
+        help = "the gas price to use to calculate fee. Format is NNNtoken eg. 1000uluna. note we only support a single price for now"
     )]
     gas_price: String,
     #[structopt(
@@ -151,7 +152,7 @@ enum Market {
         #[structopt(name = "denom", help = "token symbol. remember we are uXXX not XXX")]
         denom: String,
         #[structopt(name = "amount", help = "the amount. remember we are uXXX not XXX")]
-        amount: u64,
+        amount: f64,
         #[structopt(name = "ask", help = "what to swap the amount into")]
         ask: String,
     },
