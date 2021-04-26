@@ -1,13 +1,13 @@
 [package]
 name = "terra-rust"
-version = "0.1.0"
-authors = ["Pete's Fan Club <petes-fan-club@protonmail.com>"]
+version = "0.1.1"
+authors = ["PFC-Validator <PFC-Validator@protonmail.com>"]
 edition = "2018"
 readme = "README.md"
-homepage = "https://github.com/petes-fan-club/terraRust/"
-repository = "https://github.com/petes-fan-club/terraRust/"
-keywords = ["terra", "blockchain"]
-categories = ["cli"]
+homepage = "https://github.com/PFC-Validator/terra-rust/"
+repository = "https://github.com/PFC-Validator/terra-rust/"
+keywords = ["terra", "blockchain"
+categ-rries = ["cli"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
