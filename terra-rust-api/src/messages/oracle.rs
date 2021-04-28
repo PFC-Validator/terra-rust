@@ -43,28 +43,22 @@ impl MsgAggregateExchangeRatePreVote {
 /// the parameters to the message
 pub struct MsgAggregateExchangeRateVote2 {
     pub(crate) salt: String,
-    pub(crate) exchange_rates: Vec<Coin>,
+    pub(crate) exchange_rates: String,
     pub(crate) feeder: String,
     pub(crate) validator: String,
 }
 impl MsgAggregateExchangeRateVote2 {
     fn generate_hash(&self) -> String {
-        let coins = self
-            .exchange_rates
-            .iter()
-            .map(|f| f.to_string())
-            .collect::<Vec<String>>()
-            .join(",");
-        generate_hash(&self.salt, coins, &self.validator)
+        generate_hash(&self.salt, &self.exchange_rates, &self.validator)
     }
 }
 /// put out into a separate function to facilitate better testing
-fn generate_hash<'a>(salt: &'a str, exchange_string: String, validator: &'a str) -> String {
+fn generate_hash<'a>(salt: &'a str, exchange_string: &'a str, validator: &'a str) -> String {
     let mut sha = Sha256::new();
     let mut to_hash: String = String::new();
     to_hash = to_hash.add(salt);
     to_hash = to_hash.add(":");
-    to_hash = to_hash.add(&exchange_string);
+    to_hash = to_hash.add(exchange_string);
     to_hash = to_hash.add(":");
     to_hash = to_hash.add(validator);
     sha.input_str(&to_hash);
@@ -91,10 +85,14 @@ impl MsgAggregateExchangeRateVote {
             new_rates.push(rate);
         }
         new_rates.sort_by(|a, b| a.denom.cmp(&b.denom));
-
+        let coins = new_rates
+            .iter()
+            .map(|f| f.to_string())
+            .collect::<Vec<String>>()
+            .join(",");
         let msg = MsgAggregateExchangeRateVote2 {
             salt,
-            exchange_rates: new_rates,
+            exchange_rates: coins,
             feeder,
             validator,
         };
@@ -134,10 +132,7 @@ mod tst {
             .join(",");
         assert_eq!(coins, exchange_rate_str);
 
-        assert_eq!(
-            generate_hash(&salt, exchange_rate_str.parse().unwrap(), &validator),
-            hash
-        );
+        assert_eq!(generate_hash(&salt, exchange_rate_str, &validator), hash);
         let vote_1 = MsgAggregateExchangeRateVote::create(salt, exchange_rates, feeder, validator);
 
         assert_eq!(vote_1.generate_hash(), hash);
@@ -183,18 +178,12 @@ mod tst {
         let salt = "df59";
         let validator = "terravaloper1usws7c2c6cs7nuc8vma9qzaky5pkgvm2ujy8ny";
         let hash = "36681b69da96623a6ae12c2a51448b7426fdd64e";
-        assert_eq!(
-            hash,
-            generate_hash(salt, exchange_rates.parse().unwrap(), validator)
-        );
+        assert_eq!(hash, generate_hash(salt, exchange_rates, validator));
         let exchange_rates2="22.548222362821767308uaud,21.653297230216244188ucad,15.972468127589880034uchf,113.208029274598674692ucny,14.454986380997906048ueur,12.58731653903855345ugbp,135.522792907175522923uhkd,1300.676405771192471765uinr,1901.501902950678788445ujpy,20358.286256112132944846ukrw,49766.806079087327983387umnt,12.159308866922868479usdr,23.151324082621141584usgd,0.0uthb,17.451040085807700841uusd";
         let salt2 = "6dd4";
         let validator2 = "terravaloper1usws7c2c6cs7nuc8vma9qzaky5pkgvm2ujy8ny";
         let hash2 = "54a849b1b3b510f5f0b7c5405ed2cc74cd283251";
-        assert_eq!(
-            hash2,
-            generate_hash(salt2, exchange_rates2.parse().unwrap(), validator2)
-        );
+        assert_eq!(hash2, generate_hash(salt2, exchange_rates2, validator2));
         /*
         this was taken from a transaction dump. the others were generated directly from nodejs code
 
