@@ -106,6 +106,7 @@ struct Cli {
 impl Cli {
     pub fn gas_opts(&self) -> Result<GasOptions> {
         let fees = Coin::parse(&self.fees)?;
+
         let gas_str = &self.gas;
         let (estimate_gas, gas) = if gas_str == "auto" {
             (true, None)

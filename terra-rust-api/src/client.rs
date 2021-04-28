@@ -206,37 +206,45 @@ impl<'a> Terra<'_> {
             return Err(ErrorKind::NoGasOpts.into());
         }
         let gas = self.gas_options.unwrap();
-        let fee: StdFee = match &gas.estimate_gas {
-            true => {
-                let default_gas_coin = Coin::create("ukrw", dec!(1.0));
-                let gas_coin = match &gas.gas_price {
-                    Some(c) => c,
-                    None => &default_gas_coin,
-                };
-                let res: TxFeeResult = self
-                    .tx()
-                    .estimate_fee(messages, gas.gas_adjustment.unwrap_or(1.0), &[gas_coin])
-                    .await?;
-                //  let gas_amount = gas.gas_adjustment.unwrap_or(1.0) * res.result.gas as f64;
-                //  log::info!("GAS: {} -> {}", res.result.gas, gas_amount);
-                let mut fees: Vec<Coin> = vec![];
-                for fee in res.result.fees {
-                    fees.push(Coin::create(&fee.denom, fee.amount))
-                }
-                StdFee::create(fees, res.result.gas as u64)
+        match &gas.fees {
+            Some(f) => {
+                let fee_coin: Coin = Coin::create(&f.denom, f.amount);
+                Ok(StdFee::create(vec![fee_coin], gas.gas.unwrap_or(0)))
             }
-            false => {
-                let mut fees: Vec<Coin> = vec![];
-                match &gas.fees {
-                    Some(fee) => {
-                        fees.push(Coin::create(&fee.denom, fee.amount));
+            None => {
+                let fee: StdFee = match &gas.estimate_gas {
+                    true => {
+                        let default_gas_coin = Coin::create("ukrw", dec!(1.0));
+                        let gas_coin = match &gas.gas_price {
+                            Some(c) => c,
+                            None => &default_gas_coin,
+                        };
+                        let res: TxFeeResult = self
+                            .tx()
+                            .estimate_fee(messages, gas.gas_adjustment.unwrap_or(1.0), &[gas_coin])
+                            .await?;
+                        //  let gas_amount = gas.gas_adjustment.unwrap_or(1.0) * res.result.gas as f64;
+                        //  log::info!("GAS: {} -> {}", res.result.gas, gas_amount);
+                        let mut fees: Vec<Coin> = vec![];
+                        for fee in res.result.fees {
+                            fees.push(Coin::create(&fee.denom, fee.amount))
+                        }
+                        StdFee::create(fees, res.result.gas as u64)
                     }
-                    None => {}
-                }
+                    false => {
+                        let mut fees: Vec<Coin> = vec![];
+                        match &gas.fees {
+                            Some(fee) => {
+                                fees.push(Coin::create(&fee.denom, fee.amount));
+                            }
+                            None => {}
+                        }
 
-                StdFee::create(fees, gas.gas.unwrap_or(0))
+                        StdFee::create(fees, gas.gas.unwrap_or(0))
+                    }
+                };
+                Ok(fee)
             }
-        };
-        Ok(fee)
+        }
     }
 }
