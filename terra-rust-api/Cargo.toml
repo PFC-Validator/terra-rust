@@ -1,6 +1,6 @@
 [package]
 name = "terra-rust-api"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["PFC-Validator <PFC-Validator@protonmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -31,4 +31,6 @@ bitcoin="0.26.0"
 regex="1"
 lazy_static="1.4"
 num-traits="0.2"
+rust_decimal="1.12.2"
+rust_decimal_macros="1.12.2"
 # https://crates.io/crates/prost-amino

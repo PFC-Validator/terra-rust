@@ -31,6 +31,7 @@ error_chain! {
     ParseFloatError(std::num::ParseFloatError);
     Secp256k1(bitcoin::secp256k1::Error);
     Bip32(bitcoin::util::bip32::Error);
+        Decimal(rust_decimal::Error);
     }
     errors {
         Terra(err:String) {
@@ -56,6 +57,10 @@ error_chain! {
         NoGasOpts {
             description("Can't call Transactions without some gas rules")
             display("Can't call transactions without some gas rules")
+        }
+        CoinParseErr(err:String) {
+            display("Can't parse {} into a coin", err)
+            description("coin parse error")
         }
     }
 }

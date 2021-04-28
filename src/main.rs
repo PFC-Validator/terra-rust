@@ -24,6 +24,7 @@ use crate::keys::{key_cmd_parse, KeysCommand};
 use crate::oracle::{oracle_cmd_parse, OracleCommand};
 use crate::tendermint::{block_cmd_parse, BlockCommand};
 use crate::validator::{validator_cmd_parse, ValidatorCommand};
+use rust_decimal::Decimal;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::{GasOptions, Terra};
 
@@ -152,7 +153,7 @@ enum Market {
         #[structopt(name = "denom", help = "token symbol. remember we are uXXX not XXX")]
         denom: String,
         #[structopt(name = "amount", help = "the amount. remember we are uXXX not XXX")]
-        amount: f64,
+        amount: Decimal,
         #[structopt(name = "ask", help = "what to swap the amount into")]
         ask: String,
     },

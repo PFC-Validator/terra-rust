@@ -28,7 +28,7 @@ pub mod tendermint_types;
 mod tx;
 /// Structures used for sending transactions to LCD
 pub mod tx_types;
-
+use rust_decimal_macros::dec;
 const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 
 /// When Submitting transactions you need to either submit gas or a fee to the validator
@@ -208,7 +208,7 @@ impl<'a> Terra<'_> {
         let gas = self.gas_options.unwrap();
         let fee: StdFee = match &gas.estimate_gas {
             true => {
-                let default_gas_coin = Coin::create("ukrw", 1.0);
+                let default_gas_coin = Coin::create("ukrw", dec!(1.0));
                 let gas_coin = match &gas.gas_price {
                     Some(c) => c,
                     None => &default_gas_coin,

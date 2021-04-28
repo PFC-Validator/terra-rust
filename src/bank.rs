@@ -7,6 +7,7 @@ use bitcoin::secp256k1::Secp256k1;
 use terra_rust_api::auth_types::AuthAccountResult;
 use terra_rust_api::messages::MsgSend;
 
+use rust_decimal::Decimal;
 use terra_rust_api::core_types::{Coin, Msg, StdSignMsg, StdSignature};
 
 #[derive(StructOpt)]
@@ -18,7 +19,7 @@ pub enum BankCommand {
         /// the to account in 'terra' format
         to: String,
         /// the amount
-        amount: f64,
+        amount: Decimal,
         /// denom
         denom: String,
     },

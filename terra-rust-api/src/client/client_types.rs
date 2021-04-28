@@ -148,3 +148,48 @@ pub mod terra_f64_format {
         }
     }
 }
+
+/// Convert a Decimal number (which is sent as a string) into a f64 rust structure
+pub mod terra_decimal_format {
+    use rust_decimal::Decimal;
+    use serde::{self, Deserialize, Deserializer, Serializer};
+
+    // convert a number in string format into a regular u64
+    //
+    //    fn serialize<S>(&T, S) -> Result<S::Ok, S::Error>
+    //    where
+    //        S: Serializer
+    //
+    // although it may also be generic over the input types T.
+    #[allow(missing_docs)]
+    pub fn serialize<S>(val: &Decimal, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        //  let s = format!("{}", val);
+        serializer.serialize_str(&val.to_string())
+    }
+
+    // The signature of a deserialize_with function must follow the pattern:
+    //
+    //    fn deserialize<'de, D>(D) -> Result<T, D::Error>
+    //    where
+    //        D: Deserializer<'de>
+    //
+    // although it may also be generic over the output types T.
+    #[allow(missing_docs)]
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Decimal, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: String = String::deserialize(deserializer)?;
+
+        match s.parse::<Decimal>() {
+            Err(_e) => {
+                eprintln!("Decimal Fail {} {:#?}", s, _e);
+                Err(serde::de::Error::custom(_e))
+            }
+            Ok(val) => Ok(val),
+        }
+    }
+}

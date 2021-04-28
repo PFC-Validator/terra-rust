@@ -80,6 +80,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28b2cd92db5cbd74e8e5028f7e27dd7aa3090e89e4f2a197cc7c8dfb69c7063b"
 
 [[package]]
+name = "arrayvec"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
+
+[[package]]
 name = "async-trait"
 version = "0.1.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1576,6 +1582,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "rust_decimal"
+version = "1.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d64bd27418c091ebd539b00f50ad059fc41421c87d5033c217cd76c7506d0d71"
+dependencies = [
+ "arrayvec",
+ "num-traits",
+ "serde",
+]
+
+[[package]]
+name = "rust_decimal_macros"
+version = "1.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81dbf822f50d527a9ba351f392aadca0ac47375c3bfad5d48ecfad53cc067833"
+dependencies = [
+ "quote",
+ "rust_decimal",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1970,6 +1997,8 @@ dependencies = [
  "error-chain",
  "keyring",
  "log",
+ "rust_decimal",
+ "rust_decimal_macros",
  "serde",
  "serde_json",
  "structopt",
@@ -1979,7 +2008,7 @@ dependencies = [
 
 [[package]]
 name = "terra-rust-api"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "bitcoin",
  "chrono",
@@ -1994,6 +2023,8 @@ dependencies = [
  "regex",
  "reqwest",
  "rust-crypto",
+ "rust_decimal",
+ "rust_decimal_macros",
  "rustc-serialize",
  "serde",
  "serde_json",
