@@ -10,15 +10,15 @@ use crate::Terra;
 pub struct TX<'a> {
     terra: &'a Terra<'a>,
 }
-impl TX<'_> {
-    pub fn create<'a>(terra: &'a Terra) -> TX<'a> {
+impl<'a> TX<'a> {
+    pub fn create(terra: &'a Terra) -> TX<'a> {
         TX { terra }
     }
     /// perform an Async submission to the blockchain. This returns the TXHash
     /// This is not guaranteed to successfully create a transaction record, due to numerous factors
     pub async fn broadcast_async(
         &self,
-        std_sign_msg: &StdSignMsg,
+        std_sign_msg: &'a StdSignMsg<'a>,
         sigs: &[StdSignature],
     ) -> Result<TXResultAsync> {
         let std_tx: StdTx = StdTx::from_StdSignMsg(&std_sign_msg, &sigs, "async");
@@ -34,7 +34,7 @@ impl TX<'_> {
     /// but you wait. It is still not guaranteed to create a blockchain transaction
     pub async fn broadcast_sync(
         &self,
-        std_sign_msg: &StdSignMsg,
+        std_sign_msg: &'a StdSignMsg<'a>,
         sigs: &[StdSignature],
     ) -> Result<TXResultSync> {
         let std_tx: StdTx = StdTx::from_StdSignMsg(&std_sign_msg, &sigs, "sync");
@@ -50,7 +50,7 @@ impl TX<'_> {
     /// is executed on the blockchain. This is great for debugging, but not recommended to be used otherwise
     pub async fn broadcast_block(
         &self,
-        std_sign_msg: &StdSignMsg,
+        std_sign_msg: &'a StdSignMsg<'a>,
         sigs: &[StdSignature],
     ) -> Result<TXResultBlock> {
         log::warn!("Broadcast_block is not recommended to be used in production situations");

@@ -4,11 +4,11 @@ use terra_rust_api::Terra;
 use crate::errors::Result;
 use crate::keys::get_private_key;
 use bitcoin::secp256k1::Secp256k1;
-use terra_rust_api::auth_types::AuthAccountResult;
 use terra_rust_api::messages::MsgSend;
 
+use crate::{NAME, VERSION};
 use rust_decimal::Decimal;
-use terra_rust_api::core_types::{Coin, Msg, StdSignMsg, StdSignature};
+use terra_rust_api::core_types::{Coin, Msg};
 
 #[derive(StructOpt)]
 pub enum BankCommand {
@@ -46,27 +46,18 @@ pub async fn bank_cmd_parse(
             let send: MsgSend = MsgSend::create(from_account, to, vec![coin]);
 
             let messages: Vec<Box<dyn Msg>> = vec![Box::new(send)];
-            let std_fee = terra.calc_fees(&messages).await?;
-            log::info!("Fees:{:#?}", std_fee);
-            //let std_fee = StdFee::create_single(Coin::create("uluna", 233471), 1156472);
-
-            let auth_result: AuthAccountResult =
-                terra.auth().account(&from_public_key.account()?).await?;
-            let account_number = auth_result.result.value.account_number;
-
-            let std_sign_msg = StdSignMsg {
-                chain_id: terra.chain_id.to_string(),
-                account_number,
-                sequence: auth_result.result.value.sequence,
-                fee: std_fee,
-                msgs: messages,
-                memo: "".to_string(),
-            };
-
-            let js = serde_json::to_string(&std_sign_msg)?;
-
-            let sig = from_key.sign(&secp, &js)?;
-            let sigs: Vec<StdSignature> = vec![sig];
+            let (std_sign_msg, sigs) = terra
+                .generate_transaction_to_broadcast(
+                    &secp,
+                    &from_key,
+                    &messages,
+                    Some(format!(
+                        "PFC-{}/{}",
+                        NAME.unwrap_or("TERRARUST"),
+                        VERSION.unwrap_or("DEV")
+                    )),
+                )
+                .await?;
 
             let resp = terra.tx().broadcast_sync(&std_sign_msg, &sigs).await?;
             match resp.code {

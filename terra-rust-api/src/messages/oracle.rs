@@ -72,6 +72,7 @@ pub struct MsgAggregateExchangeRateVote {
     stype: String,
     value: MsgAggregateExchangeRateVote2,
 }
+impl Msg for MsgAggregateExchangeRateVote {}
 impl MsgAggregateExchangeRateVote {
     /// Create a pre vote message
     pub fn create(

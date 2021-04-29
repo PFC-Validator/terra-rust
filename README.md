@@ -26,15 +26,15 @@ Do you own research
 # Environment Variables
 some things are used often and repeatedly, so we decided to use environment variables.
 
-**TERRARUST_LCD** sets the LCD URL. eg https://tequila-lcd.terra.dev 
+**TERRARUST_LCD** sets the LCD URL. e.g. https://tequila-lcd.terra.dev 
 
-**TERRARUST_CHAIN** set the CHAIN to use eg. tequila-0004
+**TERRARUST_CHAIN** set the CHAIN to use e.g. tequila-0004
 
-**TERRARUST_SEEDPHRASE** the passphrase used in combination with the 24-words to generate the private key
+**TERRARUST_SEED_PHRASE** the passphrase used in combination with the 24-words to generate the private key
 
 **TERRARUST_WALLET** the default wallet to use
 
-**TERRARUST_GAS_PRICES** the gas price to use. eg 50ukrw
+**TERRARUST_GAS_PRICES** the gas price to use. e.g. 50ukrw
 
 **TERRARUST_GAS_ADJUSTMENT** the gas adjustment multiplier to use
 

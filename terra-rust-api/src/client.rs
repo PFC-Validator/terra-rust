@@ -1,7 +1,7 @@
 use crate::errors::{ErrorKind, Result};
 
 use crate::client::tx_types::TxFeeResult;
-use crate::core_types::{Coin, Msg, StdFee};
+use crate::core_types::{Coin, Msg, StdFee, StdSignMsg, StdSignature};
 use reqwest::header::{HeaderMap, CONTENT_TYPE, USER_AGENT};
 use reqwest::{Client, RequestBuilder};
 use serde::{Deserialize, Serialize};
@@ -28,8 +28,15 @@ pub mod tendermint_types;
 mod tx;
 /// Structures used for sending transactions to LCD
 pub mod tx_types;
+use crate::PrivateKey;
+use bitcoin::secp256k1::{All, Secp256k1};
+use futures::TryFutureExt;
 use rust_decimal_macros::dec;
+
+/// Version # of package sent out on requests to help with debugging
 const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
+/// name of package
+const NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
 
 /// When Submitting transactions you need to either submit gas or a fee to the validator
 /// This structure is used to determine what your preferences are by default
@@ -81,7 +88,7 @@ pub struct Terra<'a> {
     /// Gas Options used to help with gas/fee generation of transactions
     pub gas_options: Option<&'a GasOptions>,
 }
-impl<'a> Terra<'_> {
+impl<'a> Terra<'a> {
     /// Create a FULL client interface
     pub async fn lcd_client(
         url: &'a str,
@@ -136,9 +143,13 @@ impl<'a> Terra<'_> {
 
         headers.insert(
             USER_AGENT,
-            format!("PFC-TerraRust/{}", VERSION.unwrap_or("-?-"))
-                .parse()
-                .unwrap(),
+            format!(
+                "PFC-{}/{}",
+                NAME.unwrap_or("terra-rust-api"),
+                VERSION.unwrap_or("-?-")
+            )
+            .parse()
+            .unwrap(),
         );
         headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
         headers
@@ -201,7 +212,7 @@ impl<'a> Terra<'_> {
     /// Generate Fee structure, either by estimation method or hardcoded
     ///
 
-    pub async fn calc_fees(&'a self, messages: &[Box<dyn Msg>]) -> Result<StdFee> {
+    pub async fn calc_fees(&self, messages: &[Box<dyn Msg>]) -> Result<StdFee> {
         if self.gas_options.is_none() {
             return Err(ErrorKind::NoGasOpts.into());
         }
@@ -246,5 +257,67 @@ impl<'a> Terra<'_> {
                 Ok(fee)
             }
         }
+    }
+    /// helper function to generate a 'StdSignMsg' & 'Signature' blocks to be used to broadcast a transaction
+
+    pub fn generate_transaction_to_broadcast_fees(
+        &self,
+        account_number: u64,
+        sequence: u64,
+        fee: StdFee,
+        secp: &Secp256k1<All>,
+        from: &'a PrivateKey,
+        messages: &'a Vec<Box<dyn Msg>>,
+        memo: Option<String>,
+    ) -> Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
+        let std_sign_msg = StdSignMsg {
+            chain_id: String::from(self.chain_id),
+            account_number,
+            sequence,
+            fee,
+            msgs: messages,
+            memo: memo.unwrap_or(format!(
+                "PFC-{}/{}",
+                NAME.unwrap_or("TERRA-RUST"),
+                VERSION.unwrap_or("dev")
+            )),
+        };
+        let js = serde_json::to_string(&std_sign_msg)?;
+        let sig = from.sign(&secp, &js)?;
+        let sigs: Vec<StdSignature> = vec![sig];
+
+        Ok((std_sign_msg, sigs))
+    }
+
+    /// helper function to generate a 'StdSignMsg' & 'Signature' blocks to be used to broadcast a transaction
+    /// This version calculates fees, and obtains account# and sequence# as well
+
+    pub async fn generate_transaction_to_broadcast(
+        &self,
+        secp: &Secp256k1<All>,
+        from: &'a PrivateKey,
+        messages: &'a Vec<Box<dyn Msg>>,
+        memo: Option<String>,
+    ) -> Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
+        let from_public = from.public_key(secp);
+        let from_account = from_public.account()?;
+
+        self.auth()
+            .account(&from_account)
+            .map_ok(move |auth_result| {
+                self.calc_fees(&messages).map_ok(move |std_fee| {
+                    self.generate_transaction_to_broadcast_fees(
+                        auth_result.result.value.account_number,
+                        auth_result.result.value.sequence,
+                        std_fee,
+                        secp,
+                        from,
+                        messages,
+                        memo,
+                    )
+                })
+            })
+            .await?
+            .await?
     }
 }

@@ -47,24 +47,14 @@ let from_account = from_public_key.account()?;
 let send: MsgSend = MsgSend::create(from_account, "terra1usws7c2c6cs7nuc8vma9qzaky5pkgvm2uag6rh", vec![coin]);
 // generate the transaction & calc fees
 let messages: Vec<Box<dyn Msg>> = vec![Box::new(send)];
-let std_fee = terra.calc_fees(&messages).await?;
-let auth_result: AuthAccountResult =
-               terra.auth().account(&from_public_key.account()?).await?;
-let account_number = auth_result.result.value.account_number;
-let std_sign_msg = StdSignMsg {
-                chain_id: terra.chain_id.to_string(),
-                account_number,
-                sequence: auth_result.result.value.sequence,
-                fee: std_fee,
-                msgs: messages,
-                memo: "Luna to the Moon!".to_string(),
- };
-
-// Sign it
- let js = serde_json::to_string(&std_sign_msg)?;
- let sig = from_key.sign(&secp, &js)?;
- let sigs: Vec<StdSignature> = vec![sig];
-
+let (std_sign_msg, sigs) = terra
+                .generate_transaction_to_broadcast(
+                    &secp,
+                    &from_key,
+                    &messages,
+                    None
+                )
+                .await?;
 // send it out
  let resp = terra.tx().broadcast_sync(&std_sign_msg, &sigs).await?;
  match resp.code {

@@ -28,6 +28,11 @@ use rust_decimal::Decimal;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::{GasOptions, Terra};
 
+/// VERSION number of package
+pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
+/// NAME of package
+pub const NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
+
 #[derive(StructOpt)]
 struct Cli {
     #[structopt(
@@ -36,7 +41,7 @@ struct Cli {
         default_value = "https://tequila-lcd.terra.dev",
         short,
         long = "lcd-client-url",
-        help = "https://lcd.terra.dev is mainnet"
+        help = "https://lcd.terra.dev is main-net"
     )]
     // Terra cli Client daemon
     lcd: String,
@@ -46,7 +51,7 @@ struct Cli {
         default_value = "tequila-0004",
         short,
         long = "chain",
-        help = "tequilla-0004 is testnet, columbus-4 is mainnet"
+        help = "tequila-0004 is testnet, columbus-4 is main-net"
     )]
     chain_id: String,
     // Wallet name
@@ -61,7 +66,7 @@ struct Cli {
     wallet: String,
     #[structopt(
         name = "seed",
-        env = "TERRARUST_SEEDPHRASE",
+        env = "TERRARUST_SEED_PHRASE",
         default_value = "",
         short,
         long = "seed",

@@ -121,7 +121,7 @@ impl StdFee {
 /// The messages component of the transaction that gets signed.
 /// Note: The ordering is important
 #[derive(Serialize)]
-pub struct StdSignMsg {
+pub struct StdSignMsg<'a> {
     #[serde(with = "terra_u64_format")]
     /// from auth::account response
     pub account_number: u64,
@@ -133,7 +133,7 @@ pub struct StdSignMsg {
     /// the note you want to attach to the transaction.
     pub memo: String,
     /// the messages in the transaction
-    pub msgs: Vec<Box<dyn Msg>>,
+    pub msgs: &'a Vec<Box<dyn Msg>>,
     /// from auth::account response
     #[serde(with = "terra_u64_format")]
     pub sequence: u64,
