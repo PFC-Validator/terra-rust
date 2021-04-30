@@ -114,6 +114,31 @@ impl MsgAggregateExchangeRateVote {
     }
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+
+pub struct MsgDelegateFeedConsent2 {
+    pub(crate) operator: String,
+    pub(crate) delegate: String,
+}
+/// used in feeder oracle
+#[derive(Deserialize, Serialize, Debug)]
+pub struct MsgDelegateFeedConsent {
+    #[serde(rename = "type")]
+    stype: String,
+    value: MsgDelegateFeedConsent2,
+}
+impl Msg for MsgDelegateFeedConsent {}
+impl MsgDelegateFeedConsent {
+    /// Create a pre vote message
+    pub fn create(operator: String, delegate: String) -> MsgDelegateFeedConsent {
+        let msg = MsgDelegateFeedConsent2 { operator, delegate };
+        MsgDelegateFeedConsent {
+            stype: String::from("oracle/MsgDelegateFeedConsent"),
+            value: msg,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tst {
     use super::*;
