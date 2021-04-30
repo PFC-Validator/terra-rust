@@ -42,14 +42,15 @@ impl MsgAggregateExchangeRatePreVote {
 #[derive(Deserialize, Serialize, Debug)]
 /// the parameters to the message
 pub struct MsgAggregateExchangeRateVote2 {
+    /// The salt is used in the next round's 'PreVote'
     pub(crate) salt: String,
     pub(crate) exchange_rates: String,
     pub(crate) feeder: String,
     pub(crate) validator: String,
 }
 impl MsgAggregateExchangeRateVote2 {
-    fn generate_hash(&self) -> String {
-        generate_hash(&self.salt, &self.exchange_rates, &self.validator)
+    fn generate_hash(&self, previous_salt: &str) -> String {
+        generate_hash(previous_salt, &self.exchange_rates, &self.validator)
     }
 }
 /// put out into a separate function to facilitate better testing
@@ -74,7 +75,7 @@ pub struct MsgAggregateExchangeRateVote {
 }
 impl Msg for MsgAggregateExchangeRateVote {}
 impl MsgAggregateExchangeRateVote {
-    /// Create a pre vote message
+    /// Create a vote message
     pub fn create(
         salt: String,
         exchange_rates: Vec<Coin>,
@@ -102,12 +103,14 @@ impl MsgAggregateExchangeRateVote {
             value: msg,
         }
     }
-    fn generate_hash(&self) -> String {
-        self.value.generate_hash()
+    fn generate_hash(&self, previous_salt: &str) -> String {
+        self.value.generate_hash(previous_salt)
     }
-    pub fn gen_pre_vote(&self) -> MsgAggregateExchangeRatePreVote {
+    /// Pre-Vote messages are like a 'linked list'.
+    /// they use the salt of the previous 'RateVote' to hash the current prices, to ensure continuity
+    pub fn gen_pre_vote(&self, previous_salt: &str) -> MsgAggregateExchangeRatePreVote {
         MsgAggregateExchangeRatePreVote::create(
-            String::from(self.generate_hash()),
+            String::from(self.generate_hash(previous_salt)),
             self.value.feeder.clone(),
             self.value.validator.clone(),
         )
