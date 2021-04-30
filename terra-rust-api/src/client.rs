@@ -87,6 +87,7 @@ pub struct Terra<'a> {
     pub chain_id: &'a str,
     /// Gas Options used to help with gas/fee generation of transactions
     pub gas_options: Option<&'a GasOptions>,
+    pub debug: bool,
 }
 impl<'a> Terra<'a> {
     /// Create a FULL client interface
@@ -94,14 +95,25 @@ impl<'a> Terra<'a> {
         url: &'a str,
         chain_id: &'a str,
         gas_options: &'a GasOptions,
+        debug: Option<bool>,
     ) -> Result<Terra<'a>> {
         let client = reqwest::Client::new();
-        Ok(Terra {
-            client,
-            url,
-            chain_id,
-            gas_options: Some(gas_options),
-        })
+        match debug {
+            Some(d) => Ok(Terra {
+                client,
+                url,
+                chain_id,
+                gas_options: Some(gas_options),
+                debug: d,
+            }),
+            None => Ok(Terra {
+                client,
+                url,
+                chain_id,
+                gas_options: Some(gas_options),
+                debug: false,
+            }),
+        }
     }
     /// Create a read-only / query client interface
     pub async fn lcd_client_no_tx(url: &'a str, chain_id: &'a str) -> Result<Terra<'a>> {
@@ -111,6 +123,7 @@ impl<'a> Terra<'a> {
             url,
             chain_id,
             gas_options: None,
+            debug: false,
         })
     }
     /// Auth API functions
@@ -166,8 +179,9 @@ impl<'a> Terra<'a> {
             None => format!("{}{}", self.url.to_owned(), path),
         };
 
-        log::debug!("URL={}", &request_url);
-
+        if self.debug {
+            log::debug!("URL={}", &request_url);
+        }
         let req = self
             .client
             .get(&request_url)
@@ -183,8 +197,9 @@ impl<'a> Terra<'a> {
     ) -> Result<T> {
         let request_url = format!("{}{}", self.url.to_owned(), path);
 
-        log::debug!("URL={}", &request_url);
-        //log::debug!("JSON={}", &args);
+        if self.debug {
+            log::debug!("URL={}", &request_url);
+        }
 
         let req = self
             .client
@@ -235,7 +250,6 @@ impl<'a> Terra<'a> {
                             .estimate_fee(messages, gas.gas_adjustment.unwrap_or(1.0), &[gas_coin])
                             .await?;
                         //  let gas_amount = gas.gas_adjustment.unwrap_or(1.0) * res.result.gas as f64;
-                        //  log::info!("GAS: {} -> {}", res.result.gas, gas_amount);
                         let mut fees: Vec<Coin> = vec![];
                         for fee in res.result.fees {
                             fees.push(Coin::create(&fee.denom, fee.amount))

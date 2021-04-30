@@ -35,7 +35,7 @@
 * async fn demo() -> Result<()>{
 * // set up the LCD client
 * let gas_opts = GasOptions::create_with_gas_estimate("50ukrw",1.4)?;
-* let terra = Terra::lcd_client("https://tequila-lcd.terra.dev/", "tequila-0004", &gas_opts).await?;
+* let terra = Terra::lcd_client("https://tequila-lcd.terra.dev/", "tequila-0004", &gas_opts,None).await?;
 * // generate a private key
 * let secp = Secp256k1::new();
 * let from_key = PrivateKey::from_words(&secp,"your secret words")?;

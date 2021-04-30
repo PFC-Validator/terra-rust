@@ -104,6 +104,8 @@ struct Cli {
         help = "the adjustment to multiply the estimate to calculate the fee"
     )]
     gas_adjustment: f64,
+    #[structopt(short, long, parse(from_flag))]
+    debug: std::sync::atomic::AtomicBool,
 
     #[structopt(subcommand)]
     cmd: Command,
@@ -199,8 +201,15 @@ pub struct TxCommand {
 
 async fn run() -> Result<()> {
     let cli: Cli = Cli::from_args();
+
     let gas_opts: GasOptions = cli.gas_opts()?;
-    let t = Terra::lcd_client(&cli.lcd, &cli.chain_id, &gas_opts).await?;
+    let t = Terra::lcd_client(
+        &cli.lcd,
+        &cli.chain_id,
+        &gas_opts,
+        Some(cli.debug.into_inner()),
+    )
+    .await?;
     let seed: Option<&str> = if cli.seed.is_empty() {
         None
     } else {
