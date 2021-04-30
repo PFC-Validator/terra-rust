@@ -55,6 +55,7 @@ impl PrivateKey {
             Err(_) => Err(ErrorKind::Phrasing.into()),
         }
     }
+
     /// for private key recovery with seed phrase
     pub fn from_words_seed(
         secp: &Secp256k1<All>,
@@ -68,6 +69,7 @@ impl PrivateKey {
             Err(_) => Err(ErrorKind::Phrasing.into()),
         }
     }
+
     /// generate the public key for this private key
     pub fn public_key(&self, secp: &Secp256k1<All>) -> PublicKey {
         let x = &self.private_key.private_key.public_key(secp);
@@ -181,11 +183,11 @@ mod tst {
         let account = pub_k.account()?;
         assert_eq!(&account, "terra1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztv3qqm");
         assert_eq!(
-            &pub_k.TerraValOperPub()?,
+            &pub_k.operator_address_public_key()?,
             "terravaloperpub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5y7accr"
         );
         assert_eq!(
-            &pub_k.TerraPub()?,
+            &pub_k.application_public_key()?,
             "terrapub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5nwzrf9"
         );
 
