@@ -150,9 +150,8 @@ impl PublicKey {
             None => Err(ErrorKind::Implementation.into()),
         }
     }
-    #[allow(missing_docs)]
-    #[allow(non_snake_case)]
-    pub fn TerraPub(&self) -> Result<String> {
+    /// application public key - Application keys are associated with a public key terrapub- and an address terra-
+    pub fn application_public_key(&self) -> Result<String> {
         match &self.raw_pub_key {
             Some(raw) => {
                 let data = encode("terrapub", raw.to_base32());
@@ -164,9 +163,8 @@ impl PublicKey {
             None => Err(ErrorKind::Implementation.into()),
         }
     }
-    #[allow(missing_docs)]
-    #[allow(non_snake_case)]
-    pub fn TerraValOperPub(&self) -> Result<String> {
+    /// The operator address used for validators public key.
+    pub fn operator_address_public_key(&self) -> Result<String> {
         match &self.raw_pub_key {
             Some(raw) => {
                 let data = encode("terravaloperpub", raw.to_base32());
@@ -178,10 +176,8 @@ impl PublicKey {
             None => Err(ErrorKind::Implementation.into()),
         }
     }
-    // TODO verify if this is derived from 'raw_address' or 'raw_pubkey'
-    #[allow(missing_docs)]
-    #[allow(non_snake_case)]
-    pub fn ValConsAddress(&self) -> Result<String> {
+    /// This is a unique key used to sign block hashes. It is associated with a public key terravalconspub.
+    pub fn tendermint(&self) -> Result<String> {
         match &self.raw_address {
             Some(raw) => {
                 let data = encode("terravalcons", raw.to_base32());
@@ -193,9 +189,8 @@ impl PublicKey {
             None => Err(ErrorKind::Implementation.into()),
         }
     }
-    #[allow(missing_docs)]
-    #[allow(non_snake_case)]
-    pub fn ValConsPub(&self) -> Result<String> {
+    /// This is a unique key used to sign block hashes. It is associated with a public key terravalconspub.
+    pub fn tendermint_pubkey(&self) -> Result<String> {
         match &self.raw_pub_key {
             Some(raw) => {
                 let data = encode("terravalconspub", raw.to_base32());
@@ -224,7 +219,7 @@ mod tst {
             "terravaloper1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztraasg"
         );
         assert_eq!(
-            &pub_key.ValConsAddress()?,
+            &pub_key.tendermint()?,
             "terravalcons1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vzlswpuf"
         );
         let x = &pub_key.raw_address.unwrap();
@@ -247,11 +242,11 @@ mod tst {
             "terra1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztv3qqm"
         );
         assert_eq!(
-            &pub_key.TerraPub()?,
+            &pub_key.application_public_key()?,
             "terrapub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5nwzrf9"
         );
         assert_eq!(
-            &pub_key.ValConsPub()?,
+            &pub_key.tendermint_pubkey()?,
             "terravalconspub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5z3fguk"
         );
 
