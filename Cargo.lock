@@ -2014,6 +2014,7 @@ dependencies = [
  "chrono",
  "erased-serde",
  "error-chain",
+ "futures",
  "hex",
  "hkd32",
  "lazy_static",
