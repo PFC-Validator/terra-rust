@@ -69,7 +69,8 @@
 * }
 * ```
 */
-mod client;
+/// APIs
+pub mod client;
 /// Error Messages
 pub mod errors;
 mod keys;

@@ -5,6 +5,7 @@ use crate::errors::Result;
 use crate::keys::get_private_key;
 use crate::{NAME, VERSION};
 use bitcoin::secp256k1::Secp256k1;
+use terra_rust_api::client::oracle::Voters;
 use terra_rust_api::core_types::Msg;
 use terra_rust_api::messages::oracle::MsgDelegateFeedConsent;
 
@@ -23,8 +24,23 @@ pub enum OracleCommand {
         #[structopt(name = "delegate", help = "The account name of the feeder account")]
         delegate: String,
     },
+    #[structopt(name = "voters", about = "commands related to exchange rate voting")]
+    Voters {
+        /// validator account (the terravaloper one)
+        validator: String,
+        #[structopt(subcommand)]
+        cmd: VotersCommand,
+    },
 }
-
+#[derive(StructOpt)]
+pub enum VotersCommand {
+    Votes,
+    PreVotes,
+    Feeder,
+    Miss,
+    AggregatePreVote,
+    AggregateVote,
+}
 pub async fn oracle_cmd_parse(
     terra: &Terra<'_>,
     wallet: &str,
@@ -73,6 +89,43 @@ pub async fn oracle_cmd_parse(
                     println!("{}", resp.txhash)
                 }
             }
+        }
+        OracleCommand::Voters { validator, cmd } => {
+            let voter = terra.oracle().voters(&validator);
+            voter_cmd_parse(&voter, wallet, seed, cmd).await?;
+        }
+    }
+    Ok(())
+}
+
+pub async fn voter_cmd_parse<'a>(
+    voters: &Voters<'a>,
+    _wallet: &str,
+    _seed: Option<&str>,
+    cmd: VotersCommand,
+) -> Result<()> {
+    match cmd {
+        VotersCommand::Votes => {
+            let x = voters.votes().await?;
+            println!("{:#?}", x)
+        }
+        VotersCommand::PreVotes => {
+            let x = voters.prevotes().await?;
+            println!("{:#?}", x)
+        }
+        VotersCommand::Feeder => {
+            let x = voters.feeder().await?;
+            println!("{:#?}", x)
+        }
+        VotersCommand::Miss => {
+            let x = voters.miss().await?;
+            println!("{:#?}", x)
+        }
+        VotersCommand::AggregatePreVote => {
+            todo!()
+        }
+        VotersCommand::AggregateVote => {
+            todo!()
         }
     }
     Ok(())

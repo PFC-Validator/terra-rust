@@ -16,7 +16,8 @@ pub mod core_types;
 mod market;
 /// Structures used for Market APIs
 pub mod market_types;
-mod oracle;
+/// APIs to perform oracle related things
+pub mod oracle;
 /// Structures used for Oracle APIs
 pub mod oracle_types;
 mod staking;

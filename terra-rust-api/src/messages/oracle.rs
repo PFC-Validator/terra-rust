@@ -162,43 +162,13 @@ mod tst {
         assert_eq!(coins, exchange_rate_str);
 
         assert_eq!(generate_hash(&salt, exchange_rate_str, &validator), hash);
-        let vote_1 = MsgAggregateExchangeRateVote::create(salt, exchange_rates, feeder, validator);
+        let vote_1 =
+            MsgAggregateExchangeRateVote::create(salt.clone(), exchange_rates, feeder, validator);
 
-        assert_eq!(vote_1.generate_hash(), hash);
-        let pre_vote = vote_1.gen_pre_vote();
+        assert_eq!(vote_1.generate_hash(&salt), hash);
+        let pre_vote = vote_1.gen_pre_vote(&salt);
         assert_eq!(pre_vote.stype, "oracle/MsgAggregateExchangeRatePrevote");
-        /*
-            This example is taken from the TX log. The others are based on what the nodejs feeder generates.
-               let rates_str ="22.707524482460197756uaud,21.882510617180501989ucad,16.107413560222631626uchf,114.382279464849248732ucny,14.594888140543189388ueur,12.689498975492463452ugbp,136.932658449160933002uhkd,1315.661396873891976912uinr,1917.803659404458501345ujpy,20710.846165266109229516ukrw,50292.255931832196576203umnt,12.276992042852615569usdr,23.395036036859944228usgd,0.0uthb,17.639582167170638049uusd";
-               let rates: Vec<Coin> = Coin::parse_coins(rates_str)?;
-               let validator2 = "terravaloper12g4nkvsjjnl0t7fvq3hdcw7y8dc9fq69nyeu9q";
-               let salt2 = String::from("f560");
-               let coins = rates
-                   .iter()
-                   .map(|f| f.to_string())
-                   .collect::<Vec<String>>()
-                   .join(",");
-               assert_eq!(coins, rates_str);
-               let hash2_eq = "cc43d5cdd5264bc214656082070a0d52dbc614e4";
 
-               let hash2_eq_2 = generate_hash(&salt2, String::from(rates_str), validator2);
-               assert_eq!(hash2_eq, hash2_eq_2);
-
-               let vote = MsgAggregateExchangeRateVote::create(
-                   salt2,
-                   rates,
-                   "terra1824vxwh43h9d3qczj4jvc3qphlf2evfp9w0ph9"
-                       .parse()
-                       .unwrap(),
-                   String::from(validator2),
-               );
-
-               let hash2 = vote.generate_hash();
-               assert_eq!(hash2, hash2_eq);
-               let pre_vote = vote.gen_pre_vote();
-               assert_eq!(pre_vote.stype, "oracle/MsgAggregateExchangeRatePrevote");
-
-        */
         Ok(())
     }
     #[test]
@@ -213,19 +183,7 @@ mod tst {
         let validator2 = "terravaloper1usws7c2c6cs7nuc8vma9qzaky5pkgvm2ujy8ny";
         let hash2 = "54a849b1b3b510f5f0b7c5405ed2cc74cd283251";
         assert_eq!(hash2, generate_hash(salt2, exchange_rates2, validator2));
-        /*
-        this was taken from a transaction dump. the others were generated directly from nodejs code
 
-        let exchange_rates3="22.707524482460197756uaud,21.882510617180501989ucad,16.107413560222631626uchf,114.382279464849248732ucny,14.594888140543189388ueur,12.689498975492463452ugbp,136.932658449160933002uhkd,1315.661396873891976912uinr,1917.803659404458501345ujpy,20710.846165266109229516ukrw,50292.255931832196576203umnt,12.276992042852615569usdr,23.395036036859944228usgd,0.0uthb,17.639582167170638049uusd";
-        let salt3 = "f560";
-        let validator3 = "terravaloper12g4nkvsjjnl0t7fvq3hdcw7y8dc9fq69nyeu9q";
-        let hash3 = "cc43d5cdd5264bc214656082070a0d52dbc614e4";
-        assert_eq!(
-            hash3,
-            generate_hash(salt3, exchange_rates3.parse().unwrap(), validator3)
-        );
-
-         */
         Ok(())
     }
 }
