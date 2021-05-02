@@ -298,6 +298,9 @@ impl<'a> Terra<'a> {
             )),
         };
         let js = serde_json::to_string(&std_sign_msg)?;
+        if self.debug {
+            log::info!("TO SIGN - {}", js);
+        }
         let sig = from.sign(&secp, &js)?;
         let sigs: Vec<StdSignature> = vec![sig];
 
