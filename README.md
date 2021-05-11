@@ -49,3 +49,5 @@ If you think this was useful, feel free to delegate to the [PFC](https://station
 
 # Contribute
 Feel free to submit patches/comments/Pull Requests.
+
+We have also setup a [Discord](https://discord.gg/zKVWs4HhJD) channel to discuss this, and other PFC things
