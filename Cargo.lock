@@ -1995,7 +1995,6 @@ dependencies = [
  "dotenv",
  "env_logger",
  "error-chain",
- "keyring",
  "log",
  "rust_decimal",
  "rust_decimal_macros",
@@ -2003,6 +2002,7 @@ dependencies = [
  "serde_json",
  "structopt",
  "terra-rust-api",
+ "terra-rust-wallet",
  "tokio",
 ]
 
@@ -2031,6 +2031,19 @@ dependencies = [
  "serde_json",
  "subtle-encoding",
  "tendermint",
+]
+
+[[package]]
+name = "terra-rust-wallet"
+version = "0.1.1"
+dependencies = [
+ "bitcoin",
+ "error-chain",
+ "keyring",
+ "log",
+ "serde",
+ "serde_json",
+ "terra-rust-api",
 ]
 
 [[package]]

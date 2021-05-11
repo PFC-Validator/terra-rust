@@ -3,8 +3,8 @@ use structopt::StructOpt;
 use terra_rust_api::{PrivateKey, Terra};
 
 use crate::errors::Result;
-use bitcoin::secp256k1::All;
 use bitcoin::secp256k1::Secp256k1;
+use terra_rust_wallet::Wallet;
 
 #[derive(StructOpt)]
 pub enum KeysCommand {
@@ -39,24 +39,18 @@ pub enum KeysCommand {
     List,
 }
 
-macro_rules! key_format {
-    () => {
-        "TERRA-RUST-{}-{}"
-    };
-}
 pub fn key_cmd_parse(
     _terra: &Terra,
-    wallet: &str,
+    wallet: &Wallet,
     seed: Option<&str>,
     key_cmd: KeysCommand,
 ) -> Result<()> {
     match key_cmd {
-        KeysCommand::Parse { hex } => {
-            println!("{}", hex)
+        KeysCommand::Parse { .. } => {
+            todo!()
         }
         KeysCommand::Recover { name } => {
             let secp = Secp256k1::new();
-            let keyname = format!(key_format!(), wallet, name);
 
             println!("Please input the set of the recovery words, followed by the passphrase (which is passed via --seed)");
             if seed.is_some() {
@@ -82,8 +76,7 @@ pub fn key_cmd_parse(
                 Some(seed_str) => PrivateKey::from_words_seed(&secp, &words, seed_str)?,
                 None => PrivateKey::from_words(&secp, &words)?,
             };
-            let keyring = keyring::Keyring::new(&wallet, &keyname);
-            keyring.set_password(pk.words().unwrap())?;
+            wallet.store_key(&name, &pk)?;
         }
 
         KeysCommand::New { name } => {
@@ -105,19 +98,19 @@ pub fn key_cmd_parse(
                 println!("Please also take note of your seed phrase");
             }
 
-            let keyname = format!(key_format!(), wallet, name);
-            let keyring = keyring::Keyring::new(&wallet, &keyname);
-            keyring.set_password(pk.words().unwrap())?;
+            wallet.store_key(&name, &pk)?;
+
+            let pub_key = wallet.get_public_key(&secp, &name, seed)?;
+
+            println!("{}", pub_key.account()?)
         }
         KeysCommand::Delete { name } => {
-            let keyname = format!(key_format!(), wallet, name);
-            let keyring = keyring::Keyring::new(&wallet, &keyname);
-            keyring.delete_password()?;
+            wallet.delete_key(&name)?;
         }
         KeysCommand::Get { name } => {
             let secp = Secp256k1::new();
-            let priv_key = get_private_key(&secp, wallet, &name, seed)?;
-            let pub_key = priv_key.public_key(&secp);
+            let pub_key = wallet.get_public_key(&secp, &name, seed)?;
+
             println!("{}", pub_key.account()?)
         }
         KeysCommand::List => {
@@ -125,20 +118,4 @@ pub fn key_cmd_parse(
         }
     }
     Ok(())
-}
-
-pub fn get_private_key(
-    secp: &Secp256k1<All>,
-    wallet: &str,
-    name: &str,
-    seed: Option<&str>,
-) -> Result<PrivateKey> {
-    let keyname = format!(key_format!(), wallet, name);
-    let keyring = keyring::Keyring::new(&wallet, &keyname);
-    let phrase = keyring.get_password()?;
-    //    log::error!("{}", &phrase);
-    match seed {
-        None => Ok(PrivateKey::from_words(secp, &phrase)?),
-        Some(seed_str) => Ok(PrivateKey::from_words_seed(secp, &phrase, seed_str)?),
-    }
 }

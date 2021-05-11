@@ -27,6 +27,7 @@ use crate::validator::{validator_cmd_parse, ValidatorCommand};
 use rust_decimal::Decimal;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::{GasOptions, Terra};
+use terra_rust_wallet::Wallet;
 
 /// VERSION number of package
 pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
@@ -215,10 +216,11 @@ async fn run() -> Result<()> {
     } else {
         Some(&cli.seed)
     };
+    let wallet = Wallet::create(&cli.wallet);
     match cli.cmd {
-        Command::Keys(key_cmd) => key_cmd_parse(&t, &cli.wallet, seed, key_cmd),
-        Command::Bank(bank_cmd) => bank_cmd_parse(&t, &cli.wallet, seed, bank_cmd).await,
-        Command::Oracle(cmd) => oracle_cmd_parse(&t, &cli.wallet, seed, cmd).await,
+        Command::Keys(key_cmd) => key_cmd_parse(&t, &wallet, seed, key_cmd),
+        Command::Bank(bank_cmd) => bank_cmd_parse(&t, &wallet, seed, bank_cmd).await,
+        Command::Oracle(cmd) => oracle_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::Validator(cmd) => validator_cmd_parse(&t, cmd).await,
         Command::Block(cmd) => block_cmd_parse(&t, cmd).await,
         Command::Market(market_cmd) => match market_cmd {
@@ -244,14 +246,24 @@ async fn run() -> Result<()> {
             }
         },
         Command::Wallets(wallet_cmd) => match wallet_cmd {
-            Wallets::Create { .. } => {
-                todo!()
+            Wallets::Create { name } => {
+                Wallet::new(&name)?;
+                println!("Wallet {} created", name);
+                Ok(())
             }
             Wallets::List => {
-                todo!()
+                let keys = wallet.list()?;
+                println!("{:#?}", keys);
+                Ok(())
             }
-            Wallets::Delete { .. } => {
-                todo!()
+            Wallets::Delete { name } => {
+                if name.eq(&cli.wallet) {
+                    wallet.delete()?;
+                    Ok(())
+                } else {
+                    eprintln!("you will need to specify the wallet as a --wallet parameter as well as the wallet name");
+                    Ok(())
+                }
             }
         },
     }

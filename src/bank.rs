@@ -2,13 +2,15 @@ use structopt::StructOpt;
 use terra_rust_api::Terra;
 
 use crate::errors::Result;
-use crate::keys::get_private_key;
+//use crate::keys::get_private_key;
+
 use bitcoin::secp256k1::Secp256k1;
 use terra_rust_api::messages::MsgSend;
 
 use crate::{NAME, VERSION};
 use rust_decimal::Decimal;
 use terra_rust_api::core_types::{Coin, Msg};
+use terra_rust_wallet::Wallet;
 
 #[derive(StructOpt)]
 pub enum BankCommand {
@@ -25,9 +27,9 @@ pub enum BankCommand {
     },
 }
 
-pub async fn bank_cmd_parse(
-    terra: &Terra<'_>,
-    wallet: &str,
+pub async fn bank_cmd_parse<'a>(
+    terra: &Terra<'a>,
+    wallet: &Wallet<'a>,
     seed: Option<&str>,
     bank_cmd: BankCommand,
 ) -> Result<()> {
@@ -39,7 +41,7 @@ pub async fn bank_cmd_parse(
             denom,
         } => {
             let secp = Secp256k1::new();
-            let from_key = get_private_key(&secp, wallet, &from, seed)?;
+            let from_key = wallet.get_private_key(&secp, &from, seed)?;
             let from_public_key = from_key.public_key(&secp);
             let coin: Coin = Coin::create(&denom, amount);
             let from_account = from_public_key.account()?;

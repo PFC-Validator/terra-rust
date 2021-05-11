@@ -2,13 +2,13 @@ use structopt::StructOpt;
 use terra_rust_api::Terra;
 
 use crate::errors::Result;
-use crate::keys::get_private_key;
+//use crate::keys::get_private_key;
 use crate::{NAME, VERSION};
 use bitcoin::secp256k1::Secp256k1;
 use terra_rust_api::client::oracle::Voters;
 use terra_rust_api::core_types::Msg;
 use terra_rust_api::messages::oracle::MsgDelegateFeedConsent;
-
+use terra_rust_wallet::Wallet;
 #[derive(StructOpt)]
 pub enum OracleCommand {
     #[structopt(name = "parameters", about = "Get Oracle Parameters")]
@@ -41,9 +41,9 @@ pub enum VotersCommand {
     AggregatePreVote,
     AggregateVote,
 }
-pub async fn oracle_cmd_parse(
-    terra: &Terra<'_>,
-    wallet: &str,
+pub async fn oracle_cmd_parse<'a>(
+    terra: &Terra<'a>,
+    wallet: &Wallet<'a>,
     seed: Option<&str>,
     oracle_cmd: OracleCommand,
 ) -> Result<()> {
@@ -59,7 +59,7 @@ pub async fn oracle_cmd_parse(
         } => {
             println!("Set Feeder {}", delegate);
             let secp = Secp256k1::new();
-            let from_key = get_private_key(&secp, wallet, &validator, seed)?;
+            let from_key = wallet.get_private_key(&secp, &validator, seed)?;
             let from_public_key = from_key.public_key(&secp);
             let from_operator = from_public_key.operator_address()?;
             let delegate_msg: MsgDelegateFeedConsent =
@@ -100,7 +100,7 @@ pub async fn oracle_cmd_parse(
 
 pub async fn voter_cmd_parse<'a>(
     voters: &Voters<'a>,
-    _wallet: &str,
+    _wallet: &Wallet<'a>,
     _seed: Option<&str>,
     cmd: VotersCommand,
 ) -> Result<()> {

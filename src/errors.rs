@@ -7,8 +7,9 @@ impl PartialEq for Error {
 }
 error_chain! {
     foreign_links {
-       TerraError ( terra_rust_api::errors::Error);
-       KeyringError(keyring::KeyringError);
+       TerraApi ( terra_rust_api::errors::Error);
+       TerraWallet ( terra_rust_wallet::errors::Error);
+
        Secp256k1(bitcoin::secp256k1::Error);
        SerdeJson(serde_json::Error);
        ParseInt(std::num::ParseIntError);
