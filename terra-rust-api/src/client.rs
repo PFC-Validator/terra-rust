@@ -282,7 +282,7 @@ impl<'a> Terra<'a> {
         fee: StdFee,
         secp: &Secp256k1<All>,
         from: &'a PrivateKey,
-        messages: &'a Vec<Box<dyn Msg>>,
+        messages: &'a [Box<dyn Msg>],
         memo: Option<String>,
     ) -> Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
         let std_sign_msg = StdSignMsg {
@@ -314,7 +314,7 @@ impl<'a> Terra<'a> {
         &self,
         secp: &Secp256k1<All>,
         from: &'a PrivateKey,
-        messages: &'a Vec<Box<dyn Msg>>,
+        messages: &'a [Box<dyn Msg>],
         memo: Option<String>,
     ) -> Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
         let from_public = from.public_key(secp);

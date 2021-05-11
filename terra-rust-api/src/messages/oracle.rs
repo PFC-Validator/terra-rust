@@ -110,7 +110,7 @@ impl MsgAggregateExchangeRateVote {
     /// they use the salt of the previous 'RateVote' to hash the current prices, to ensure continuity
     pub fn gen_pre_vote(&self, previous_salt: &str) -> MsgAggregateExchangeRatePreVote {
         MsgAggregateExchangeRatePreVote::create(
-            String::from(self.generate_hash(previous_salt)),
+            self.generate_hash(previous_salt),
             self.value.feeder.clone(),
             self.value.validator.clone(),
         )

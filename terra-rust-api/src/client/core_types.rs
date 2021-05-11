@@ -50,7 +50,7 @@ impl Coin {
     ///
     pub fn parse_coins(str: &str) -> Result<Vec<Coin>> {
         let vec_res_opt_coins = str
-            .split(",")
+            .split(',')
             .map(|coin_str| Coin::parse(coin_str))
             .collect::<Vec<Result<Option<Coin>>>>();
         let mut coins: Vec<Coin> = Vec::with_capacity(vec_res_opt_coins.len());
@@ -89,14 +89,12 @@ impl PartialEq for Coin {
     fn eq(&self, other: &Self) -> bool {
         self.denom == other.denom && self.amount == other.amount
     }
-
-    fn ne(&self, other: &Self) -> bool {
-        !self.eq(other)
-    }
 }
 /// Every Message sent must implement this trait
 pub trait Msg: erased_serde::Serialize {}
 serialize_trait_object!(Msg);
+pub trait MsgInt: erased_serde::Serialize {}
+serialize_trait_object!(MsgInt);
 
 /// The fee the Transaction will pay. either in gas, or Fee (or both)
 #[derive(Deserialize, Serialize, Debug)]
@@ -133,7 +131,7 @@ pub struct StdSignMsg<'a> {
     /// the note you want to attach to the transaction.
     pub memo: String,
     /// the messages in the transaction
-    pub msgs: &'a Vec<Box<dyn Msg>>,
+    pub msgs: &'a [Box<dyn Msg>],
     /// from auth::account response
     #[serde(with = "terra_u64_format")]
     pub sequence: u64,

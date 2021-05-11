@@ -103,10 +103,7 @@ impl PrivateKey {
 
     /// the words used to generate this private key
     pub fn words(&self) -> Option<&str> {
-        match &self.mnemonic {
-            Some(phrase) => Some(phrase.phrase()),
-            None => None,
-        }
+        self.mnemonic.as_ref().map(|phrase| phrase.phrase())
     }
     /// signs a blob of data and returns a [StdSignature]
     pub fn sign(&self, secp: &Secp256k1<All>, blob: &str) -> Result<StdSignature> {
@@ -128,10 +125,7 @@ impl PrivateKey {
     /// could potentially be used to recreate the private key instead of words
     #[allow(dead_code)]
     pub(crate) fn seed(&self, passwd: &str) -> Option<Seed> {
-        match &self.mnemonic {
-            Some(phrase) => Some(phrase.to_seed(passwd)),
-            None => None,
-        }
+        self.mnemonic.as_ref().map(|phrase| phrase.to_seed(passwd))
     }
 }
 

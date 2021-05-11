@@ -35,9 +35,9 @@ impl MsgSend {
     /// send multiple coins from from_address to to_address
     pub fn create(from_address: String, to_address: String, amount: Vec<Coin>) -> MsgSend {
         let msg = MsgSend2 {
+            amount,
             from_address,
             to_address,
-            amount,
         };
         MsgSend {
             stype: String::from("bank/MsgSend"),
