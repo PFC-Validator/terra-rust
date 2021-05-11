@@ -11,7 +11,7 @@
 * It will help defray the costs.
 *
 * # Warning
-* This uses crytpographic routines that have not gone through any security audit.
+* This uses cryptographic routines that have not gone through any security audit.
 *
 * The manner which it stores private keys may be unsecure/subject to hacks, and if you use it, may put the assets behind those keys at risk.
 *
