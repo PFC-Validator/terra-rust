@@ -34,16 +34,20 @@ use serde::{Deserialize, Serialize};
 use terra_rust_api::{PrivateKey, PublicKey};
 
 #[derive(Deserialize, Serialize, Debug)]
+/// Internal structure used to hold list of keys in keyring
 pub struct WalletInternal {
     pub keys: Vec<String>,
 }
 ///
 /// Wallet operations based on Keyring API
+///
+/// stores key names in another 'username/password' to facilitate listing keys, and deletion of ALL keys in a wallet
 pub struct Wallet<'a> {
     name: &'a str,
 }
 impl<'a> Wallet<'a> {
-    /// create a new wallet to store keys into
+    /// create a new wallet to store keys into. This just creates the structure
+    /// use #new to create a new wallet
     pub fn new(wallet_name: &'a str) -> Result<Wallet<'a>> {
         log::debug!("Creating new wallet {}", wallet_name);
         let wallet = Wallet::create(wallet_name);
@@ -128,7 +132,7 @@ impl<'a> Wallet<'a> {
     pub fn list(&self) -> Result<Vec<String>> {
         self.get_keys()
     }
-    // deletes the wallet and ALL the keys in the wallet
+    /// deletes the wallet and ALL the keys in the wallet
     pub fn delete(&self) -> Result<()> {
         let keys = self.get_keys()?;
         for key in keys {
