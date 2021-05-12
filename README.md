@@ -4,6 +4,12 @@ This is a WIP.
 
 No security audit has been performed.
 
+There are currently 3 interesting things
+ 
+* [Terra-Rust](https://github.com/PFC-Validator/terra-rust/blob/main/src/main.rs) A cross-platform CLI tool
+* [Terra-Rust-API](https://crates.io/crates/terra-rust-api) an API you can integrate into your own code
+* [Terra-Rust-Wallet](https://crates.io/crates/terra-rust-wallet) a secure OS agnostic wallet, using [keyring](https://crates.io/crates/keyring)
+
 ## Randomness
 The API is currently using random numbers via     
 `
@@ -19,7 +25,7 @@ Do you own research
 
 ## Why?
 
-2 reasons.
+I built this for 2 main reasons.
 1. There was no easy way for me to get the default terra-cli to work on Windows
 1. I wanted a RUST api to use in other things. The CLI is just cream on top.
 
@@ -39,6 +45,9 @@ some things are used often and repeatedly, so we decided to use environment vari
 **TERRARUST_GAS_ADJUSTMENT** the gas adjustment multiplier to use
 
 you can also set these in a file called '.env' if you prefer
+# Documentation
+* [API docs](https://docs.rs/terra-rust-api) are available here
+* [Wallet docs](https://docs.rs/terra-rust-wallet) 
 
 # Help ?
 $ terra-rust --help
