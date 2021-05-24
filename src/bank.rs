@@ -5,11 +5,11 @@ use crate::errors::Result;
 //use crate::keys::get_private_key;
 
 use bitcoin::secp256k1::Secp256k1;
-use terra_rust_api::messages::MsgSend;
+use terra_rust_api::messages::{Message, MsgSend};
 
 use crate::{NAME, VERSION};
 use rust_decimal::Decimal;
-use terra_rust_api::core_types::{Coin, Msg};
+use terra_rust_api::core_types::Coin;
 use terra_rust_wallet::Wallet;
 
 #[derive(StructOpt)]
@@ -45,9 +45,9 @@ pub async fn bank_cmd_parse<'a>(
             let from_public_key = from_key.public_key(&secp);
             let coin: Coin = Coin::create(&denom, amount);
             let from_account = from_public_key.account()?;
-            let send: MsgSend = MsgSend::create(from_account, to, vec![coin]);
+            let send = MsgSend::create(from_account, to, vec![coin]);
 
-            let messages: Vec<Box<dyn Msg>> = vec![Box::new(send)];
+            let messages: Vec<Message> = vec![send];
             let (std_sign_msg, sigs) = terra
                 .generate_transaction_to_broadcast(
                     &secp,

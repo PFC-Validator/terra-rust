@@ -48,7 +48,7 @@ let coin: Coin = Coin::parse("1000uluna")?.unwrap();
 let from_account = from_public_key.account()?;
 let send: MsgSend = MsgSend::create(from_account, "terra1usws7c2c6cs7nuc8vma9qzaky5pkgvm2uag6rh", vec![coin]);
 // generate the transaction & calc fees
-let messages: Vec<Box<dyn Msg>> = vec![Box::new(send)];
+let messages = vec![send];
 let (std_sign_msg, sigs) = terra
                 .generate_transaction_to_broadcast(
                     &secp,
@@ -69,3 +69,7 @@ let (std_sign_msg, sigs) = terra
      }
  }
 ```
+
+# Docs 
+* [API Documentation](https://docs.rs/terra-rust-api)
+* see [Change log](./Changelog.md) for more detailed change summaries

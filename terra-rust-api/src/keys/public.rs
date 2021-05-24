@@ -4,9 +4,10 @@ use bitcoin::bech32::{decode, encode, u5, FromBase32, ToBase32};
 use crypto::digest::Digest;
 use crypto::ripemd160::Ripemd160;
 use crypto::sha2::Sha256;
+pub use ed25519_dalek::PublicKey as Ed25519;
 use serde::{Deserialize, Serialize};
-
-static BECH32_PUBKEY_DATA_PREFIX: [u8; 5] = [0xeb, 0x5a, 0xe9, 0x87, 0x21]; // "eb5ae98721";
+static BECH32_PUBKEY_DATA_PREFIX_SECP256K1: [u8; 5] = [0xeb, 0x5a, 0xe9, 0x87, 0x21]; // "eb5ae98721";
+static BECH32_PUBKEY_DATA_PREFIX_ED25519: [u8; 5] = [0x16, 0x24, 0xde, 0x64, 0x20]; // "eb5ae98721";
 
 #[derive(Deserialize, Serialize, Debug)]
 /// The public key we used to generate the cosmos/tendermind/terrad addresses
@@ -30,7 +31,7 @@ impl PublicKey {
             raw_address: Some(raw_address),
         }
     }
-    /// Generate from Cosmos/Tendermint/Terrad Public Key
+    /// Generate from secp256k1 Cosmos/Terrad Public Key
     pub fn from_public_key(bpub: &[u8]) -> PublicKey {
         let raw_pub_key = PublicKey::pubkey_from_public_key(bpub);
         let raw_address = PublicKey::address_from_public_key(bpub);
@@ -51,6 +52,73 @@ impl PublicKey {
                 Err(_) => Err(ErrorKind::Conversion(String::from(acc_address)).into()),
             }
         })
+    }
+    /// build a public key from a tendermint public key
+    pub fn from_tendermint_key(tendermint_public_key: &str) -> Result<PublicKey> {
+        // Len 83 == PubKeySecp256k1 key with a prefix of 0xEB5AE987
+        // Len 82 == PubKeyEd25519 key with a prefix of 0x1624DE64
+
+        let len = tendermint_public_key.len();
+        if len == 83 {
+            PublicKey::check_prefix_and_length("terravalconspub", tendermint_public_key, len)
+                .and_then(|vu5| match Vec::from_base32(vu5.as_slice()) {
+                    Ok(vu8) => {
+                        log::debug!("{:#?}", hex::encode(&vu8));
+                        if vu8.starts_with(&BECH32_PUBKEY_DATA_PREFIX_SECP256K1) {
+                            let public_key = PublicKey::public_key_from_pubkey(&vu8)?;
+                            let raw = PublicKey::address_from_public_key(&public_key);
+
+                            Ok(PublicKey {
+                                raw_pub_key: Some(vu8),
+                                raw_address: Some(raw),
+                            })
+                        } else {
+                            Err(
+                                ErrorKind::Conversion(String::from("83-missing SECP256K1/prefix"))
+                                    .into(),
+                            )
+                        }
+                    }
+                    Err(e) => {
+                        log::info!("{}", e);
+                        Err(ErrorKind::Conversion(String::from(tendermint_public_key)).into())
+                    }
+                })
+        } else if len == 82 {
+            //  eprintln!("ED25519 keys are not currently supported");
+            // todo!()
+
+            PublicKey::check_prefix_and_length("terravalconspub", tendermint_public_key, len)
+                .and_then(|vu5| match Vec::from_base32(vu5.as_slice()) {
+                    Ok(vu8) => {
+                        log::debug!("{:#?}", hex::encode(&vu8));
+                        log::info!("ED25519 public keys are not fully supported");
+                        if vu8.starts_with(&BECH32_PUBKEY_DATA_PREFIX_ED25519) {
+                            //   let public_key = PublicKey::pubkey_from_ed25519_public_key(&vu8);
+                            let _raw = PublicKey::address_from_public_ed25519_key(&vu8)?;
+                            Ok(PublicKey {
+                                raw_pub_key: Some(vu8),
+                                raw_address: None,
+                            })
+                        } else {
+                            eprintln!("{}", hex::encode(&vu8));
+                            Err(ErrorKind::Conversion(String::from(
+                                "82-missing prefix ED25519/terravalconspub",
+                            ))
+                            .into())
+                        }
+                    }
+                    Err(e) => {
+                        log::info!("{}", e);
+                        Err(ErrorKind::Conversion(String::from(tendermint_public_key)).into())
+                    }
+                })
+
+            /* */
+        } else {
+            log::info!("Expected Key length of 82 or 83 length was {}", len);
+            Err(ErrorKind::Conversion(String::from(tendermint_public_key)).into())
+        }
     }
     /// Generate a Operator address for this public key (used by the validator)
     pub fn from_operator_address(valoper_address: &str) -> Result<PublicKey> {
@@ -80,23 +148,62 @@ impl PublicKey {
                 if hrp == prefix && data.len() == length {
                     Ok(decoded_str)
                 } else {
+                    eprintln!(
+                        "Key Failed prefix {} or length {} Wanted:{}/{}",
+                        hrp,
+                        data.len(),
+                        prefix,
+                        length
+                    );
                     Err(ErrorKind::Bech32DecodeErr.into())
                 }
             }
-            Err(_) => Err(ErrorKind::Conversion(String::from(data)).into()),
+            Err(e) => {
+                log::info!("check prefix: {}", &e);
+                Err(ErrorKind::Conversion(String::from(data)).into())
+            }
         }
     }
     /**
-     * Gets a bech32-words pubkey from a compressed bytes public key.
+     * Gets a bech32-words pubkey from a compressed bytes Secp256K1 public key.
      *
      * @param publicKey raw public key
      */
     pub fn pubkey_from_public_key(public_key: &[u8]) -> Vec<u8> {
-        //Vec<bech32::u5> {
-        //   let mut buf = BECH32_PUBKEY_DATA_PREFIX.to_vec();
-        //  buf.extend_from_slice(publicKey);
-        [BECH32_PUBKEY_DATA_PREFIX.to_vec(), public_key.to_vec()].concat()
-        //     .to_base32()
+        [
+            BECH32_PUBKEY_DATA_PREFIX_SECP256K1.to_vec(),
+            public_key.to_vec(),
+        ]
+        .concat()
+    }
+    /**
+     * Gets a bech32-words pubkey from a compressed bytes Ed25519 public key.
+     *
+     * @param publicKey raw public key
+     */
+    pub fn pubkey_from_ed25519_public_key(public_key: &[u8]) -> Vec<u8> {
+        [
+            BECH32_PUBKEY_DATA_PREFIX_ED25519.to_vec(),
+            public_key.to_vec(),
+        ]
+        .concat()
+    }
+    /// Translate from a BECH32 prefixed key to a standard public key
+    pub fn public_key_from_pubkey(pub_key: &[u8]) -> Result<Vec<u8>> {
+        if pub_key.starts_with(&BECH32_PUBKEY_DATA_PREFIX_SECP256K1) {
+            let len = BECH32_PUBKEY_DATA_PREFIX_SECP256K1.len();
+            let len2 = pub_key.len();
+            Ok(Vec::from(&pub_key[len..len2]))
+        } else if pub_key.starts_with(&BECH32_PUBKEY_DATA_PREFIX_ED25519) {
+            let len = BECH32_PUBKEY_DATA_PREFIX_ED25519.len();
+            let len2 = pub_key.len();
+            let vec = &pub_key[len..len2];
+            let ed25519_pubkey = ed25519_dalek::PublicKey::from_bytes(vec)?;
+            Ok(ed25519_pubkey.to_bytes().to_vec())
+        } else {
+            log::info!("pub key does not start with BECH32 PREFIX");
+            Err(ErrorKind::Bech32DecodeErr.into())
+        }
     }
 
     /**
@@ -116,13 +223,57 @@ impl PublicKey {
 
         sha.input(public_key);
         sha.result(&mut sha_result);
-        //    eprintln!(".{}", encode_hex(&sha_result).unwrap());
 
         hasher.input(&sha_result);
         hasher.result(&mut ripe_result);
 
         let address: Vec<u8> = ripe_result.to_vec();
         address
+    }
+    /**
+    * Gets a raw address from a  ed25519 public key.
+    *
+    * @param publicKey raw public key
+
+    */
+
+    pub fn address_from_public_ed25519_key(public_key: &[u8]) -> Result<Vec<u8>> {
+        // Vec<bech32::u5> {
+
+        if public_key.len() != (32 + 5/* the 5 is the BECH32 ED25519 prefix */) {
+            eprintln!("{} {}", public_key.len(), hex::encode(public_key));
+            Err(ErrorKind::Conversion(String::from(
+                "Expected ED25519 key of length 32 with a BECH32 ED25519 prefix of 5 chars",
+            ))
+            .into())
+        } else {
+            eprintln!("a_pub_ed_key {}", hex::encode(public_key));
+            log::debug!(
+                "address_from_public_ed25519_key public key - {}",
+                hex::encode(public_key)
+            );
+            //  let mut hasher = Ripemd160::new();
+            let mut sha = Sha256::new();
+            let mut sha_result: [u8; 32] = [0; 32];
+            //  let mut ripe_result: [u8; 20] = [0; 20];
+            // let v = &public_key[5..37];
+
+            sha.input(public_key);
+            sha.result(&mut sha_result);
+            //    hasher.input(public_key);
+            //hasher.input(v);
+            //    hasher.input(&sha_result);
+            //   hasher.result(&mut ripe_result);
+
+            let address: Vec<u8> = sha_result[0..20].to_vec();
+            // let address: Vec<u8> = ripe_result.to_vec();
+            eprintln!("address_from_public_ed_key {}", hex::encode(&address));
+            log::debug!(
+                "address_from_public_ed25519_key sha result - {}",
+                hex::encode(&address)
+            );
+            Ok(address)
+        }
     }
     /// The main account used in most things
     pub fn account(&self) -> Result<String> {
@@ -160,7 +311,10 @@ impl PublicKey {
                     Err(_) => Err(ErrorKind::Bech32DecodeErr.into()),
                 }
             }
-            None => Err(ErrorKind::Implementation.into()),
+            None => {
+                log::warn!("Missing Public Key. Can't continue");
+                Err(ErrorKind::Implementation.into())
+            }
         }
     }
     /// The operator address used for validators public key.
@@ -193,7 +347,9 @@ impl PublicKey {
     pub fn tendermint_pubkey(&self) -> Result<String> {
         match &self.raw_pub_key {
             Some(raw) => {
-                let data = encode("terravalconspub", raw.to_base32());
+                // eprintln!("{} - tendermint_pubkey", hex::encode(raw));
+                let b32 = raw.to_base32();
+                let data = encode("terravalconspub", b32);
                 match data {
                     Ok(acc) => Ok(acc),
                     Err(_) => Err(ErrorKind::Bech32DecodeErr.into()),
@@ -206,6 +362,7 @@ impl PublicKey {
 #[cfg(test)]
 mod tst {
     use super::*;
+
     #[test]
     pub fn tst_conv() -> Result<()> {
         let pub_key = PublicKey::from_account("terra1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztv3qqm")?;
@@ -228,7 +385,7 @@ mod tst {
         Ok(())
     }
     #[test]
-    pub fn test_pete() -> Result<()> {
+    pub fn test_key_conversions() -> Result<()> {
         let pub_key = PublicKey::from_public_key(&hex::decode(
             "02cf7ed0b5832538cd89b55084ce93399b186e381684b31388763801439cbdd20a",
         )?);
@@ -257,7 +414,91 @@ mod tst {
             hex::encode(y),
             "eb5ae9872102cf7ed0b5832538cd89b55084ce93399b186e381684b31388763801439cbdd20a"
         );
+
+        let valconspub_83 =
+            "terravalconspub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5z3fguk";
         //   eprintln!("{}", hex::encode(&pub_key.raw_pub_key.unwrap()));
+        let tendermint_pub_key = PublicKey::from_tendermint_key(valconspub_83)?;
+        assert_eq!(
+            &tendermint_pub_key.account()?.to_string(),
+            "terra1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztv3qqm"
+        );
+        assert_eq!(
+            &tendermint_pub_key.application_public_key()?,
+            "terrapub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5nwzrf9"
+        );
+        assert_eq!(&tendermint_pub_key.tendermint_pubkey()?, valconspub_83);
+        /*
+                ED25519 Keys are not currently supported
+        */
+        // eprintln!("Ed25519 stuff");
+        let tendermint_pub_key_ed25519 = PublicKey::from_tendermint_key(
+            "terravalconspub1zcjduepqxrwvps0dn88x9s09h6nwrgrpv2vp5dz99309erlp0qmrx8y9ckmq49jx4n",
+        )?;
+
+        assert_eq!(
+            "terravalconspub1zcjduepqxrwvps0dn88x9s09h6nwrgrpv2vp5dz99309erlp0qmrx8y9ckmq49jx4n",
+            &tendermint_pub_key_ed25519.tendermint_pubkey()?
+        );
+        /*
+        assert_eq!(
+            "terravaloper1z5tzp4kdl9h3k29dhp636fy5g97ram29kpxcwh",
+            &tendermint_pub_key_ed25519.operator_address()?
+        );
+
+        eprintln!("P2");
+
+        assert_eq!(
+            "terra1usws7c2c6cs7nuc8vma9qzaky5pkgvm2uag6rh",
+            //"terra1zcjduepqxrwvps0dn88x9s09h6nwrgrpv2vp5dz99309erlp0qmrx8y9ckmqyg0kh0",
+            &tendermint_pub_key_ed25519.account()?
+        );
+
+        assert_eq!(
+            "terravalcons1usws7c2c6cs7nuc8vma9qzaky5pkgvm2gphml9",
+            //            "terravalcons1zcjduepqxrwvps0dn88x9s09h6nwrgrpv2vp5dz99309erlp0qmrx8y9ckmq27ayxy",
+            &tendermint_pub_key_ed25519.tendermint()?
+        );
+
+         */
+        Ok(())
+    }
+    #[test]
+    pub fn test_tendermint() -> Result<()> {
+        let secp256k1_public_key_str =
+            "02A1633CAFCC01EBFB6D78E39F687A1F0995C62FC95F51EAD10A02EE0BE551B5DC";
+        let seccp256k1_public_key =
+            PublicKey::from_public_key(&hex::decode(secp256k1_public_key_str)?);
+        assert_eq!(
+            "terrapub1addwnpepq2skx090esq7h7md0r3e76r6ruyet330e904r6k3pgpwuzl92x6actkch6g",
+            seccp256k1_public_key.application_public_key()?
+        );
+
+        let public_key = "4A25C6640A1F72B9C975338294EF51B6D1C33158BB6ECBA69FBC3FB5A33C9DCE";
+        let ed = Ed25519::from_bytes(&hex::decode(public_key)?)?;
+        let foo_v8 = PublicKey::pubkey_from_ed25519_public_key(&ed.to_bytes());
+        let ed2: tendermint::PublicKey =
+            tendermint::PublicKey::from_raw_ed25519(&hex::decode(public_key)?).unwrap();
+
+        match encode("cosmosvalconspub", foo_v8.to_base32()) {
+            Ok(cosmospub) => assert_eq!("cosmosvalconspub1zcjduepqfgjuveq2raetnjt4xwpffm63kmguxv2chdhvhf5lhslmtgeunh8qmf7exk", cosmospub),
+            Err(_) => assert!(false, "bad encoding"),
+        };
+        assert_eq!(
+            "cosmosvalconspub1zcjduepqfgjuveq2raetnjt4xwpffm63kmguxv2chdhvhf5lhslmtgeunh8qmf7exk",
+            ed2.to_bech32("cosmosvalconspub")
+        );
+
+        match encode("terravalconspub", foo_v8.to_base32()) {
+            Ok(tendermint) => {
+                let ed_key = PublicKey::from_tendermint_key(&tendermint)?;
+                //let ed_key_pubkey = ed_key.tendermint_pubkey()?;
+                let foo = &ed_key.raw_pub_key.unwrap();
+
+                assert_eq!(public_key, hex::encode_upper(&foo[5..]));
+            }
+            Err(_) => assert!(false, "bad encoding"),
+        };
         Ok(())
     }
 }

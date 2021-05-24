@@ -1,6 +1,7 @@
 use crate::client::client_types::{terra_f64_format, terra_u64_format};
 
-use crate::core_types::{Coin, Msg};
+use crate::core_types::Coin;
+use crate::messages::Message;
 use serde::{Deserialize, Serialize};
 
 /**
@@ -34,20 +35,20 @@ pub struct TxResultBlockAttribute {
     pub key: String,
     pub value: String,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct TxResultBlockEvent {
     #[serde(rename = "type")]
     pub sytpe: String,
     pub attributes: Vec<TxResultBlockAttribute>,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct TxResultBlockMsg {
     pub msg_index: usize,
     pub log: String,
     pub events: Vec<TxResultBlockEvent>,
 }
 #[allow(clippy::upper_case_acronyms)]
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct TXResultBlock {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
@@ -55,16 +56,16 @@ pub struct TXResultBlock {
     pub codespace: Option<String>,
     pub code: Option<usize>,
     pub raw_log: String,
-    pub logs: Vec<TxResultBlockMsg>,
-    #[serde(with = "terra_u64_format")]
-    pub gas_wanted: u64,
-    #[serde(with = "terra_u64_format")]
-    pub gas_used: u64,
+    pub logs: Option<Vec<TxResultBlockMsg>>,
+    // #[serde(with = "terra_u64_format")]
+    // pub gas_wanted: u64,
+    // #[serde(with = "terra_u64_format")]
+    // pub gas_used: u64,
 }
 
 #[derive(Serialize)]
 pub struct TxEstimate2<'a> {
-    pub msg: &'a [Box<dyn Msg>],
+    pub msg: &'a [Message],
 }
 #[derive(Serialize)]
 pub struct TxEstimate<'a> {
@@ -75,7 +76,7 @@ pub struct TxEstimate<'a> {
 }
 impl<'a> TxEstimate<'a> {
     pub fn create(
-        msg: &'a [Box<dyn Msg>],
+        msg: &'a [Message],
         gas_adjustment: f64,
         gas_prices: &'a [&'a Coin],
     ) -> TxEstimate<'a> {

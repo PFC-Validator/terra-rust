@@ -30,6 +30,7 @@ error_chain! {
     ParseIntError(std::num::ParseIntError);
     ParseFloatError(std::num::ParseFloatError);
     Secp256k1(bitcoin::secp256k1::Error);
+    Ed25519(ed25519_dalek::ed25519::Error);
     Bip32(bitcoin::util::bip32::Error);
         Decimal(rust_decimal::Error);
     }

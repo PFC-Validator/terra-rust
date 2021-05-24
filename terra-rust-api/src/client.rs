@@ -1,7 +1,7 @@
 use crate::errors::{ErrorKind, Result};
 
 use crate::client::tx_types::TxFeeResult;
-use crate::core_types::{Coin, Msg, StdFee, StdSignMsg, StdSignature};
+use crate::core_types::{Coin, StdFee, StdSignMsg, StdSignature};
 use reqwest::header::{HeaderMap, CONTENT_TYPE, USER_AGENT};
 use reqwest::{Client, RequestBuilder};
 use serde::{Deserialize, Serialize};
@@ -29,6 +29,7 @@ pub mod tendermint_types;
 mod tx;
 /// Structures used for sending transactions to LCD
 pub mod tx_types;
+use crate::messages::Message;
 use crate::PrivateKey;
 use bitcoin::secp256k1::{All, Secp256k1};
 use futures::TryFutureExt;
@@ -228,7 +229,7 @@ impl<'a> Terra<'a> {
     /// Generate Fee structure, either by estimation method or hardcoded
     ///
 
-    pub async fn calc_fees(&self, messages: &[Box<dyn Msg>]) -> Result<StdFee> {
+    pub async fn calc_fees(&self, messages: &[Message]) -> Result<StdFee> {
         if self.gas_options.is_none() {
             return Err(ErrorKind::NoGasOpts.into());
         }
@@ -275,18 +276,18 @@ impl<'a> Terra<'a> {
     }
     /// helper function to generate a 'StdSignMsg' & 'Signature' blocks to be used to broadcast a transaction
 
-    pub fn generate_transaction_to_broadcast_fees(
-        &self,
+    fn generate_transaction_to_broadcast_fees(
+        chain_id: String,
         account_number: u64,
         sequence: u64,
         fee: StdFee,
         secp: &Secp256k1<All>,
         from: &'a PrivateKey,
-        messages: &'a [Box<dyn Msg>],
+        messages: &'a [Message],
         memo: Option<String>,
     ) -> Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
         let std_sign_msg = StdSignMsg {
-            chain_id: String::from(self.chain_id),
+            chain_id, //: String::from(self.chain_id),
             account_number,
             sequence,
             fee,
@@ -298,9 +299,7 @@ impl<'a> Terra<'a> {
             )),
         };
         let js = serde_json::to_string(&std_sign_msg)?;
-        if self.debug {
-            log::info!("TO SIGN - {}", js);
-        }
+        log::debug!("TO SIGN - {}", js);
         let sig = from.sign(&secp, &js)?;
         let sigs: Vec<StdSignature> = vec![sig];
 
@@ -314,7 +313,7 @@ impl<'a> Terra<'a> {
         &self,
         secp: &Secp256k1<All>,
         from: &'a PrivateKey,
-        messages: &'a [Box<dyn Msg>],
+        messages: &'a [Message],
         memo: Option<String>,
     ) -> Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
         let from_public = from.public_key(secp);
@@ -324,7 +323,8 @@ impl<'a> Terra<'a> {
             .account(&from_account)
             .map_ok(move |auth_result| {
                 self.calc_fees(&messages).map_ok(move |std_fee| {
-                    self.generate_transaction_to_broadcast_fees(
+                    Terra::generate_transaction_to_broadcast_fees(
+                        self.chain_id.into(),
                         auth_result.result.value.account_number,
                         auth_result.result.value.sequence,
                         std_fee,
@@ -337,5 +337,58 @@ impl<'a> Terra<'a> {
             })
             .await?
             .await?
+    }
+}
+#[cfg(test)]
+mod tst {
+    use super::*;
+    use crate::core_types::{Coin, StdTx};
+    use crate::errors::Result;
+    use crate::messages::MsgSend;
+    use crate::{PrivateKey, Terra};
+    use bitcoin::secp256k1::Secp256k1;
+
+    #[test]
+    pub fn test_send() -> Result<()> {
+        let str_1 =  "island relax shop such yellow opinion find know caught erode blue dolphin behind coach tattoo light focus snake common size analyst imitate employ walnut";
+        let secp = Secp256k1::new();
+        let pk = PrivateKey::from_words(&secp, str_1)?;
+        let pub_k = pk.public_key(&secp);
+        let from_address = pub_k.account()?;
+        assert_eq!(from_address, "terra1n3g37dsdlv7ryqftlkef8mhgqj4ny7p8v78lg7");
+
+        let send = MsgSend::create_single(
+            from_address,
+            "terra1usws7c2c6cs7nuc8vma9qzaky5pkgvm2uag6rh".into(),
+            Coin::parse("100000uluna")?.unwrap(),
+        );
+        let json = serde_json::to_string(&send)?;
+        let json_eq = r#"{"type":"bank/MsgSend","value":{"amount":[{"amount":"100000","denom":"uluna"}],"from_address":"terra1n3g37dsdlv7ryqftlkef8mhgqj4ny7p8v78lg7","to_address":"terra1usws7c2c6cs7nuc8vma9qzaky5pkgvm2uag6rh"}}"#;
+
+        assert_eq!(json, json_eq);
+        let std_fee = StdFee::create_single(Coin::parse("50000uluna")?.unwrap(), 90000);
+
+        let messages: Vec<Message> = vec![send];
+        let (sign_message, signatures) = Terra::generate_transaction_to_broadcast_fees(
+            "tequila-0004".into(),
+            43045,
+            3,
+            std_fee,
+            &secp,
+            &pk,
+            &messages,
+            Some("PFC-terra-rust/0.1.5".into()),
+        )?;
+        let json_sign_message = serde_json::to_string(&sign_message)?;
+        let json_sign_message_eq = r#"{"account_number":"43045","chain_id":"tequila-0004","fee":{"amount":[{"amount":"50000","denom":"uluna"}],"gas":"90000"},"memo":"PFC-terra-rust/0.1.5","msgs":[{"type":"bank/MsgSend","value":{"amount":[{"amount":"100000","denom":"uluna"}],"from_address":"terra1n3g37dsdlv7ryqftlkef8mhgqj4ny7p8v78lg7","to_address":"terra1usws7c2c6cs7nuc8vma9qzaky5pkgvm2uag6rh"}}],"sequence":"3"}"#;
+        assert_eq!(json_sign_message, json_sign_message_eq);
+        let json_sig = serde_json::to_string(&signatures)?;
+        let json_sig_eq = r#"[{"signature":"f1wYTzbSyAYqN2tGR0A4PGmfyNYBUExpuoU7UOiBDpNoRlChF/BMtE7h6pdgbpu/V7jNzitu1Eb0fO35dxVkWA==","pub_key":{"type":"tendermint/PubKeySecp256k1","value":"AiMzHaA2bvnDXfHzkjMM+vkSE/p0ymBtAFKUnUtQAeXe"}}]"#;
+        assert_eq!(json_sig, json_sig_eq);
+        let std_tx: StdTx = StdTx::from_StdSignMsg(&sign_message, &signatures, "sync");
+        let js_sig = serde_json::to_string(&std_tx)?;
+        let js_sig_eq = r#"{"tx":{"msg":[{"type":"bank/MsgSend","value":{"amount":[{"amount":"100000","denom":"uluna"}],"from_address":"terra1n3g37dsdlv7ryqftlkef8mhgqj4ny7p8v78lg7","to_address":"terra1usws7c2c6cs7nuc8vma9qzaky5pkgvm2uag6rh"}}],"fee":{"amount":[{"amount":"50000","denom":"uluna"}],"gas":"90000"},"signatures":[{"signature":"f1wYTzbSyAYqN2tGR0A4PGmfyNYBUExpuoU7UOiBDpNoRlChF/BMtE7h6pdgbpu/V7jNzitu1Eb0fO35dxVkWA==","pub_key":{"type":"tendermint/PubKeySecp256k1","value":"AiMzHaA2bvnDXfHzkjMM+vkSE/p0ymBtAFKUnUtQAeXe"}}],"memo":"PFC-terra-rust/0.1.5"},"mode":"sync"}"#;
+        assert_eq!(js_sig, js_sig_eq);
+        Ok(())
     }
 }

@@ -6,9 +6,10 @@ use crate::errors::Result;
 use crate::{NAME, VERSION};
 use bitcoin::secp256k1::Secp256k1;
 use terra_rust_api::client::oracle::Voters;
-use terra_rust_api::core_types::Msg;
 use terra_rust_api::messages::oracle::MsgDelegateFeedConsent;
+use terra_rust_api::messages::Message;
 use terra_rust_wallet::Wallet;
+
 #[derive(StructOpt)]
 pub enum OracleCommand {
     #[structopt(name = "parameters", about = "Get Oracle Parameters")]
@@ -62,10 +63,9 @@ pub async fn oracle_cmd_parse<'a>(
             let from_key = wallet.get_private_key(&secp, &validator, seed)?;
             let from_public_key = from_key.public_key(&secp);
             let from_operator = from_public_key.operator_address()?;
-            let delegate_msg: MsgDelegateFeedConsent =
-                MsgDelegateFeedConsent::create(from_operator, delegate);
+            let delegate_msg = MsgDelegateFeedConsent::create(from_operator, delegate);
 
-            let messages: Vec<Box<dyn Msg>> = vec![Box::new(delegate_msg)];
+            let messages: Vec<Message> = vec![delegate_msg];
             let (std_sign_msg, sigs) = terra
                 .generate_transaction_to_broadcast(
                     &secp,

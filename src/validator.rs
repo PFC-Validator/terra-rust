@@ -11,6 +11,7 @@ pub enum VoterCommand {
     AggregatorPreVote,
     AggregatorVote,
 }
+
 #[derive(StructOpt)]
 pub enum ValidatorCommand {
     #[structopt(name = "list")]
@@ -25,12 +26,12 @@ pub enum ValidatorCommand {
     #[structopt(name = "moniker")]
     Moniker {
         #[structopt(name = "moniker", help = "the validator's moniker")]
-        // the validator to get more info on. try PFC
+        /// the validator to get more info on. try PFC
         moniker: String,
     },
     #[structopt(name = "voter")]
     Voters {
-        // the validator to get more info on. hint: use the terravaloper address. try terravaloper12g4nkvsjjnl0t7fvq3hdcw7y8dc9fq69nyeu9q
+        /// the validator to get more info on. hint: use the terravaloper address. try terravaloper12g4nkvsjjnl0t7fvq3hdcw7y8dc9fq69nyeu9q
         validator: String,
         #[structopt(subcommand)]
         cmd: VoterCommand,

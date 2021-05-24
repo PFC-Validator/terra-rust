@@ -1,6 +1,6 @@
 [package]
 name = "terra-rust-api"
-version = "0.1.14"
+version = "0.2.1"
 authors = ["PFC-Validator <PFC-Validator@protonmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -35,3 +35,8 @@ rust_decimal_macros="1.12.2"
 futures="0.3.14"
 # https://crates.io/crates/prost-amino
 # tendermint = { version = "0.19", features = ["secp256k1"] }
+# ed25519 is requirement for Tendermint Consensus keys.
+# so far the only need for this is in the message to create a validator
+ed25519 = "1"
+ed25519-dalek = { version = "1", features = ["serde"] }
+tendermint = "0.19.0"

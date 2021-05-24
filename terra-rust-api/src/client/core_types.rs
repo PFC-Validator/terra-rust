@@ -7,6 +7,7 @@ use rust_decimal_macros::dec;
 // use rust_decimal::prelude::*;
 use rust_decimal::Decimal;
 
+use crate::messages::Message;
 use rustc_serialize::base64::{ToBase64, STANDARD};
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -91,10 +92,10 @@ impl PartialEq for Coin {
     }
 }
 /// Every Message sent must implement this trait
-pub trait Msg: erased_serde::Serialize {}
-serialize_trait_object!(Msg);
-pub trait MsgInt: erased_serde::Serialize {}
-serialize_trait_object!(MsgInt);
+//pub trait Msg: erased_serde::Serialize {}
+//serialize_trait_object!(Msg);
+pub trait MsgInternal: erased_serde::Serialize {}
+serialize_trait_object!(MsgInternal);
 
 /// The fee the Transaction will pay. either in gas, or Fee (or both)
 #[derive(Deserialize, Serialize, Debug)]
@@ -131,7 +132,7 @@ pub struct StdSignMsg<'a> {
     /// the note you want to attach to the transaction.
     pub memo: String,
     /// the messages in the transaction
-    pub msgs: &'a [Box<dyn Msg>],
+    pub msgs: &'a [Message],
     /// from auth::account response
     #[serde(with = "terra_u64_format")]
     pub sequence: u64,
@@ -178,7 +179,7 @@ impl StdSignature {
 #[allow(missing_docs)]
 #[derive(Serialize)]
 pub struct StdTxInner<'a> {
-    pub msg: &'a [Box<dyn Msg>],
+    pub msg: &'a [Message],
     pub fee: &'a StdFee,
     pub signatures: &'a [StdSignature],
     pub memo: &'a str,
@@ -194,7 +195,7 @@ pub struct StdTx<'a> {
 impl<'a> StdTx<'a> {
     /// create the TX which is used to POST to LCD
     pub fn create(
-        msg: &'a [Box<dyn Msg>],
+        msg: &'a [Message],
         fee: &'a StdFee,
         signatures: &'a [StdSignature],
         memo: &'a str,

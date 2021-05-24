@@ -1,6 +1,6 @@
 [package]
 name = "terra-rust-wallet"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["PFC-Validator <PFC-Validator@protonmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -14,7 +14,7 @@ documentation = "https://docs.rs/terra-rust-wallet"
 
 [dependencies]
 error-chain = "0.12.4"
-terra-rust-api = { path = "../terra-rust-api", version = "0.1" }
+terra-rust-api = { path = "../terra-rust-api", version = "0.2" }
 bitcoin="0.26.0"
 keyring = "0.10.1"
 log="0.4"

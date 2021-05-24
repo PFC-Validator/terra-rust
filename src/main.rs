@@ -14,16 +14,20 @@ mod bank;
 mod errors;
 mod keys;
 mod oracle;
+mod staking;
 mod tendermint;
 mod validator;
+mod wallet;
 
 use crate::errors::Result;
 
 use crate::bank::{bank_cmd_parse, BankCommand};
 use crate::keys::{key_cmd_parse, KeysCommand};
 use crate::oracle::{oracle_cmd_parse, OracleCommand};
+use crate::staking::{staking_cmd_parse, StakingCommand};
 use crate::tendermint::{block_cmd_parse, BlockCommand};
 use crate::validator::{validator_cmd_parse, ValidatorCommand};
+use crate::wallet::{wallet_cmd_parse, WalletCommand};
 use rust_decimal::Decimal;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::{GasOptions, Terra};
@@ -144,7 +148,7 @@ enum Command {
     /// Auth operations
     Auth(Auth),
     /// wallet ops
-    Wallets(Wallets),
+    Wallet(WalletCommand),
     /// Bank Transactions
     Bank(BankCommand),
     /// Oracle Transactions
@@ -153,6 +157,8 @@ enum Command {
     Block(BlockCommand),
     /// Transaction Commands
     Tx(TxCommand),
+    /// Staking Commands
+    Staking(StakingCommand),
 }
 
 #[derive(StructOpt)]
@@ -173,23 +179,6 @@ enum Auth {
     Account {
         #[structopt(name = "address", help = "the address to query")]
         address: String,
-    },
-}
-#[derive(StructOpt)]
-enum Wallets {
-    #[structopt(name = "create", help = "create a wallet")]
-    Create {
-        #[allow(dead_code)]
-        #[structopt(name = "name", help = "name of the wallet")]
-        name: String,
-    },
-    #[structopt(name = "list", help = "List available wallets")]
-    List,
-    #[structopt(name = "delete", help = "delete a wallet")]
-    Delete {
-        #[structopt(name = "name", help = "name of the wallet")]
-        #[allow(dead_code)]
-        name: String,
     },
 }
 /// Input to the /txs/XXXX query
@@ -245,27 +234,8 @@ async fn run() -> Result<()> {
                 Ok(())
             }
         },
-        Command::Wallets(wallet_cmd) => match wallet_cmd {
-            Wallets::Create { name } => {
-                Wallet::new(&name)?;
-                println!("Wallet {} created", name);
-                Ok(())
-            }
-            Wallets::List => {
-                let keys = wallet.list()?;
-                println!("{:#?}", keys);
-                Ok(())
-            }
-            Wallets::Delete { name } => {
-                if name.eq(&cli.wallet) {
-                    wallet.delete()?;
-                    Ok(())
-                } else {
-                    eprintln!("you will need to specify the wallet as a --wallet parameter as well as the wallet name");
-                    Ok(())
-                }
-            }
-        },
+        Command::Wallet(wallet_cmd) => wallet_cmd_parse(&t, &wallet, seed, wallet_cmd),
+        Command::Staking(cmd) => staking_cmd_parse(&t, &wallet, seed, cmd).await,
     }
 }
 #[tokio::main]

@@ -114,7 +114,8 @@ pub fn key_cmd_parse(
             println!("{}", pub_key.account()?)
         }
         KeysCommand::List => {
-            todo!()
+            let keys = wallet.list()?;
+            println!("{:#?}", keys);
         }
     }
     Ok(())

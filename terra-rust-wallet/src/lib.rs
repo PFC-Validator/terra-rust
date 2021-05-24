@@ -38,12 +38,18 @@ use terra_rust_api::{PrivateKey, PublicKey};
 pub struct WalletInternal {
     pub keys: Vec<String>,
 }
+#[derive(Deserialize, Serialize, Debug)]
+/// Internal structure used to hold list of keys in keyring
+pub struct WalletListInternal {
+    pub wallets: Vec<String>,
+}
+
 ///
 /// Wallet operations based on Keyring API
 ///
 /// stores key names in another 'username/password' to facilitate listing keys, and deletion of ALL keys in a wallet
 pub struct Wallet<'a> {
-    name: &'a str,
+    pub name: &'a str,
 }
 impl<'a> Wallet<'a> {
     /// create a new wallet to store keys into. This just creates the structure
@@ -55,6 +61,28 @@ impl<'a> Wallet<'a> {
         let keyring = keyring::Keyring::new(wallet_name, wallet_list_name);
         let wallet_internal = WalletInternal { keys: vec![] };
         keyring.set_password(&serde_json::to_string(&wallet_internal)?)?;
+        let string_key_name: String = String::from(wallet_name);
+
+        match Wallet::get_wallets() {
+            Ok(old_list) => {
+                let mut new_list: Vec<String> = vec![];
+                for s in old_list {
+                    if s.ne(wallet_name) {
+                        new_list.push(s);
+                    }
+                }
+                new_list.push(string_key_name);
+                let wallet_list = WalletListInternal { wallets: new_list };
+                Wallet::set_wallets(&wallet_list)?;
+            }
+            Err(_) => {
+                // Keyring just returns a 'generic' error, probably need to dig in and check if it is 'NOTFOUND' vs other
+                let wallet_list = WalletListInternal {
+                    wallets: vec![string_key_name],
+                };
+                Wallet::set_wallets(&wallet_list)?;
+            }
+        }
 
         Ok(wallet)
     }
@@ -65,12 +93,11 @@ impl<'a> Wallet<'a> {
     /// retrieves the private key from the keyring
     pub fn get_private_key(
         &self,
-        secp: &Secp256k1<All>,
-        key_name: &str,
-        seed: Option<&str>,
+        secp: &'a Secp256k1<All>,
+        key_name: &'a str,
+        seed: Option<&'a str>,
     ) -> Result<PrivateKey> {
         let full_key_name = self.full_key_name(key_name);
-        //  log::debug!("Wallet/Key - {}/{}", &self.name, &full_key_name);
         let keyring = keyring::Keyring::new(&self.name, &full_key_name);
         let phrase = &keyring.get_password()?;
 
@@ -132,6 +159,7 @@ impl<'a> Wallet<'a> {
     pub fn list(&self) -> Result<Vec<String>> {
         self.get_keys()
     }
+
     /// deletes the wallet and ALL the keys in the wallet
     pub fn delete(&self) -> Result<()> {
         let keys = self.get_keys()?;
@@ -142,17 +170,32 @@ impl<'a> Wallet<'a> {
         let wallet_list_name = self.full_list_name();
         let keyring = keyring::Keyring::new(&self.name, &wallet_list_name);
         keyring.delete_password()?;
-
+        let old_list = Wallet::get_wallets()?;
+        // let string_key_name: String = String::from(self.name);
+        let mut new_list: Vec<String> = vec![];
+        for s in old_list {
+            if s.ne(self.name) {
+                new_list.push(s);
+            }
+        }
+        let wallet_list = WalletListInternal { wallets: new_list };
+        Wallet::set_wallets(&wallet_list)?;
         Ok(())
     }
     /// key name format
     fn full_key_name(&self, key_name: &'a str) -> String {
         format!("TERRA-RUST-{}-{}", self.name, key_name)
     }
+    /// used to store list of keys for a wallet
     fn full_list_name(&self) -> String {
         format!("TERRA-RUST-{}_KEYS", self.name)
     }
+    /// used to store list of wallets
+    fn wallet_list_name() -> String {
+        "TERRA-RUST_WALLETS".to_string()
+    }
 
+    /// get list of keys in a wallet
     fn get_keys(&self) -> Result<Vec<String>> {
         let wallet_list_name = self.full_list_name();
         let keyring = keyring::Keyring::new(&self.name, &wallet_list_name);
@@ -160,9 +203,28 @@ impl<'a> Wallet<'a> {
         let wallet_internal: WalletInternal = serde_json::from_str(&keyring.get_password()?)?;
         Ok(wallet_internal.keys)
     }
+
+    /// get list of wallets
+    pub fn get_wallets() -> Result<Vec<String>> {
+        let wallet_list_name = Wallet::wallet_list_name();
+        let keyring = keyring::Keyring::new(&wallet_list_name, "wallets");
+
+        let wallet_internal: WalletListInternal = serde_json::from_str(&keyring.get_password()?)?;
+        Ok(wallet_internal.wallets)
+    }
+
+    /// update keys in a wallet
     fn set_keys(&self, int: &WalletInternal) -> Result<()> {
         let wallet_list_name = self.full_list_name();
         let keyring = keyring::Keyring::new(&self.name, &wallet_list_name);
+
+        keyring.set_password(&serde_json::to_string(int)?)?;
+        Ok(())
+    }
+    /// update list of wallets
+    fn set_wallets(int: &WalletListInternal) -> Result<()> {
+        let wallet_list_name = Wallet::wallet_list_name();
+        let keyring = keyring::Keyring::new(&wallet_list_name, "wallets");
 
         keyring.set_password(&serde_json::to_string(int)?)?;
         Ok(())

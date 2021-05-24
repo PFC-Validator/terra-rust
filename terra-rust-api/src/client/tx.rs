@@ -1,9 +1,10 @@
-use crate::client::core_types::Msg;
+//use crate::client::core_types::Msg;
 use crate::client::tx_types::{
     TXResultAsync, TXResultBlock, TXResultSync, TxEstimate, TxFeeResult,
 };
 use crate::core_types::{Coin, StdSignMsg, StdSignature, StdTx};
 use crate::errors::Result;
+use crate::messages::Message;
 use crate::Terra;
 
 #[allow(clippy::upper_case_acronyms)]
@@ -73,7 +74,8 @@ impl<'a> TX<'a> {
     /// Estimate the StdFee structure based on the gas used
     pub async fn estimate_fee(
         &self,
-        msgs: &[Box<dyn Msg>],
+        msgs: &[Message],
+        //msgs: &[Box<dyn Msg>],
         gas_adjustment: f64,
         gas_prices: &[&Coin],
     ) -> Result<TxFeeResult> {
