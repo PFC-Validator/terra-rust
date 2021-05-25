@@ -11,6 +11,7 @@ use log::{debug, error, info};
 // use std::env;
 use structopt::StructOpt;
 mod bank;
+mod contract;
 mod errors;
 mod keys;
 mod oracle;
@@ -22,6 +23,7 @@ mod wallet;
 use crate::errors::Result;
 
 use crate::bank::{bank_cmd_parse, BankCommand};
+use crate::contract::{contract_cmd_parse, ContractCommand};
 use crate::keys::{key_cmd_parse, KeysCommand};
 use crate::oracle::{oracle_cmd_parse, OracleCommand};
 use crate::staking::{staking_cmd_parse, StakingCommand};
@@ -159,6 +161,8 @@ enum Command {
     Tx(TxCommand),
     /// Staking Commands
     Staking(StakingCommand),
+    /// WASM Module / Smart Contract commands
+    Contract(ContractCommand),
 }
 
 #[derive(StructOpt)]
@@ -212,25 +216,26 @@ async fn run() -> Result<()> {
         Command::Oracle(cmd) => oracle_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::Validator(cmd) => validator_cmd_parse(&t, cmd).await,
         Command::Block(cmd) => block_cmd_parse(&t, cmd).await,
+        Command::Contract(cmd) => contract_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::Market(market_cmd) => match market_cmd {
             Market::Swap { denom, ask, amount } => {
                 let coin = Coin::create(&denom, amount);
                 let sw = t.market().swap(&coin, &ask).await?;
 
-                println!("{:#?}", sw);
+                println!("{}", serde_json::to_string_pretty(&sw)?);
                 Ok(())
             }
         },
         Command::Tx(cmd) => {
             let resp = t.tx().get(&cmd.hash).await?;
-            println!("{:#?}", resp);
+            println!("{}", serde_json::to_string_pretty(&resp)?);
             Ok(())
         }
         Command::Auth(auth_cmd) => match auth_cmd {
             Auth::Account { address } => {
                 let sw = t.auth().account(&address).await?;
 
-                println!("{:#?}", sw);
+                println!("{}", serde_json::to_string_pretty(&sw)?);
                 Ok(())
             }
         },

@@ -22,16 +22,16 @@ impl PartialEq for Error {
 error_chain! {
 
     foreign_links {
-    ReqwestError(::reqwest::Error);
-    SerdeJsonError(serde_json::Error);
-
-    HexError(hex::FromHexError);
-
-    ParseIntError(std::num::ParseIntError);
-    ParseFloatError(std::num::ParseFloatError);
-    Secp256k1(bitcoin::secp256k1::Error);
-    Ed25519(ed25519_dalek::ed25519::Error);
-    Bip32(bitcoin::util::bip32::Error);
+        ReqwestError(::reqwest::Error);
+        SerdeJsonError(serde_json::Error);
+        HexError(hex::FromHexError);
+        ParseIntError(std::num::ParseIntError);
+        ParseFloatError(std::num::ParseFloatError);
+        Secp256k1(bitcoin::secp256k1::Error);
+        SubtleEncoding(subtle_encoding::Error);
+        Utf8(std::string::FromUtf8Error);
+        Ed25519(ed25519_dalek::ed25519::Error);
+        Bip32(bitcoin::util::bip32::Error);
         Decimal(rust_decimal::Error);
     }
     errors {

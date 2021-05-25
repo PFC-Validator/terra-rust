@@ -15,7 +15,7 @@ This may steal your money.
 
 This is not investment advice.
 
-Do you own research
+Do your own research
 
 
 # Help ?

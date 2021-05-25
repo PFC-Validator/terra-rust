@@ -29,6 +29,10 @@ pub mod tendermint_types;
 mod tx;
 /// Structures used for sending transactions to LCD
 pub mod tx_types;
+/// wasm module/contract related apis
+mod wasm;
+mod wasm_types;
+
 use crate::messages::Message;
 use crate::PrivateKey;
 use bitcoin::secp256k1::{All, Secp256k1};
@@ -151,6 +155,10 @@ impl<'a> Terra<'a> {
     /// TXS API Functions
     pub fn tx(&self) -> tx::TX {
         tx::TX::create(&self)
+    }
+    /// WASM module / smart contract API Functions
+    pub fn wasm(&self) -> wasm::Wasm {
+        wasm::Wasm::create(&self)
     }
 
     fn construct_headers() -> HeaderMap {
