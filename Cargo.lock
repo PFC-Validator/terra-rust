@@ -1889,7 +1889,7 @@ dependencies = [
 
 [[package]]
 name = "terra-rust-api"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "bitcoin",
  "chrono",
@@ -1970,9 +1970,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.4.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "134af885d758d645f0f0505c9a8b3f9bf8a348fd822e112ab5248138348f1722"
+checksum = "bd3076b5c8cc18138b8f8814895c11eb4de37114a5d127bafdc5e55798ceef37"
 dependencies = [
  "autocfg",
  "bytes",

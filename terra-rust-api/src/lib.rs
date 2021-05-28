@@ -86,6 +86,10 @@ extern crate rustc_serialize;
 extern crate error_chain;
 extern crate reqwest;
 
+pub use crate::client_types::{
+    terra_datetime_format, terra_decimal_format, terra_f64_format, terra_opt_decimal_format,
+    terra_u64_format,
+};
 pub use client::{auth_types, client_types, core_types, market_types, staking_types};
 pub use client::{GasOptions, Terra};
 pub use keys::{PrivateKey, PublicKey};
