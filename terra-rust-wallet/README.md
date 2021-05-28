@@ -17,6 +17,8 @@ This is not investment advice.
 
 Do your own research
 
+# Linux
+$ sudo apt-get install libdbus-1-dev
 
 # Help ?
 There is a [CLI](https://github.com/pfc-validator/terra-rust) that uses this, which may be helpful.

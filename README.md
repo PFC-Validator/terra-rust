@@ -48,10 +48,15 @@ you can also set these in a file called '.env' if you prefer
 # Documentation
 * [API docs](https://docs.rs/terra-rust-api) are available here
 * [Wallet docs](https://docs.rs/terra-rust-wallet) 
+on first install you may want to
+```
+$ terra-rust wallet create default
+```
 
 # Help ?
+```
 $ terra-rust --help
-
+```
 If you think this was useful, feel free to delegate to the [PFC](https://station.terra.money/validator/terravaloper12g4nkvsjjnl0t7fvq3hdcw7y8dc9fq69nyeu9q) validator. It will help defray the costs.
 
 [PFC](https://twitter.com/PFC_Validator) - Terra/Luna is Pretty Freaking Cool right... feel free to drop me a line 
@@ -59,4 +64,4 @@ If you think this was useful, feel free to delegate to the [PFC](https://station
 # Contribute
 Feel free to submit patches/comments/Pull Requests.
 
-We have also setup a [Discord](https://discord.gg/zKVWs4HhJD) channel to discuss this, and other PFC things
+We have also set up a [Discord](https://discord.gg/zKVWs4HhJD) channel to discuss this, and other PFC things
