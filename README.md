@@ -48,7 +48,9 @@ you can also set these in a file called '.env' if you prefer
 # Documentation
 * [API docs](https://docs.rs/terra-rust-api) are available here
 * [Wallet docs](https://docs.rs/terra-rust-wallet) 
-on first install you may want to
+
+on first install you may want to:
+  
 ```
 $ terra-rust wallet create default
 ```
