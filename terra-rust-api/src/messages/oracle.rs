@@ -98,6 +98,15 @@ impl MsgAggregateExchangeRateVote {
             value: Box::new(internal),
         }
     }
+    /// Create a vote message from internal message
+    pub fn create_from_internal(internal: MsgAggregateExchangeRateVote) -> Message {
+        //  let internal =
+        //      MsgAggregateExchangeRateVote::create_internal(salt, exchange_rates, feeder, validator);
+        Message {
+            s_type: "oracle/MsgAggregateExchangeRateVote".into(),
+            value: Box::new(internal),
+        }
+    }
 
     /// Pre-Vote messages are like a 'linked list'.
     /// they use the salt of the previous 'RateVote' to hash the current prices, to ensure continuity
