@@ -244,3 +244,53 @@ pub mod terra_opt_decimal_format {
         }
     }
 }
+
+/// Convert a Optional u64 number (which is sent as a string) into a u64 rust structure
+pub mod terra_opt_u64_format {
+    use serde::{self, Deserialize, Deserializer, Serializer};
+
+    // convert a number in string format into a regular u64
+    //
+    //    fn serialize<S>(&T, S) -> Result<S::Ok, S::Error>
+    //    where
+    //        S: Serializer
+    //
+    // although it may also be generic over the input types T.
+    #[allow(missing_docs)]
+    pub fn serialize<S>(val: &Option<u64>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match val {
+            None => serializer.serialize_none(),
+            Some(d) => serializer.serialize_str(&d.to_string()),
+        }
+        //   serializer.serialize_str(&val.to_string())
+    }
+
+    // The signature of a deserialize_with function must follow the pattern:
+    //
+    //    fn deserialize<'de, D>(D) -> Result<T, D::Error>
+    //    where
+    //        D: Deserializer<'de>
+    //
+    // although it may also be generic over the output types T.
+    #[allow(missing_docs)]
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<u64>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: String = String::deserialize(deserializer)?;
+        if s.is_empty() {
+            Ok(None)
+        } else {
+            match s.parse::<u64>() {
+                Err(_e) => {
+                    eprintln!("Decimal Fail {} {:#?}", s, _e);
+                    Err(serde::de::Error::custom(_e))
+                }
+                Ok(val) => Ok(Some(val)),
+            }
+        }
+    }
+}

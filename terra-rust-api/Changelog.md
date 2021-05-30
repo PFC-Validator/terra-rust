@@ -1,8 +1,10 @@
 # Changes
 
 ## 0.2
-### 0.2.2 - In Devel
+### 0.2.3 - In Devel
 * contract queries
+* terra_opt_u64_format / Option<u64> json formatting
+
 ### 0.2.1 - 24-May-21
 * Restructured messages API to hopefully make it easier
 * Addded basic support for ED25519 keys (which are used in tendermint consensus)
