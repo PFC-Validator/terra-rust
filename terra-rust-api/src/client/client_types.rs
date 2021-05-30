@@ -230,17 +230,21 @@ pub mod terra_opt_decimal_format {
     where
         D: Deserializer<'de>,
     {
-        let s: String = String::deserialize(deserializer)?;
-        if s.is_empty() {
-            Ok(None)
-        } else {
-            match s.parse::<Decimal>() {
-                Err(_e) => {
-                    eprintln!("Decimal Fail {} {:#?}", s, _e);
-                    Err(serde::de::Error::custom(_e))
+        match String::deserialize(deserializer) {
+            Ok(s) => {
+                if s.is_empty() {
+                    Ok(None)
+                } else {
+                    match s.parse::<Decimal>() {
+                        Err(_e) => {
+                            eprintln!("Decimal Fail {} {:#?}", s, _e);
+                            Err(serde::de::Error::custom(_e))
+                        }
+                        Ok(val) => Ok(Some(val)),
+                    }
                 }
-                Ok(val) => Ok(Some(val)),
             }
+            Err(_) => Ok(None),
         }
     }
 }
@@ -280,17 +284,21 @@ pub mod terra_opt_u64_format {
     where
         D: Deserializer<'de>,
     {
-        let s: String = String::deserialize(deserializer)?;
-        if s.is_empty() {
-            Ok(None)
-        } else {
-            match s.parse::<u64>() {
-                Err(_e) => {
-                    eprintln!("Decimal Fail {} {:#?}", s, _e);
-                    Err(serde::de::Error::custom(_e))
+        match String::deserialize(deserializer) {
+            Ok(s) => {
+                if s.is_empty() {
+                    Ok(None)
+                } else {
+                    match s.parse::<u64>() {
+                        Err(_e) => {
+                            eprintln!("Decimal Fail {} {:#?}", s, _e);
+                            Err(serde::de::Error::custom(_e))
+                        }
+                        Ok(val) => Ok(Some(val)),
+                    }
                 }
-                Ok(val) => Ok(Some(val)),
             }
+            Err(_) => Ok(None),
         }
     }
 }
