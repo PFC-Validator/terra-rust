@@ -94,3 +94,5 @@ pub use client::{auth_types, client_types, core_types, market_types, staking_typ
 pub use client::{GasOptions, Terra};
 pub use keys::{PrivateKey, PublicKey};
 pub use messages::bank;
+pub use messages::wasm::MsgExecuteContract;
+pub use messages::Message;

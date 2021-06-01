@@ -10,8 +10,8 @@ use std::ops::Add;
 
 /// used in feeder oracle
 pub struct MsgAggregateExchangeRatePreVote {
-    pub hash: String,
     pub feeder: String,
+    pub hash: String,
     pub validator: String,
 }
 
@@ -20,8 +20,8 @@ impl MsgAggregateExchangeRatePreVote {
     /// Create a pre vote message
     pub fn create(hash: String, feeder: String, validator: String) -> Message {
         let internal = MsgAggregateExchangeRatePreVote {
-            hash,
             feeder,
+            hash,
             validator,
         };
         Message {
@@ -35,10 +35,10 @@ impl MsgAggregateExchangeRatePreVote {
 
 /// used in feeder oracle to submit exchange rates
 pub struct MsgAggregateExchangeRateVote {
-    /// The salt is used in the next round's 'PreVote'
-    pub salt: String,
     pub exchange_rates: String,
     pub feeder: String,
+    /// The salt is used in the next round's 'PreVote'
+    pub salt: String,
     pub validator: String,
 }
 
@@ -123,14 +123,14 @@ impl MsgAggregateExchangeRateVote {
 /// used in feeder oracle
 
 pub struct MsgDelegateFeedConsent {
-    pub operator: String,
     pub delegate: String,
+    pub operator: String,
 }
 impl MsgInternal for MsgDelegateFeedConsent {}
 impl MsgDelegateFeedConsent {
     /// Create a pre vote message
     pub fn create(operator: String, delegate: String) -> Message {
-        let internal = MsgDelegateFeedConsent { operator, delegate };
+        let internal = MsgDelegateFeedConsent { delegate, operator };
         Message {
             s_type: "oracle/MsgDelegateFeedConsent".into(),
             value: Box::new(internal),

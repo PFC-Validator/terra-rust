@@ -14,7 +14,7 @@ use std::fmt;
 
 /// The primary way to denote currency
 /// NB: Internally everything is represented by their uXXX format.
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Coin {
     #[allow(missing_docs)]
     #[serde(with = "terra_decimal_format")]
@@ -118,7 +118,7 @@ impl StdFee {
     }
 }
 /// The messages component of the transaction that gets signed.
-/// Note: The ordering is important
+/// Note: The ordering is alphabetical and *IS* important
 #[derive(Serialize)]
 pub struct StdSignMsg<'a> {
     #[serde(with = "terra_u64_format")]

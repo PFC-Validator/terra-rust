@@ -308,6 +308,7 @@ impl<'a> Terra<'a> {
         };
         let js = serde_json::to_string(&std_sign_msg)?;
         log::debug!("TO SIGN - {}", js);
+        // eprintln!("Client.rs:311\n{}", js);
         let sig = from.sign(&secp, &js)?;
         let sigs: Vec<StdSignature> = vec![sig];
 
@@ -353,7 +354,7 @@ mod tst {
     use crate::core_types::{Coin, StdTx};
     use crate::errors::Result;
     use crate::messages::MsgSend;
-    use crate::{PrivateKey, Terra};
+    use crate::{MsgExecuteContract, PrivateKey, Terra};
     use bitcoin::secp256k1::Secp256k1;
 
     #[test]
@@ -396,6 +397,54 @@ mod tst {
         let std_tx: StdTx = StdTx::from_StdSignMsg(&sign_message, &signatures, "sync");
         let js_sig = serde_json::to_string(&std_tx)?;
         let js_sig_eq = r#"{"tx":{"msg":[{"type":"bank/MsgSend","value":{"amount":[{"amount":"100000","denom":"uluna"}],"from_address":"terra1n3g37dsdlv7ryqftlkef8mhgqj4ny7p8v78lg7","to_address":"terra1usws7c2c6cs7nuc8vma9qzaky5pkgvm2uag6rh"}}],"fee":{"amount":[{"amount":"50000","denom":"uluna"}],"gas":"90000"},"signatures":[{"signature":"f1wYTzbSyAYqN2tGR0A4PGmfyNYBUExpuoU7UOiBDpNoRlChF/BMtE7h6pdgbpu/V7jNzitu1Eb0fO35dxVkWA==","pub_key":{"type":"tendermint/PubKeySecp256k1","value":"AiMzHaA2bvnDXfHzkjMM+vkSE/p0ymBtAFKUnUtQAeXe"}}],"memo":"PFC-terra-rust/0.1.5"},"mode":"sync"}"#;
+        assert_eq!(js_sig, js_sig_eq);
+        Ok(())
+    }
+
+    #[test]
+    pub fn test_wasm() -> Result<()> {
+        let key_words="sell raven long age tooth still predict idea quit march gasp bamboo hurdle problem voyage east tiger divide machine brain hole tiger find smooth";
+        let secp = Secp256k1::new();
+        let private = PrivateKey::from_words(&secp, key_words)?;
+        let public_key = private.public_key(&secp);
+        let account = public_key.account()?;
+        assert_eq!(account, "terra1vr0e7kylhu9am44v0s3gwkccmz7k3naxysrwew");
+        //  let gas = GasOptions::create_with_fees("70000uluna", 200000)?;
+        //   let terra =
+        //       Terra::lcd_client("https://tequila-lcd.terra.dev", "tequila-0004", &gas, None).await?;
+        let msg = MsgExecuteContract::create_from_b64(
+            &account,
+            "terra16ckeuu7c6ggu52a8se005mg5c0kd2kmuun63cu",
+            "eyJjYXN0X3ZvdGUiOnsicG9sbF9pZCI6NDQsInZvdGUiOiJ5ZXMiLCJhbW91bnQiOiIxMDAwMDAwIn19",
+            &vec![],
+        );
+
+        let json = serde_json::to_string(&msg)?;
+        let json_eq = r#"{"type":"wasm/MsgExecuteContract","value":{"coins":[],"contract":"terra16ckeuu7c6ggu52a8se005mg5c0kd2kmuun63cu","execute_msg":"eyJjYXN0X3ZvdGUiOnsicG9sbF9pZCI6NDQsInZvdGUiOiJ5ZXMiLCJhbW91bnQiOiIxMDAwMDAwIn19","sender":"terra1vr0e7kylhu9am44v0s3gwkccmz7k3naxysrwew"}}"#;
+
+        assert_eq!(json, json_eq);
+        let std_fee = StdFee::create_single(Coin::parse("70000uluna")?.unwrap(), 200000);
+
+        let messages: Vec<Message> = vec![msg];
+        let (sign_message, signatures) = Terra::generate_transaction_to_broadcast_fees(
+            "tequila-0004".into(),
+            49411,
+            0,
+            std_fee,
+            &secp,
+            &private,
+            &messages,
+            Some("PFC-terra-rust-anchor/0.1.1".into()),
+        )?;
+        let json_sign_message = serde_json::to_string(&sign_message)?;
+        let json_sign_message_eq = r#"{"account_number":"49411","chain_id":"tequila-0004","fee":{"amount":[{"amount":"70000","denom":"uluna"}],"gas":"200000"},"memo":"PFC-terra-rust-anchor/0.1.1","msgs":[{"type":"wasm/MsgExecuteContract","value":{"coins":[],"contract":"terra16ckeuu7c6ggu52a8se005mg5c0kd2kmuun63cu","execute_msg":"eyJjYXN0X3ZvdGUiOnsicG9sbF9pZCI6NDQsInZvdGUiOiJ5ZXMiLCJhbW91bnQiOiIxMDAwMDAwIn19","sender":"terra1vr0e7kylhu9am44v0s3gwkccmz7k3naxysrwew"}}],"sequence":"0"}"#;
+        assert_eq!(json_sign_message, json_sign_message_eq);
+        let json_sig = serde_json::to_string(&signatures)?;
+        let json_sig_eq = r#"[{"signature":"pCkd+nBaz1U3DYw0oY2Arxqc+3jI8QRdaXtYbIle9uh60POxvcUHVk2aN7VklgvnPKF7XGIF04U0sxpq/05Vqg==","pub_key":{"type":"tendermint/PubKeySecp256k1","value":"A3K4ruHQP1yY4dkCp41Djnx6z7KfMjDcvkIB93L3Po9C"}}]"#;
+        assert_eq!(json_sig, json_sig_eq);
+        let std_tx: StdTx = StdTx::from_StdSignMsg(&sign_message, &signatures, "sync");
+        let js_sig = serde_json::to_string(&std_tx)?;
+        let js_sig_eq = r#"{"tx":{"msg":[{"type":"wasm/MsgExecuteContract","value":{"coins":[],"contract":"terra16ckeuu7c6ggu52a8se005mg5c0kd2kmuun63cu","execute_msg":"eyJjYXN0X3ZvdGUiOnsicG9sbF9pZCI6NDQsInZvdGUiOiJ5ZXMiLCJhbW91bnQiOiIxMDAwMDAwIn19","sender":"terra1vr0e7kylhu9am44v0s3gwkccmz7k3naxysrwew"}}],"fee":{"amount":[{"amount":"70000","denom":"uluna"}],"gas":"200000"},"signatures":[{"signature":"pCkd+nBaz1U3DYw0oY2Arxqc+3jI8QRdaXtYbIle9uh60POxvcUHVk2aN7VklgvnPKF7XGIF04U0sxpq/05Vqg==","pub_key":{"type":"tendermint/PubKeySecp256k1","value":"A3K4ruHQP1yY4dkCp41Djnx6z7KfMjDcvkIB93L3Po9C"}}],"memo":"PFC-terra-rust-anchor/0.1.1"},"mode":"sync"}"#;
         assert_eq!(js_sig, js_sig_eq);
         Ok(())
     }

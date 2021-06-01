@@ -136,9 +136,9 @@ pub async fn staking_cmd_parse<'a>(
                 details,
             );
             let commission = ValidatorCommission {
-                rate,
-                max_rate,
                 max_change_rate,
+                max_rate,
+                rate,
             };
             let secp = Secp256k1::new();
             log::info!("Delegator {}", &delegator);

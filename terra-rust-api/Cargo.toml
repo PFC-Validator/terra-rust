@@ -40,3 +40,4 @@ futures="0.3.14"
 ed25519 = "1"
 ed25519-dalek = { version = "1", features = ["serde"] }
 tendermint = "0.19.0"
+base64 = "0.13.0"

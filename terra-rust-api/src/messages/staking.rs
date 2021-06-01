@@ -10,11 +10,11 @@ use serde::{Deserialize, Serialize};
 /// on MsgEditValidator messages for fields that don't change you should put "[do-not-modify]"
 ///
 pub struct ValidatorDescription {
-    pub moniker: String,
-    pub identity: String,
-    pub website: String,
-    pub security_contact: String,
     pub details: String,
+    pub identity: String,
+    pub security_contact: String,
+    pub moniker: String,
+    pub website: String,
 }
 impl ValidatorDescription {
     pub fn create_create(
@@ -52,23 +52,23 @@ impl ValidatorDescription {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ValidatorCommission {
     #[serde(with = "terra_decimal_format")]
-    pub rate: Decimal,
+    pub max_change_rate: Decimal,
     #[serde(with = "terra_decimal_format")]
     pub max_rate: Decimal,
     #[serde(with = "terra_decimal_format")]
-    pub max_change_rate: Decimal,
+    pub rate: Decimal,
 }
 /// create validator message
 #[derive(Serialize, Debug)]
 pub struct MsgCreateValidator {
-    pub description: ValidatorDescription,
     pub commission: ValidatorCommission,
+    pub delegator_address: String,
+    pub description: ValidatorDescription,
     #[serde(with = "terra_decimal_format")]
     pub min_self_delegation: Decimal,
-    pub delegator_address: String,
-    pub validator_address: String,
     pub pubkey: String,
     pub value: Coin,
+    pub validator_address: String,
 }
 impl MsgInternal for MsgCreateValidator {}
 impl MsgCreateValidator {
@@ -82,13 +82,13 @@ impl MsgCreateValidator {
         value: Coin,
     ) -> Message {
         let internal = MsgCreateValidator {
-            description,
             commission,
-            min_self_delegation,
             delegator_address,
-            validator_address,
+            description,
+            min_self_delegation,
             pubkey,
             value,
+            validator_address,
         };
         Message {
             s_type: "staking/MsgCreateValidator".into(),
@@ -99,10 +99,10 @@ impl MsgCreateValidator {
 /// edit validator message
 #[derive(Serialize, Debug)]
 pub struct MsgEditValidator {
-    pub description: ValidatorDescription,
     pub address: String,
     #[serde(with = "terra_decimal_format")]
     pub commission_rate: Decimal,
+    pub description: ValidatorDescription,
     #[serde(with = "terra_opt_decimal_format")]
     pub min_self_delegation: Option<Decimal>,
 }
@@ -115,9 +115,9 @@ impl MsgEditValidator {
         min_self_delegation: Option<Decimal>,
     ) -> Message {
         let internal = MsgEditValidator {
-            description,
             address,
             commission_rate,
+            description,
             min_self_delegation,
         };
         Message {
