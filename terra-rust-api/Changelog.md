@@ -2,7 +2,7 @@
 
 ## 0.2
 ### 0.2.4 - Devel
-* 
+* Switch to thiserror (api) & anyhow (command)
 ### 0.2.3 -  1-Jun-21
 * contract execution/queries
 * terra_opt_u64_format / Option<u64> json formatting

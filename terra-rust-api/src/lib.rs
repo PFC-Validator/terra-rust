@@ -1,5 +1,5 @@
 // `error_chain!` can recurse deeply
-#![recursion_limit = "1024"]
+// #![recursion_limit = "1024"]
 #![allow(missing_docs)]
 /*!
 * This crate provides an interface into the Terra LCD HTTP service.
@@ -29,10 +29,9 @@
 * use terra_rust_api::messages::{MsgSend, Message};
 * use terra_rust_api::auth_types::AuthAccountResult;
 * use bitcoin::secp256k1::Secp256k1;
-* use terra_rust_api::errors::Result;
 *
 *
-* async fn demo() -> Result<()>{
+* async fn demo() -> anyhow::Result<()>{
 * // set up the LCD client
 * let gas_opts = GasOptions::create_with_gas_estimate("50ukrw",1.4)?;
 * let terra = Terra::lcd_client("https://tequila-lcd.terra.dev/", "tequila-0004", &gas_opts,None).await?;
@@ -83,8 +82,9 @@ extern crate erased_serde;
 extern crate rustc_serialize;
 //
 //#[macro_use]
-extern crate error_chain;
+//extern crate error_chain;
 extern crate reqwest;
+//use crate::Error;
 
 pub use crate::client_types::{
     terra_datetime_format, terra_decimal_format, terra_f64_format, terra_opt_decimal_format,

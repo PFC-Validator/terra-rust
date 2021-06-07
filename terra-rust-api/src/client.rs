@@ -1,5 +1,4 @@
-use crate::errors::{ErrorKind, Result};
-
+// use crate::errors::{ErrorKind, Result};
 use crate::client::tx_types::TxFeeResult;
 use crate::core_types::{Coin, StdFee, StdSignMsg, StdSignature};
 use reqwest::header::{HeaderMap, CONTENT_TYPE, USER_AGENT};
@@ -33,6 +32,7 @@ pub mod tx_types;
 mod wasm;
 mod wasm_types;
 
+use crate::errors::TerraRustAPIError;
 use crate::messages::Message;
 use crate::PrivateKey;
 use bitcoin::secp256k1::{All, Secp256k1};
@@ -62,7 +62,7 @@ pub struct GasOptions {
 }
 impl GasOptions {
     /// for hard-coding of fees
-    pub fn create_with_fees(fees: &str, gas: u64) -> Result<GasOptions> {
+    pub fn create_with_fees(fees: &str, gas: u64) -> anyhow::Result<GasOptions> {
         Ok(GasOptions {
             fees: Coin::parse(fees)?,
             estimate_gas: false,
@@ -72,7 +72,10 @@ impl GasOptions {
         })
     }
     /// for when you want the validator to give you an estimate on the amounts
-    pub fn create_with_gas_estimate(gas_price: &str, gas_adjustment: f64) -> Result<GasOptions> {
+    pub fn create_with_gas_estimate(
+        gas_price: &str,
+        gas_adjustment: f64,
+    ) -> anyhow::Result<GasOptions> {
         Ok(GasOptions {
             fees: None,
             estimate_gas: true,
@@ -102,7 +105,7 @@ impl<'a> Terra<'a> {
         chain_id: &'a str,
         gas_options: &'a GasOptions,
         debug: Option<bool>,
-    ) -> Result<Terra<'a>> {
+    ) -> anyhow::Result<Terra<'a>> {
         let client = reqwest::Client::new();
         match debug {
             Some(d) => Ok(Terra {
@@ -122,7 +125,7 @@ impl<'a> Terra<'a> {
         }
     }
     /// Create a read-only / query client interface
-    pub async fn lcd_client_no_tx(url: &'a str, chain_id: &'a str) -> Result<Terra<'a>> {
+    pub async fn lcd_client_no_tx(url: &'a str, chain_id: &'a str) -> anyhow::Result<Terra<'a>> {
         let client = reqwest::Client::new();
         Ok(Terra {
             client,
@@ -183,7 +186,7 @@ impl<'a> Terra<'a> {
         &self,
         path: &str,
         args: Option<&str>,
-    ) -> Result<T> {
+    ) -> anyhow::Result<T> {
         let request_url = match args {
             Some(a) => format!("{}{}{}", self.url.to_owned(), path, a),
             None => format!("{}{}", self.url.to_owned(), path),
@@ -204,7 +207,7 @@ impl<'a> Terra<'a> {
         &self,
         path: &str,
         args: &R,
-    ) -> Result<T> {
+    ) -> anyhow::Result<T> {
         let request_url = format!("{}{}", self.url.to_owned(), path);
 
         if self.debug {
@@ -222,13 +225,13 @@ impl<'a> Terra<'a> {
     async fn resp<T: for<'de> Deserialize<'de>>(
         request_url: &str,
         req: RequestBuilder,
-    ) -> Result<T> {
+    ) -> anyhow::Result<T> {
         let response = req.send().await?;
         if !response.status().is_success() {
             let status_text = response.text().await?;
             //  eprintln!("{}", &request_url);
             log::error!("URL={} - {}", &request_url, &status_text);
-            Err(ErrorKind::Terra(status_text).into())
+            Err(TerraRustAPIError::Terra(status_text).into())
         } else {
             let struct_response: T = response.json::<T>().await?;
             Ok(struct_response)
@@ -237,9 +240,9 @@ impl<'a> Terra<'a> {
     /// Generate Fee structure, either by estimation method or hardcoded
     ///
 
-    pub async fn calc_fees(&self, messages: &[Message]) -> Result<StdFee> {
+    pub async fn calc_fees(&self, messages: &[Message]) -> anyhow::Result<StdFee> {
         if self.gas_options.is_none() {
-            return Err(ErrorKind::NoGasOpts.into());
+            return Err(TerraRustAPIError::NoGasOpts.into());
         }
         let gas = self.gas_options.unwrap();
         match &gas.fees {
@@ -293,7 +296,7 @@ impl<'a> Terra<'a> {
         from: &'a PrivateKey,
         messages: &'a [Message],
         memo: Option<String>,
-    ) -> Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
+    ) -> anyhow::Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
         let std_sign_msg = StdSignMsg {
             chain_id, //: String::from(self.chain_id),
             account_number,
@@ -324,7 +327,7 @@ impl<'a> Terra<'a> {
         from: &'a PrivateKey,
         messages: &'a [Message],
         memo: Option<String>,
-    ) -> Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
+    ) -> anyhow::Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
         let from_public = from.public_key(secp);
         let from_account = from_public.account()?;
 
@@ -352,13 +355,12 @@ impl<'a> Terra<'a> {
 mod tst {
     use super::*;
     use crate::core_types::{Coin, StdTx};
-    use crate::errors::Result;
     use crate::messages::MsgSend;
     use crate::{MsgExecuteContract, PrivateKey, Terra};
     use bitcoin::secp256k1::Secp256k1;
 
     #[test]
-    pub fn test_send() -> Result<()> {
+    pub fn test_send() -> anyhow::Result<()> {
         let str_1 =  "island relax shop such yellow opinion find know caught erode blue dolphin behind coach tattoo light focus snake common size analyst imitate employ walnut";
         let secp = Secp256k1::new();
         let pk = PrivateKey::from_words(&secp, str_1)?;
@@ -402,7 +404,7 @@ mod tst {
     }
 
     #[test]
-    pub fn test_wasm() -> Result<()> {
+    pub fn test_wasm() -> anyhow::Result<()> {
         let key_words="sell raven long age tooth still predict idea quit march gasp bamboo hurdle problem voyage east tiger divide machine brain hole tiger find smooth";
         let secp = Secp256k1::new();
         let private = PrivateKey::from_words(&secp, key_words)?;

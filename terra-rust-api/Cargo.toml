@@ -13,7 +13,8 @@ categories = ["api-bindings"]
 documentation = "https://docs.rs/terra-rust-api"
 
 [dependencies]
-error-chain = "0.12.4"
+thiserror = "1.0"
+anyhow="1.0"
 reqwest = { version ="0.11", features=["json"]}
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }

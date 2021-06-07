@@ -49,9 +49,8 @@ impl MsgExecuteContract {
 #[cfg(test)]
 mod tst {
     use super::*;
-    use crate::errors::Result;
     #[test]
-    pub fn test_b64() -> Result<()> {
+    pub fn test_b64() -> anyhow::Result<()> {
         let vote_1 = MsgExecuteContract::create_from_b64(
             "terra1vr0e7kylhu9am44v0s3gwkccmz7k3naxysrwew",
             "terra1f32xyep306hhcxxxf7mlyh0ucggc00rm2s9da5",

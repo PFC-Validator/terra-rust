@@ -1,5 +1,4 @@
 use crate::core_types::StdSignature;
-use crate::errors::{ErrorKind, Result};
 use crate::keys::PublicKey;
 use bitcoin::secp256k1::Secp256k1;
 use bitcoin::secp256k1::{All, Message};
@@ -10,7 +9,9 @@ use crypto::sha2::Sha256;
 use crypto::digest::Digest;
 use hkd32::mnemonic::{Phrase, Seed};
 
+use crate::errors::TerraRustAPIError;
 use rand_core::OsRng;
+
 /// This is the coin type used in most derivations
 pub static LUNA_COIN_TYPE: u32 = 330;
 
@@ -33,26 +34,26 @@ pub struct PrivateKey {
 }
 impl PrivateKey {
     /// Generate a new private key
-    pub fn new(secp: &Secp256k1<All>) -> Result<PrivateKey> {
+    pub fn new(secp: &Secp256k1<All>) -> anyhow::Result<PrivateKey> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
 
         PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, "")
     }
     /// generate a new private key with a seed phrase
-    pub fn new_seed(secp: &Secp256k1<All>, seed_phrase: &str) -> Result<PrivateKey> {
+    pub fn new_seed(secp: &Secp256k1<All>, seed_phrase: &str) -> anyhow::Result<PrivateKey> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
 
         PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, seed_phrase)
     }
     /// for private key recovery. This is also used by wallet routines to re-hydrate the structure
-    pub fn from_words(secp: &Secp256k1<All>, words: &str) -> Result<PrivateKey> {
+    pub fn from_words(secp: &Secp256k1<All>, words: &str) -> anyhow::Result<PrivateKey> {
         match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
             Ok(phrase) => {
                 PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, "")
             }
-            Err(_) => Err(ErrorKind::Phrasing.into()),
+            Err(_) => Err(TerraRustAPIError::Phrasing.into()),
         }
     }
 
@@ -61,12 +62,12 @@ impl PrivateKey {
         secp: &Secp256k1<All>,
         words: &str,
         seed_pass: &str,
-    ) -> Result<PrivateKey> {
+    ) -> anyhow::Result<PrivateKey> {
         match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
             Ok(phrase) => {
                 PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, seed_pass)
             }
-            Err(_) => Err(ErrorKind::Phrasing.into()),
+            Err(_) => Err(TerraRustAPIError::Phrasing.into()),
         }
     }
 
@@ -83,7 +84,7 @@ impl PrivateKey {
         index: u32,
         coin_type: u32,
         seed_phrase: &str,
-    ) -> Result<PrivateKey> {
+    ) -> anyhow::Result<PrivateKey> {
         let seed = phrase.to_seed(seed_phrase);
         let root_private_key =
             ExtendedPrivKey::new_master(Network::Bitcoin, &seed.as_bytes()).unwrap();
@@ -106,7 +107,7 @@ impl PrivateKey {
         self.mnemonic.as_ref().map(|phrase| phrase.phrase())
     }
     /// signs a blob of data and returns a [StdSignature]
-    pub fn sign(&self, secp: &Secp256k1<All>, blob: &str) -> Result<StdSignature> {
+    pub fn sign(&self, secp: &Secp256k1<All>, blob: &str) -> anyhow::Result<StdSignature> {
         let pub_k = &self.private_key.private_key.public_key(secp);
         let priv_k = self.private_key.private_key.key;
         let mut sha = Sha256::new();
@@ -134,13 +135,13 @@ mod tst {
     use super::*;
 
     #[test]
-    pub fn tst_gen_mnemonic() -> Result<()> {
+    pub fn tst_gen_mnemonic() -> anyhow::Result<()> {
         // this test just makes sure the default will call it.
         let s = Secp256k1::new();
         PrivateKey::new(&s).and_then(|_| Ok(()))
     }
     #[test]
-    pub fn tst_words() -> Result<()> {
+    pub fn tst_words() -> anyhow::Result<()> {
         let str_1 = "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius";
         let seed_1 = "a2ae8846397b55d266af35acdbb18ba1d005f7ddbdd4ca7a804df83352eaf373f274ba0dc8ac1b2b25f19dfcb7fa8b30a240d2c6039d88963defc2f626003b2f";
         let s = Secp256k1::new();
@@ -151,11 +152,11 @@ mod tst {
                 assert_eq!(words, str_1);
                 Ok(())
             }
-            None => Err("missing phrase".into()),
+            None => Err(TerraRustAPIError::MissingPhrase.into()),
         }
     }
     #[test]
-    pub fn tst_root_priv_key() -> Result<()> {
+    pub fn tst_root_priv_key() -> anyhow::Result<()> {
         let str_1 = "wonder caution square unveil april art add hover spend smile proud admit modify old copper throw crew happy nature luggage reopen exhibit ordinary napkin";
         let secp = Secp256k1::new();
         let pk = PrivateKey::from_words(&secp, str_1)?;
@@ -168,7 +169,7 @@ mod tst {
         Ok(())
     }
     #[test]
-    pub fn tst_words_to_pub() -> Result<()> {
+    pub fn tst_words_to_pub() -> anyhow::Result<()> {
         let str_1 = "wonder caution square unveil april art add hover spend smile proud admit modify old copper throw crew happy nature luggage reopen exhibit ordinary napkin";
         let secp = Secp256k1::new();
         let pk = PrivateKey::from_words(&secp, str_1)?;
@@ -188,7 +189,7 @@ mod tst {
         Ok(())
     }
     #[test]
-    pub fn test_sign() -> Result<()> {
+    pub fn test_sign() -> anyhow::Result<()> {
         // This test is using message from python SDK.. so these keys generate same sigs as they do.
         let str_1 =  "island relax shop such yellow opinion find know caught erode blue dolphin behind coach tattoo light focus snake common size analyst imitate employ walnut";
         let secp = Secp256k1::new();

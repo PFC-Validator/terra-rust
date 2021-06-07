@@ -1,5 +1,5 @@
 // `error_chain!` can recurse deeply
-#![recursion_limit = "1024"]
+// #![recursion_limit = "1024"]
 #![allow(missing_docs)]
 /*!
 * This crate provides an interface into the Terra wallet service.
@@ -25,11 +25,10 @@
 pub mod errors;
 
 //#[macro_use]
-extern crate error_chain;
-
+//extern crate error_chain;
+use crate::errors::TerraRustWalletError;
 use bitcoin::secp256k1::All;
 use bitcoin::secp256k1::Secp256k1;
-use errors::Result;
 use serde::{Deserialize, Serialize};
 use terra_rust_api::{PrivateKey, PublicKey};
 
@@ -54,7 +53,7 @@ pub struct Wallet<'a> {
 impl<'a> Wallet<'a> {
     /// create a new wallet to store keys into. This just creates the structure
     /// use #new to create a new wallet
-    pub fn new(wallet_name: &'a str) -> Result<Wallet<'a>> {
+    pub fn new(wallet_name: &'a str) -> anyhow::Result<Wallet<'a>> {
         log::debug!("Creating new wallet {}", wallet_name);
         let wallet = Wallet::create(wallet_name);
         let wallet_list_name = &wallet.full_list_name();
@@ -96,7 +95,7 @@ impl<'a> Wallet<'a> {
         secp: &'a Secp256k1<All>,
         key_name: &'a str,
         seed: Option<&'a str>,
-    ) -> Result<PrivateKey> {
+    ) -> anyhow::Result<PrivateKey> {
         let full_key_name = self.full_key_name(key_name);
         let keyring = keyring::Keyring::new(&self.name, &full_key_name);
         let phrase = &keyring.get_password()?;
@@ -112,14 +111,14 @@ impl<'a> Wallet<'a> {
         secp: &Secp256k1<All>,
         key_name: &str,
         seed: Option<&str>,
-    ) -> Result<PublicKey> {
+    ) -> anyhow::Result<PublicKey> {
         let private_key: PrivateKey = self.get_private_key(secp, key_name, seed)?;
 
         let pub_key = private_key.public_key(&secp);
         Ok(pub_key)
     }
     /// stores the private key into the keyring
-    pub fn store_key(&self, key_name: &str, pk: &PrivateKey) -> Result<bool> {
+    pub fn store_key(&self, key_name: &str, pk: &PrivateKey) -> anyhow::Result<bool> {
         let full_key_name = self.full_key_name(key_name);
 
         let keyring = keyring::Keyring::new(&self.name, &full_key_name);
@@ -140,7 +139,7 @@ impl<'a> Wallet<'a> {
         Ok(true)
     }
     /// deletes the private key from the keyring
-    pub fn delete_key(&self, key_name: &str) -> Result<bool> {
+    pub fn delete_key(&self, key_name: &str) -> anyhow::Result<bool> {
         let full_key_name = self.full_key_name(key_name);
         let keyring = keyring::Keyring::new(&self.name, &full_key_name);
         keyring.delete_password()?;
@@ -156,12 +155,12 @@ impl<'a> Wallet<'a> {
         Ok(true)
     }
     /// lists the keys in the wallet
-    pub fn list(&self) -> Result<Vec<String>> {
+    pub fn list(&self) -> anyhow::Result<Vec<String>> {
         self.get_keys()
     }
 
     /// deletes the wallet and ALL the keys in the wallet
-    pub fn delete(&self) -> Result<()> {
+    pub fn delete(&self) -> anyhow::Result<()> {
         let keys = self.get_keys()?;
         for key in keys {
             log::debug!("Deleting Key {} in wallet {}", key, &self.name);
@@ -196,16 +195,22 @@ impl<'a> Wallet<'a> {
     }
 
     /// get list of keys in a wallet
-    fn get_keys(&self) -> Result<Vec<String>> {
+    fn get_keys(&self) -> anyhow::Result<Vec<String>> {
         let wallet_list_name = self.full_list_name();
         let keyring = keyring::Keyring::new(&self.name, &wallet_list_name);
+        let pass = keyring
+            .get_password()
+            .map_err(|source| TerraRustWalletError::KeyNotFound {
+                key: wallet_list_name,
+                source,
+            })?;
 
-        let wallet_internal: WalletInternal = serde_json::from_str(&keyring.get_password()?)?;
+        let wallet_internal: WalletInternal = serde_json::from_str(&pass)?;
         Ok(wallet_internal.keys)
     }
 
     /// get list of wallets
-    pub fn get_wallets() -> Result<Vec<String>> {
+    pub fn get_wallets() -> anyhow::Result<Vec<String>> {
         let wallet_list_name = Wallet::wallet_list_name();
         let keyring = keyring::Keyring::new(&wallet_list_name, "wallets");
 
@@ -214,7 +219,7 @@ impl<'a> Wallet<'a> {
     }
 
     /// update keys in a wallet
-    fn set_keys(&self, int: &WalletInternal) -> Result<()> {
+    fn set_keys(&self, int: &WalletInternal) -> anyhow::Result<()> {
         let wallet_list_name = self.full_list_name();
         let keyring = keyring::Keyring::new(&self.name, &wallet_list_name);
 
@@ -222,7 +227,7 @@ impl<'a> Wallet<'a> {
         Ok(())
     }
     /// update list of wallets
-    fn set_wallets(int: &WalletListInternal) -> Result<()> {
+    fn set_wallets(int: &WalletListInternal) -> anyhow::Result<()> {
         let wallet_list_name = Wallet::wallet_list_name();
         let keyring = keyring::Keyring::new(&wallet_list_name, "wallets");
 
@@ -236,7 +241,7 @@ mod tst {
     use super::*;
 
     #[test]
-    pub fn test_wallet_create_delete() -> Result<()> {
+    pub fn test_wallet_create_delete() -> anyhow::Result<()> {
         let wallet = Wallet::new("PFC-Test Wallet")?;
         let key_list = wallet.get_keys()?;
         assert!(key_list.is_empty());
@@ -244,7 +249,7 @@ mod tst {
         Ok(())
     }
     #[test]
-    pub fn test_wallet_add_del() -> Result<()> {
+    pub fn test_wallet_add_del() -> anyhow::Result<()> {
         let str_1 = "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius";
         let str_2 = "wonder caution square unveil april art add hover spend smile proud admit modify old copper throw crew happy nature luggage reopen exhibit ordinary napkin";
 

@@ -1,5 +1,4 @@
 use crate::client::staking_types::{ValidatorListResult, ValidatorResult};
-use crate::errors::Result;
 use crate::staking_types::Validator;
 use crate::Terra;
 
@@ -10,7 +9,7 @@ impl Staking<'_> {
     pub fn create<'a>(terra: &'a Terra) -> Staking<'a> {
         Staking { terra }
     }
-    pub async fn validator(&self, key: &str) -> Result<ValidatorResult> {
+    pub async fn validator(&self, key: &str) -> anyhow::Result<ValidatorResult> {
         //   let url = self.terra.url.to_owned() + "/staking/validators/" + key;
         self.terra
             .send_cmd::<ValidatorResult>("/staking/validators/", Some(key))
@@ -19,12 +18,12 @@ impl Staking<'_> {
         //let response = req.send().await?;
         //Ok(response.json::<ValidatorResult>().await?)
     }
-    pub async fn validators(&self) -> Result<ValidatorListResult> {
+    pub async fn validators(&self) -> anyhow::Result<ValidatorListResult> {
         self.terra
             .send_cmd::<ValidatorListResult>("/staking/validators", None)
             .await
     }
-    pub async fn validator_by_moniker(&self, moniker: &str) -> Result<Option<Validator>> {
+    pub async fn validator_by_moniker(&self, moniker: &str) -> anyhow::Result<Option<Validator>> {
         let lst = self
             .terra
             .send_cmd::<ValidatorListResult>("/staking/validators", None)

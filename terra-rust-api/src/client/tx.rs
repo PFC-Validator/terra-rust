@@ -3,7 +3,6 @@ use crate::client::tx_types::{
     TXResultAsync, TXResultBlock, TXResultSync, TxEstimate, TxFeeResult,
 };
 use crate::core_types::{Coin, StdSignMsg, StdSignature, StdTx};
-use crate::errors::Result;
 use crate::messages::Message;
 use crate::Terra;
 
@@ -21,7 +20,7 @@ impl<'a> TX<'a> {
         &self,
         std_sign_msg: &'a StdSignMsg<'a>,
         sigs: &[StdSignature],
-    ) -> Result<TXResultAsync> {
+    ) -> anyhow::Result<TXResultAsync> {
         let std_tx: StdTx = StdTx::from_StdSignMsg(&std_sign_msg, &sigs, "async");
 
         //  let js_sig = serde_json::to_string(&std_tx)?;
@@ -37,7 +36,7 @@ impl<'a> TX<'a> {
         &self,
         std_sign_msg: &'a StdSignMsg<'a>,
         sigs: &[StdSignature],
-    ) -> Result<TXResultSync> {
+    ) -> anyhow::Result<TXResultSync> {
         let std_tx: StdTx = StdTx::from_StdSignMsg(&std_sign_msg, &sigs, "sync");
         //    let js_sig = serde_json::to_string(&std_tx)?;
         log::info!("{}", serde_json::to_string(&std_tx)?);
@@ -53,7 +52,7 @@ impl<'a> TX<'a> {
         &self,
         std_sign_msg: &'a StdSignMsg<'a>,
         sigs: &[StdSignature],
-    ) -> Result<TXResultBlock> {
+    ) -> anyhow::Result<TXResultBlock> {
         log::warn!("Broadcast_block is not recommended to be used in production situations");
         let std_tx: StdTx = StdTx::from_StdSignMsg(&std_sign_msg, &sigs, "block");
         //    let js_sig = serde_json::to_string(&std_tx)?;
@@ -64,7 +63,7 @@ impl<'a> TX<'a> {
         Ok(response)
     }
     /// get TX result
-    pub async fn get(&self, hash: &str) -> Result<TXResultBlock> {
+    pub async fn get(&self, hash: &str) -> anyhow::Result<TXResultBlock> {
         let resp = self
             .terra
             .send_cmd::<TXResultBlock>(&format!("/txs/{}", hash), None)
@@ -78,7 +77,7 @@ impl<'a> TX<'a> {
         //msgs: &[Box<dyn Msg>],
         gas_adjustment: f64,
         gas_prices: &[&Coin],
-    ) -> Result<TxFeeResult> {
+    ) -> anyhow::Result<TxFeeResult> {
         let tx_est = TxEstimate::create(msgs, gas_adjustment, gas_prices);
 
         log::info!("#Messages = {}", serde_json::to_string(&tx_est)?);

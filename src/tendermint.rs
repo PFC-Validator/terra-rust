@@ -1,7 +1,7 @@
+use anyhow::Result;
 use structopt::StructOpt;
 use terra_rust_api::Terra;
-
-use crate::errors::Result;
+//use crate::errors::Result;
 
 #[derive(StructOpt)]
 pub struct BlockCommand {

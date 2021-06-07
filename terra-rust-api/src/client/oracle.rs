@@ -2,7 +2,6 @@ use crate::client::oracle_types::{
     OracleParametersResult, OraclePreVotesResult, OracleVoteFeederResult, OracleVoteMissResult,
     OracleVotesResult,
 };
-use crate::errors::Result;
 use crate::Terra;
 
 pub struct Oracle<'a> {
@@ -12,7 +11,7 @@ impl<'a> Oracle<'a> {
     pub fn create(terra: &'a Terra) -> Oracle<'a> {
         Oracle { terra }
     }
-    pub async fn parameters(&self) -> Result<OracleParametersResult> {
+    pub async fn parameters(&self) -> anyhow::Result<OracleParametersResult> {
         let response = self
             .terra
             .send_cmd::<OracleParametersResult>("/oracle/parameters", None)
@@ -31,7 +30,7 @@ impl<'a> Voters<'a> {
     pub fn create(terra: &'a Terra, validator: &'a str) -> Voters<'a> {
         Voters { terra, validator }
     }
-    pub async fn votes(&self) -> Result<OracleVotesResult> {
+    pub async fn votes(&self) -> anyhow::Result<OracleVotesResult> {
         let response = self
             .terra
             .send_cmd::<OracleVotesResult>(
@@ -41,7 +40,7 @@ impl<'a> Voters<'a> {
             .await?;
         Ok(response)
     }
-    pub async fn prevotes(&self) -> Result<OraclePreVotesResult> {
+    pub async fn prevotes(&self) -> anyhow::Result<OraclePreVotesResult> {
         let response = self
             .terra
             .send_cmd::<OraclePreVotesResult>(
@@ -52,7 +51,7 @@ impl<'a> Voters<'a> {
         Ok(response)
     }
 
-    pub async fn feeder(&self) -> Result<OracleVoteFeederResult> {
+    pub async fn feeder(&self) -> anyhow::Result<OracleVoteFeederResult> {
         let response = self
             .terra
             .send_cmd::<OracleVoteFeederResult>(
@@ -62,7 +61,7 @@ impl<'a> Voters<'a> {
             .await?;
         Ok(response)
     }
-    pub async fn miss(&self) -> Result<OracleVoteMissResult> {
+    pub async fn miss(&self) -> anyhow::Result<OracleVoteMissResult> {
         let response = self
             .terra
             .send_cmd::<OracleVoteMissResult>(

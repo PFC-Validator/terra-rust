@@ -1,7 +1,6 @@
 use crate::client::wasm_types::{
     WasmCodeResult, WasmContractInfoResult, WasmParameterResult, WasmQueryRawResult,
 };
-use crate::errors::Result;
 use crate::Terra;
 
 use serde::Deserialize;
@@ -14,14 +13,14 @@ impl Wasm<'_> {
     pub fn create<'a>(terra: &'a Terra) -> Wasm<'a> {
         Wasm { terra }
     }
-    pub async fn codes(&self, code_id: u64) -> Result<WasmCodeResult> {
+    pub async fn codes(&self, code_id: u64) -> anyhow::Result<WasmCodeResult> {
         let code = self
             .terra
             .send_cmd::<WasmCodeResult>(&format!("/wasm/codes/{}", code_id), None)
             .await?;
         Ok(code)
     }
-    pub async fn info(&self, contract_address: &str) -> Result<WasmContractInfoResult> {
+    pub async fn info(&self, contract_address: &str) -> anyhow::Result<WasmContractInfoResult> {
         let code = self
             .terra
             .send_cmd::<WasmContractInfoResult>(
@@ -31,7 +30,7 @@ impl Wasm<'_> {
             .await?;
         Ok(code)
     }
-    pub async fn parameters(&self) -> Result<WasmParameterResult> {
+    pub async fn parameters(&self) -> anyhow::Result<WasmParameterResult> {
         let code = self
             .terra
             .send_cmd::<WasmParameterResult>("/wasm/parameters", None)
@@ -42,7 +41,7 @@ impl Wasm<'_> {
         &self,
         contract_address: &str,
         json_query: &str,
-    ) -> Result<T> {
+    ) -> anyhow::Result<T> {
         let code = self
             .terra
             .send_cmd::<T>(
@@ -57,7 +56,7 @@ impl Wasm<'_> {
         contract_address: &str,
         key: &str,
         sub_key: &Option<String>,
-    ) -> Result<(String, String)> {
+    ) -> anyhow::Result<(String, String)> {
         let json_query = match sub_key {
             Some(sub_key_str) => format!("key={}&subkey={}", key, &sub_key_str),
             None => format!("key={}", key),

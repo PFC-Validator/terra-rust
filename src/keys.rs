@@ -1,8 +1,8 @@
+use anyhow::Result;
 use std::io::{self, BufRead};
 use structopt::StructOpt;
 use terra_rust_api::{PrivateKey, Terra};
-
-use crate::errors::Result;
+//use crate::errors::Result;
 use bitcoin::secp256k1::Secp256k1;
 use terra_rust_wallet::Wallet;
 

@@ -1,7 +1,7 @@
+use anyhow::Result;
 use structopt::StructOpt;
 use terra_rust_api::Terra;
-
-use crate::errors::Result;
+//use crate::errors::Result;
 //use crate::keys::get_private_key;
 
 use bitcoin::secp256k1::Secp256k1;
@@ -72,6 +72,6 @@ pub async fn bank_cmd_parse<'a>(
                 }
             }
         }
-    }
+    };
     Ok(())
 }

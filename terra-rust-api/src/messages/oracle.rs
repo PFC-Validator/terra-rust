@@ -141,9 +141,8 @@ impl MsgDelegateFeedConsent {
 #[cfg(test)]
 mod tst {
     use super::*;
-    use crate::errors::Result;
     #[test]
-    pub fn test_agg() -> Result<()> {
+    pub fn test_agg() -> anyhow::Result<()> {
         let exchange_rate_str = "22.540203133218404887uaud,21.645596278923282692ucad,15.966787551658593971uchf,113.167767068332957759ucny,14.449845494375560683ueur,12.582839885411827405ugbp,135.474594500430895984uhkd,1300.213822842493250029uinr,1900.8256376511075722ujpy,20351.150811544637337767ukrw,49749.106615326838874584umnt,12.154984433357638529usdr,23.143090361112943758usgd,0.0uthb,17.444833658754882816uusd";
         let exchange_rates = Coin::parse_coins(exchange_rate_str)?;
         let salt = String::from("df59");
@@ -172,7 +171,7 @@ mod tst {
         Ok(())
     }
     #[test]
-    pub fn tst_hash() -> Result<()> {
+    pub fn tst_hash() -> anyhow::Result<()> {
         let exchange_rates= "22.540203133218404887uaud,21.645596278923282692ucad,15.966787551658593971uchf,113.167767068332957759ucny,14.449845494375560683ueur,12.582839885411827405ugbp,135.474594500430895984uhkd,1300.213822842493250029uinr,1900.8256376511075722ujpy,20351.150811544637337767ukrw,49749.106615326838874584umnt,12.154984433357638529usdr,23.143090361112943758usgd,0.0uthb,17.444833658754882816uusd";
         let salt = "df59";
         let validator = "terravaloper1usws7c2c6cs7nuc8vma9qzaky5pkgvm2ujy8ny";

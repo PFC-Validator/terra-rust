@@ -1,5 +1,4 @@
 use crate::client::client_types::{terra_decimal_format, terra_u64_format};
-use crate::errors::{ErrorKind, Result};
 
 use regex::Regex;
 
@@ -7,6 +6,7 @@ use rust_decimal_macros::dec;
 // use rust_decimal::prelude::*;
 use rust_decimal::Decimal;
 
+use crate::errors::TerraRustAPIError;
 use crate::messages::Message;
 use rustc_serialize::base64::{ToBase64, STANDARD};
 use serde::{Deserialize, Serialize};
@@ -32,7 +32,7 @@ impl Coin {
         }
     }
     /// Parse the string "nnnnnXXXX" format where XXXX is the coin type
-    pub fn parse(str: &str) -> Result<Option<Coin>> {
+    pub fn parse(str: &str) -> anyhow::Result<Option<Coin>> {
         lazy_static! {
             static ref RE: Regex = Regex::new(r"^(\d+[.]?\d*)([a-zA-Z]+)$").unwrap();
         }
@@ -49,27 +49,24 @@ impl Coin {
     /// this will take a comma delimited string of coins and return a sorted (by denom) vector of coins
     /// eg "22.707524482460197756uaud,21.882510617180501989ucad,16.107413560222631626uchf,114.382279464849248732ucny,14.594888140543189388ueur,12.689498975492463452ugbp,136.932658449160933002uhkd,1315.661396873891976912uinr,1917.803659404458501345ujpy,20710.846165266109229516ukrw,50292.255931832196576203umnt,12.276992042852615569usdr,23.395036036859944228usgd,0.0uthb,17.639582167170638049uusd"
     ///
-    pub fn parse_coins(str: &str) -> Result<Vec<Coin>> {
+    pub fn parse_coins(str: &str) -> anyhow::Result<Vec<Coin>> {
         let vec_res_opt_coins = str
             .split(',')
             .map(|coin_str| Coin::parse(coin_str))
-            .collect::<Vec<Result<Option<Coin>>>>();
+            .collect::<Vec<anyhow::Result<Option<Coin>>>>();
         let mut coins: Vec<Coin> = Vec::with_capacity(vec_res_opt_coins.len());
         for vroc in vec_res_opt_coins {
-            match vroc {
-                Err(ref e) => {
-                    log::error!("{}", e);
-                    return Err(ErrorKind::CoinParseErr(str.parse().unwrap()).into());
+            let coin_opt = vroc.map_err(|source| TerraRustAPIError::CoinParseErrV {
+                parse: str.parse().unwrap(),
+                source,
+            })?;
+
+            match coin_opt {
+                None => {
+                    return Err(TerraRustAPIError::CoinParseErr(str.parse().unwrap()).into());
                 }
-                Ok(coin_opt) => {
-                    match coin_opt {
-                        None => {
-                            return Err(ErrorKind::CoinParseErr(str.parse().unwrap()).into());
-                        }
-                        Some(coin) => {
-                            coins.push(coin);
-                        }
-                    };
+                Some(coin) => {
+                    coins.push(coin);
                 }
             };
         }
@@ -235,7 +232,7 @@ impl<'a> StdTx<'a> {
 mod tst {
     use super::*;
     #[test]
-    pub fn test_coin() -> Result<()> {
+    pub fn test_coin() -> anyhow::Result<()> {
         let c = Coin::create("uluna", dec!(1000.0));
         assert_eq!(c.amount, dec!(1000.0));
         assert_eq!(c.denom, "uluna");
@@ -257,7 +254,7 @@ mod tst {
         Ok(())
     }
     #[test]
-    pub fn test_rate() -> Result<()> {
+    pub fn test_rate() -> anyhow::Result<()> {
         let d = Coin::parse("50292.255931832196576203umnt")?;
         match d {
             Some(c) => {
@@ -282,7 +279,7 @@ mod tst {
         Ok(())
     }
     #[test]
-    fn test_coins() -> Result<()> {
+    fn test_coins() -> anyhow::Result<()> {
         let exchange_rates3="22.707524482460197756uaud,21.882510617180501989ucad,16.107413560222631626uchf,114.382279464849248732ucny,14.594888140543189388ueur,12.689498975492463452ugbp,136.932658449160933002uhkd,1315.661396873891976912uinr,1917.803659404458501345ujpy,20710.846165266109229516ukrw,50292.255931832196576203umnt,12.276992042852615569usdr,23.395036036859944228usgd,0.0uthb,17.639582167170638049uusd";
         let vec = Coin::parse_coins(exchange_rates3)?;
         assert_eq!(vec.len(), 15);

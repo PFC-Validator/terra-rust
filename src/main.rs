@@ -6,21 +6,20 @@
 // use std::io::BufWriter;
 #![warn(missing_docs)]
 use dotenv::dotenv;
-use log::{debug, error, info};
+// use log::{error, info};
 // use serde::{Deserialize, Serialize};
 // use std::env;
 use structopt::StructOpt;
 mod bank;
 mod contract;
-mod errors;
+
 mod keys;
 mod oracle;
 mod staking;
 mod tendermint;
 mod validator;
 mod wallet;
-
-use crate::errors::Result;
+use anyhow::Result;
 
 use crate::bank::{bank_cmd_parse, BankCommand};
 use crate::contract::{contract_cmd_parse, ContractCommand};
@@ -193,7 +192,7 @@ pub struct TxCommand {
     hash: String,
 }
 
-async fn run() -> Result<()> {
+async fn run() -> anyhow::Result<()> {
     let cli: Cli = Cli::from_args();
 
     let gas_opts: GasOptions = cli.gas_opts()?;
@@ -247,19 +246,18 @@ async fn run() -> Result<()> {
 async fn main() {
     env_logger::init();
     dotenv().ok();
-    if let Err(ref e) = run().await {
-        error!("error: {}", e);
 
-        //  $env:RUST_LOG="output_log=info"
-        for e in e.iter().skip(1) {
-            info!("caused by: {}", e);
-        }
+    if let Err(ref err) = run().await {
+        log::error!("{}", err);
+        err.chain()
+            .skip(1)
+            .for_each(|cause| log::error!("because: {}", cause));
 
         // The backtrace is not always generated. Try to run this example
         // with `$env:RUST_BACKTRACE=1`.
-        if let Some(backtrace) = e.backtrace() {
-            debug!("backtrace: {:?}", backtrace);
-        }
+        //    if let Some(backtrace) = e.backtrace() {
+        //        log::debug!("backtrace: {:?}", backtrace);
+        //    }
 
         ::std::process::exit(1);
     }

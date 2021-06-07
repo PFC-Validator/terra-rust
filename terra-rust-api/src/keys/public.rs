@@ -1,4 +1,4 @@
-use crate::errors::{ErrorKind, Result};
+use crate::errors::TerraRustAPIError;
 
 use bitcoin::bech32::{decode, encode, u5, FromBase32, ToBase32};
 use crypto::digest::Digest;
@@ -42,46 +42,46 @@ impl PublicKey {
         }
     }
     /// Generate a Cosmos/Tendermint/Terrad Account
-    pub fn from_account(acc_address: &str) -> Result<PublicKey> {
+    pub fn from_account(acc_address: &str) -> anyhow::Result<PublicKey> {
         PublicKey::check_prefix_and_length("terra", acc_address, 44).and_then(|vu5| {
-            match Vec::from_base32(vu5.as_slice()) {
-                Ok(vu8) => Ok(PublicKey {
-                    raw_pub_key: None,
-                    raw_address: Some(vu8),
-                }),
-                Err(_) => Err(ErrorKind::Conversion(String::from(acc_address)).into()),
-            }
+            let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| {
+                TerraRustAPIError::Conversion {
+                    key: acc_address.into(),
+                    source,
+                }
+            })?;
+            Ok(PublicKey {
+                raw_pub_key: None,
+                raw_address: Some(vu8),
+            })
         })
     }
     /// build a public key from a tendermint public key
-    pub fn from_tendermint_key(tendermint_public_key: &str) -> Result<PublicKey> {
+    pub fn from_tendermint_key(tendermint_public_key: &str) -> anyhow::Result<PublicKey> {
         // Len 83 == PubKeySecp256k1 key with a prefix of 0xEB5AE987
         // Len 82 == PubKeyEd25519 key with a prefix of 0x1624DE64
 
         let len = tendermint_public_key.len();
         if len == 83 {
             PublicKey::check_prefix_and_length("terravalconspub", tendermint_public_key, len)
-                .and_then(|vu5| match Vec::from_base32(vu5.as_slice()) {
-                    Ok(vu8) => {
-                        log::debug!("{:#?}", hex::encode(&vu8));
-                        if vu8.starts_with(&BECH32_PUBKEY_DATA_PREFIX_SECP256K1) {
-                            let public_key = PublicKey::public_key_from_pubkey(&vu8)?;
-                            let raw = PublicKey::address_from_public_key(&public_key);
-
-                            Ok(PublicKey {
-                                raw_pub_key: Some(vu8),
-                                raw_address: Some(raw),
-                            })
-                        } else {
-                            Err(
-                                ErrorKind::Conversion(String::from("83-missing SECP256K1/prefix"))
-                                    .into(),
-                            )
+                .and_then(|vu5| {
+                    let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| {
+                        TerraRustAPIError::Conversion {
+                            key: tendermint_public_key.into(),
+                            source,
                         }
-                    }
-                    Err(e) => {
-                        log::info!("{}", e);
-                        Err(ErrorKind::Conversion(String::from(tendermint_public_key)).into())
+                    })?;
+                    log::debug!("{:#?}", hex::encode(&vu8));
+                    if vu8.starts_with(&BECH32_PUBKEY_DATA_PREFIX_SECP256K1) {
+                        let public_key = PublicKey::public_key_from_pubkey(&vu8)?;
+                        let raw = PublicKey::address_from_public_key(&public_key);
+
+                        Ok(PublicKey {
+                            raw_pub_key: Some(vu8),
+                            raw_address: Some(raw),
+                        })
+                    } else {
+                        Err(TerraRustAPIError::ConversionSECP256k1.into())
                     }
                 })
         } else if len == 82 {
@@ -89,52 +89,51 @@ impl PublicKey {
             // todo!()
 
             PublicKey::check_prefix_and_length("terravalconspub", tendermint_public_key, len)
-                .and_then(|vu5| match Vec::from_base32(vu5.as_slice()) {
-                    Ok(vu8) => {
-                        log::debug!("{:#?}", hex::encode(&vu8));
-                        log::info!("ED25519 public keys are not fully supported");
-                        if vu8.starts_with(&BECH32_PUBKEY_DATA_PREFIX_ED25519) {
-                            //   let public_key = PublicKey::pubkey_from_ed25519_public_key(&vu8);
-                            let _raw = PublicKey::address_from_public_ed25519_key(&vu8)?;
-                            Ok(PublicKey {
-                                raw_pub_key: Some(vu8),
-                                raw_address: None,
-                            })
-                        } else {
-                            eprintln!("{}", hex::encode(&vu8));
-                            Err(ErrorKind::Conversion(String::from(
-                                "82-missing prefix ED25519/terravalconspub",
-                            ))
-                            .into())
+                .and_then(|vu5| {
+                    let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| {
+                        TerraRustAPIError::Conversion {
+                            key: tendermint_public_key.into(),
+                            source,
                         }
-                    }
-                    Err(e) => {
-                        log::info!("{}", e);
-                        Err(ErrorKind::Conversion(String::from(tendermint_public_key)).into())
+                    })?;
+                    log::debug!("{:#?}", hex::encode(&vu8));
+                    log::info!("ED25519 public keys are not fully supported");
+                    if vu8.starts_with(&BECH32_PUBKEY_DATA_PREFIX_ED25519) {
+                        //   let public_key = PublicKey::pubkey_from_ed25519_public_key(&vu8);
+                        let _raw = PublicKey::address_from_public_ed25519_key(&vu8)?;
+                        Ok(PublicKey {
+                            raw_pub_key: Some(vu8),
+                            raw_address: None,
+                        })
+                    } else {
+                        eprintln!("{}", hex::encode(&vu8));
+                        Err(TerraRustAPIError::ConversionED25519.into())
                     }
                 })
 
             /* */
         } else {
-            log::info!("Expected Key length of 82 or 83 length was {}", len);
-            Err(ErrorKind::Conversion(String::from(tendermint_public_key)).into())
+            Err(TerraRustAPIError::ConversionLength(len).into())
         }
     }
     /// Generate a Operator address for this public key (used by the validator)
-    pub fn from_operator_address(valoper_address: &str) -> Result<PublicKey> {
+    pub fn from_operator_address(valoper_address: &str) -> anyhow::Result<PublicKey> {
         PublicKey::check_prefix_and_length("terravaloper", valoper_address, 51).and_then(|vu5| {
-            match Vec::from_base32(vu5.as_slice()) {
-                Ok(vu8) => Ok(PublicKey {
-                    raw_pub_key: None,
-                    raw_address: Some(vu8),
-                }),
-                Err(_) => Err(ErrorKind::Conversion(String::from(valoper_address)).into()),
-            }
+            let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| {
+                TerraRustAPIError::Conversion {
+                    key: valoper_address.into(),
+                    source,
+                }
+            })?;
+            Ok(PublicKey {
+                raw_pub_key: None,
+                raw_address: Some(vu8),
+            })
         })
     }
 
     /// Generate Public key from raw address
-    pub fn from_raw_address(raw_address: &str) -> Result<PublicKey> {
+    pub fn from_raw_address(raw_address: &str) -> anyhow::Result<PublicKey> {
         let vec1 = hex::decode(raw_address)?;
 
         Ok(PublicKey {
@@ -142,26 +141,18 @@ impl PublicKey {
             raw_address: Some(vec1),
         })
     }
-    fn check_prefix_and_length(prefix: &str, data: &str, length: usize) -> Result<Vec<u5>> {
-        match decode(data) {
-            Ok((hrp, decoded_str)) => {
-                if hrp == prefix && data.len() == length {
-                    Ok(decoded_str)
-                } else {
-                    eprintln!(
-                        "Key Failed prefix {} or length {} Wanted:{}/{}",
-                        hrp,
-                        data.len(),
-                        prefix,
-                        length
-                    );
-                    Err(ErrorKind::Bech32DecodeErr.into())
-                }
-            }
-            Err(e) => {
-                log::info!("check prefix: {}", &e);
-                Err(ErrorKind::Conversion(String::from(data)).into())
-            }
+    fn check_prefix_and_length(prefix: &str, data: &str, length: usize) -> anyhow::Result<Vec<u5>> {
+        let (hrp, decoded_str) = decode(data).map_err(|source| TerraRustAPIError::Conversion {
+            key: data.into(),
+            source,
+        })?;
+        if hrp == prefix && data.len() == length {
+            Ok(decoded_str)
+        } else {
+            Err(
+                TerraRustAPIError::Bech32DecodeExpanded(hrp, data.len(), prefix.into(), length)
+                    .into(),
+            )
         }
     }
     /**
@@ -189,7 +180,7 @@ impl PublicKey {
         .concat()
     }
     /// Translate from a BECH32 prefixed key to a standard public key
-    pub fn public_key_from_pubkey(pub_key: &[u8]) -> Result<Vec<u8>> {
+    pub fn public_key_from_pubkey(pub_key: &[u8]) -> anyhow::Result<Vec<u8>> {
         if pub_key.starts_with(&BECH32_PUBKEY_DATA_PREFIX_SECP256K1) {
             let len = BECH32_PUBKEY_DATA_PREFIX_SECP256K1.len();
             let len2 = pub_key.len();
@@ -202,7 +193,7 @@ impl PublicKey {
             Ok(ed25519_pubkey.to_bytes().to_vec())
         } else {
             log::info!("pub key does not start with BECH32 PREFIX");
-            Err(ErrorKind::Bech32DecodeErr.into())
+            Err(TerraRustAPIError::Bech32DecodeErr.into())
         }
     }
 
@@ -237,14 +228,14 @@ impl PublicKey {
 
     */
 
-    pub fn address_from_public_ed25519_key(public_key: &[u8]) -> Result<Vec<u8>> {
+    pub fn address_from_public_ed25519_key(public_key: &[u8]) -> anyhow::Result<Vec<u8>> {
         // Vec<bech32::u5> {
 
         if public_key.len() != (32 + 5/* the 5 is the BECH32 ED25519 prefix */) {
-            eprintln!("{} {}", public_key.len(), hex::encode(public_key));
-            Err(ErrorKind::Conversion(String::from(
-                "Expected ED25519 key of length 32 with a BECH32 ED25519 prefix of 5 chars",
-            ))
+            Err(TerraRustAPIError::ConversionPrefixED25519(
+                public_key.len(),
+                hex::encode(public_key),
+            )
             .into())
         } else {
             eprintln!("a_pub_ed_key {}", hex::encode(public_key));
@@ -276,75 +267,75 @@ impl PublicKey {
         }
     }
     /// The main account used in most things
-    pub fn account(&self) -> Result<String> {
+    pub fn account(&self) -> anyhow::Result<String> {
         match &self.raw_address {
             Some(raw) => {
                 let data = encode("terra", raw.to_base32());
                 match data {
                     Ok(acc) => Ok(acc),
-                    Err(_) => Err(ErrorKind::Bech32DecodeErr.into()),
+                    Err(_) => Err(TerraRustAPIError::Bech32DecodeErr.into()),
                 }
             }
-            None => Err(ErrorKind::Implementation.into()),
+            None => Err(TerraRustAPIError::Implementation.into()),
         }
     }
     /// The operator address used for validators
-    pub fn operator_address(&self) -> Result<String> {
+    pub fn operator_address(&self) -> anyhow::Result<String> {
         match &self.raw_address {
             Some(raw) => {
                 let data = encode("terravaloper", raw.to_base32());
                 match data {
                     Ok(acc) => Ok(acc),
-                    Err(_) => Err(ErrorKind::Bech32DecodeErr.into()),
+                    Err(_) => Err(TerraRustAPIError::Bech32DecodeErr.into()),
                 }
             }
-            None => Err(ErrorKind::Implementation.into()),
+            None => Err(TerraRustAPIError::Implementation.into()),
         }
     }
     /// application public key - Application keys are associated with a public key terrapub- and an address terra-
-    pub fn application_public_key(&self) -> Result<String> {
+    pub fn application_public_key(&self) -> anyhow::Result<String> {
         match &self.raw_pub_key {
             Some(raw) => {
                 let data = encode("terrapub", raw.to_base32());
                 match data {
                     Ok(acc) => Ok(acc),
-                    Err(_) => Err(ErrorKind::Bech32DecodeErr.into()),
+                    Err(_) => Err(TerraRustAPIError::Bech32DecodeErr.into()),
                 }
             }
             None => {
                 log::warn!("Missing Public Key. Can't continue");
-                Err(ErrorKind::Implementation.into())
+                Err(TerraRustAPIError::Implementation.into())
             }
         }
     }
     /// The operator address used for validators public key.
-    pub fn operator_address_public_key(&self) -> Result<String> {
+    pub fn operator_address_public_key(&self) -> anyhow::Result<String> {
         match &self.raw_pub_key {
             Some(raw) => {
                 let data = encode("terravaloperpub", raw.to_base32());
                 match data {
                     Ok(acc) => Ok(acc),
-                    Err(_) => Err(ErrorKind::Bech32DecodeErr.into()),
+                    Err(_) => Err(TerraRustAPIError::Bech32DecodeErr.into()),
                 }
             }
-            None => Err(ErrorKind::Implementation.into()),
+            None => Err(TerraRustAPIError::Implementation.into()),
         }
     }
     /// This is a unique key used to sign block hashes. It is associated with a public key terravalconspub.
-    pub fn tendermint(&self) -> Result<String> {
+    pub fn tendermint(&self) -> anyhow::Result<String> {
         match &self.raw_address {
             Some(raw) => {
                 let data = encode("terravalcons", raw.to_base32());
                 match data {
                     Ok(acc) => Ok(acc),
-                    Err(_) => Err(ErrorKind::Bech32DecodeErr.into()),
+                    Err(_) => Err(TerraRustAPIError::Bech32DecodeErr.into()),
                 }
             }
-            None => Err(ErrorKind::Implementation.into()),
+            None => Err(TerraRustAPIError::Implementation.into()),
         }
     }
     /// This is a unique key used to sign block hashes. It is associated with a public key terravalconspub.
-    pub fn tendermint_pubkey(&self) -> Result<String> {
+    pub fn tendermint_pubkey(&self) -> anyhow::Result<String> {
         match &self.raw_pub_key {
             Some(raw) => {
                 // eprintln!("{} - tendermint_pubkey", hex::encode(raw));
@@ -352,10 +343,10 @@ impl PublicKey {
                 let data = encode("terravalconspub", b32);
                 match data {
                     Ok(acc) => Ok(acc),
-                    Err(_) => Err(ErrorKind::Bech32DecodeErr.into()),
+                    Err(_) => Err(TerraRustAPIError::Bech32DecodeErr.into()),
                 }
             }
-            None => Err(ErrorKind::Implementation.into()),
+            None => Err(TerraRustAPIError::Implementation.into()),
         }
     }
 }
@@ -364,7 +355,7 @@ mod tst {
     use super::*;
 
     #[test]
-    pub fn tst_conv() -> Result<()> {
+    pub fn tst_conv() -> anyhow::Result<()> {
         let pub_key = PublicKey::from_account("terra1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztv3qqm")?;
 
         assert_eq!(
@@ -385,7 +376,7 @@ mod tst {
         Ok(())
     }
     #[test]
-    pub fn test_key_conversions() -> Result<()> {
+    pub fn test_key_conversions() -> anyhow::Result<()> {
         let pub_key = PublicKey::from_public_key(&hex::decode(
             "02cf7ed0b5832538cd89b55084ce93399b186e381684b31388763801439cbdd20a",
         )?);
@@ -464,7 +455,7 @@ mod tst {
         Ok(())
     }
     #[test]
-    pub fn test_tendermint() -> Result<()> {
+    pub fn test_tendermint() -> anyhow::Result<()> {
         let secp256k1_public_key_str =
             "02A1633CAFCC01EBFB6D78E39F687A1F0995C62FC95F51EAD10A02EE0BE551B5DC";
         let seccp256k1_public_key =

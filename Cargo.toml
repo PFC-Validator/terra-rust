@@ -21,7 +21,8 @@ exclude = [
 [dependencies]
 terra-rust-api = { path = "./terra-rust-api", version = "0.2" }
 terra-rust-wallet = { path = "./terra-rust-wallet", version = "0.1" }
-error-chain = "0.12.2"
+anyhow="1.0"
+async-anyhow-logger = "0.1.0"
 tokio = { version = "1.6", features = ["full"] }
 structopt = "0.3"
 env_logger = "0.8.3"
