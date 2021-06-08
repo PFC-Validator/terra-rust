@@ -12,39 +12,39 @@ use serde::{Deserialize, Serialize};
 pub struct ValidatorDescription {
     pub details: String,
     pub identity: String,
-    pub security_contact: String,
     pub moniker: String,
+    pub security_contact: String,
     pub website: String,
 }
 impl ValidatorDescription {
     pub fn create_create(
-        moniker: String,
-        identity: Option<String>,
-        website: Option<String>,
-        security_contact: Option<String>,
         details: Option<String>,
+        identity: Option<String>,
+        moniker: String,
+        security_contact: Option<String>,
+        website: Option<String>,
     ) -> ValidatorDescription {
         ValidatorDescription {
-            moniker,
-            identity: identity.unwrap_or_else(|| "".into()),
-            website: website.unwrap_or_else(|| "".into()),
-            security_contact: security_contact.unwrap_or_else(|| "".into()),
             details: details.unwrap_or_else(|| "".into()),
+            identity: identity.unwrap_or_else(|| "".into()),
+            moniker,
+            security_contact: security_contact.unwrap_or_else(|| "".into()),
+            website: website.unwrap_or_else(|| "".into()),
         }
     }
     pub fn create_edit(
-        moniker: String,
-        identity: Option<String>,
-        website: Option<String>,
-        security_contact: Option<String>,
         details: Option<String>,
+        identity: Option<String>,
+        moniker: Option<String>,
+        security_contact: Option<String>,
+        website: Option<String>,
     ) -> ValidatorDescription {
         ValidatorDescription {
-            moniker,
-            identity: identity.unwrap_or_else(|| "[do-not-modify]".into()),
-            website: website.unwrap_or_else(|| "[do-not-modify]".into()),
-            security_contact: security_contact.unwrap_or_else(|| "[do-not-modify]".into()),
             details: details.unwrap_or_else(|| "[do-not-modify]".into()),
+            identity: identity.unwrap_or_else(|| "[do-not-modify]".into()),
+            moniker: moniker.unwrap_or_else(|| "[do-not-modify]".into()),
+            security_contact: security_contact.unwrap_or_else(|| "[do-not-modify]".into()),
+            website: website.unwrap_or_else(|| "[do-not-modify]".into()),
         }
     }
 }
@@ -100,8 +100,8 @@ impl MsgCreateValidator {
 #[derive(Serialize, Debug)]
 pub struct MsgEditValidator {
     pub address: String,
-    #[serde(with = "terra_decimal_format")]
-    pub commission_rate: Decimal,
+    #[serde(with = "terra_opt_decimal_format")]
+    pub commission_rate: Option<Decimal>,
     pub description: ValidatorDescription,
     #[serde(with = "terra_opt_decimal_format")]
     pub min_self_delegation: Option<Decimal>,
@@ -111,7 +111,7 @@ impl MsgEditValidator {
     pub fn create(
         description: ValidatorDescription,
         address: String,
-        commission_rate: Decimal,
+        commission_rate: Option<Decimal>,
         min_self_delegation: Option<Decimal>,
     ) -> Message {
         let internal = MsgEditValidator {

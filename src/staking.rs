@@ -7,7 +7,7 @@ use bitcoin::secp256k1::Secp256k1;
 use rust_decimal::Decimal;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::messages::staking::{
-    MsgCreateValidator, ValidatorCommission, ValidatorDescription,
+    MsgCreateValidator, MsgEditValidator, ValidatorCommission, ValidatorDescription,
 };
 use terra_rust_api::messages::Message;
 use terra_rust_wallet::Wallet;
@@ -54,20 +54,32 @@ pub enum StakingCommand {
     #[structopt(name = "edit-validator")]
     /// edit a validator's details
     EditValidator {
-        #[structopt(name = "validator", help = "the validator's terravaloper address")]
-        /// the validator to get more info on. hint: use the terravaloper address. try terravaloper12g4nkvsjjnl0t7fvq3hdcw7y8dc9fq69nyeu9q
+        #[structopt(name = "validator", help = "the validator key in the wallet")]
         validator: String,
-
-        #[structopt(name = "moniker", help = "the validator's moniker")]
-        moniker: String,
-        /// [Optional] the keybase.io PGP identity string.
+        #[structopt(long = "moniker", help = "the validator's moniker")]
+        moniker: Option<String>,
+        #[structopt(long = "identity", help = "the keybase.io PGP identity string")]
         identity: Option<String>,
-        /// [Optional] public URL
+
+        #[structopt(long = "website", help = "public URL")]
         website: Option<String>,
-        /// [Optional] public contact point. (usually email)
+
+        #[structopt(
+            long = "security_contact",
+            help = "public contact point. (usually email)"
+        )]
         security_contact: Option<String>,
-        /// [Optional] general text describing the validator
+
+        #[structopt(long = "details", help = "general text describing the validator")]
         details: Option<String>,
+
+        #[structopt(long = "rate", help = "commission rate. 1.00 = 100%")]
+        rate: Option<Decimal>,
+        #[structopt(
+            long = "min_self_delegation",
+            help = "the minimum amount required for the validator to be active. going under this amount will force the validator to be jailed"
+        )]
+        min_self_delegation: Option<Decimal>,
     },
     #[structopt(name = "delegate")]
     /// Delegate uLuna to a validator
@@ -129,11 +141,11 @@ pub async fn staking_cmd_parse<'a>(
             details,
         } => {
             let desc = ValidatorDescription::create_create(
-                moniker,
-                identity,
-                website,
-                security_contact,
                 details,
+                identity,
+                moniker,
+                security_contact,
+                website,
             );
             let commission = ValidatorCommission {
                 max_change_rate,
@@ -186,22 +198,52 @@ pub async fn staking_cmd_parse<'a>(
         }
         StakingCommand::EditValidator {
             validator,
-
             moniker,
             identity,
             website,
             security_contact,
             details,
+            rate,
+            min_self_delegation,
         } => {
-            let _v = validator;
-            let _desc = ValidatorDescription::create_create(
-                moniker,
-                identity,
-                website,
-                security_contact,
+            let desc = ValidatorDescription::create_edit(
                 details,
+                identity,
+                moniker,
+                security_contact,
+                website,
             );
-            todo!()
+            let secp = Secp256k1::new();
+            log::info!("Validator {}", &validator);
+            let validator_key = wallet.get_private_key(&secp, &validator, seed)?;
+            let validator_operator = validator_key.public_key(&secp).operator_address()?;
+            let msg = MsgEditValidator::create(desc, validator_operator, rate, min_self_delegation);
+            let messages: Vec<Message> = vec![msg];
+            let (std_sign_msg, sigs) = terra
+                .generate_transaction_to_broadcast(
+                    &secp,
+                    &validator_key,
+                    &messages,
+                    Some(format!(
+                        "PFC-{}/{}",
+                        NAME.unwrap_or("TERRARUST"),
+                        VERSION.unwrap_or("DEV")
+                    )),
+                )
+                .await?;
+
+            let resp = terra.tx().broadcast_sync(&std_sign_msg, &sigs).await?;
+            match resp.code {
+                Some(code) => {
+                    log::error!("{}", serde_json::to_string(&resp)?);
+                    eprintln!("Transaction returned a {} {}", code, resp.txhash)
+                }
+                None => {
+                    println!("{}", resp.txhash)
+                }
+            };
+
+            Ok(())
         }
         StakingCommand::Delegate { .. } => {
             todo!()
