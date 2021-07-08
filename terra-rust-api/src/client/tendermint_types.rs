@@ -1,4 +1,4 @@
-use crate::client::client_types::{terra_datetime_format, terra_u64_format};
+use crate::client::client_types::{terra_datetime_format, terra_i64_format, terra_u64_format};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -46,11 +46,13 @@ pub struct BlockEvidence {
 }
 #[derive(Deserialize, Serialize, Debug)]
 pub struct BlockSignature {
+    /// 1 -no signature .. 2 -- signature
     pub block_id_flag: usize,
+    /// HEX/Bytes version of string
     pub validator_address: String,
     #[serde(with = "terra_datetime_format")]
     pub timestamp: DateTime<Utc>,
-    pub signature: String,
+    pub signature: Option<String>,
 }
 #[derive(Deserialize, Serialize, Debug)]
 pub struct BlockCommit {
@@ -77,4 +79,26 @@ pub struct Block {
 pub struct BlockResult {
     pub block_id: BlockId,
     pub block: Block,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ValidatorSetResponse {
+    #[serde(with = "terra_u64_format")]
+    pub height: u64,
+    pub result: ValidatorSetResult,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ValidatorSetResult {
+    #[serde(with = "terra_u64_format")]
+    pub block_height: u64,
+    pub validators: Vec<Validator>,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct Validator {
+    pub address: String,
+    pub pub_key: String,
+    #[serde(with = "terra_i64_format")]
+    pub proposer_priority: i64,
+    #[serde(with = "terra_u64_format")]
+    pub voting_power: u64,
 }

@@ -1,6 +1,11 @@
 # Changes
 
 ## 0.2
+### 0.2.5 - 8-July-21 
+* added some more documentation
+* [BUG] Tendermint/blocks - signatures can be null
+* added tendermint /validatorsets API call
+* added terra_i64_format
 ### 0.2.4 - 8-July-21
 * Switch to thiserror (api) & anyhow (command) error handling
 * EditValidator Message working

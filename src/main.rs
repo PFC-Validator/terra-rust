@@ -26,7 +26,9 @@ use crate::contract::{contract_cmd_parse, ContractCommand};
 use crate::keys::{key_cmd_parse, KeysCommand};
 use crate::oracle::{oracle_cmd_parse, OracleCommand};
 use crate::staking::{staking_cmd_parse, StakingCommand};
-use crate::tendermint::{block_cmd_parse, BlockCommand};
+use crate::tendermint::{
+    block_cmd_parse, validator_sets_cmd_parse, BlockCommand, ValidatorSetsCommand,
+};
 use crate::validator::{validator_cmd_parse, ValidatorCommand};
 use crate::wallet::{wallet_cmd_parse, WalletCommand};
 use rust_decimal::Decimal;
@@ -162,6 +164,8 @@ enum Command {
     Staking(StakingCommand),
     /// WASM Module / Smart Contract commands
     Contract(ContractCommand),
+    /// Tendermint ValidatorSets commands
+    ValidatorSets(ValidatorSetsCommand),
 }
 
 #[derive(StructOpt)]
@@ -240,6 +244,7 @@ async fn run() -> anyhow::Result<()> {
         },
         Command::Wallet(wallet_cmd) => wallet_cmd_parse(&t, &wallet, seed, wallet_cmd),
         Command::Staking(cmd) => staking_cmd_parse(&t, &wallet, seed, cmd).await,
+        Command::ValidatorSets(cmd) => validator_sets_cmd_parse(&t, cmd).await,
     }
 }
 #[tokio::main]

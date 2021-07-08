@@ -18,6 +18,7 @@ impl Staking<'_> {
         //let response = req.send().await?;
         //Ok(response.json::<ValidatorResult>().await?)
     }
+    /// Get list of validators
     pub async fn validators(&self) -> anyhow::Result<ValidatorListResult> {
         self.terra
             .send_cmd::<ValidatorListResult>("/staking/validators", None)
