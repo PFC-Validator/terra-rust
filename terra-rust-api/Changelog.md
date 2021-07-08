@@ -1,7 +1,7 @@
 # Changes
 
 ## 0.2
-### 0.2.4 - Devel
+### 0.2.4 - 8-July-21
 * Switch to thiserror (api) & anyhow (command) error handling
 * EditValidator Message working
 ### 0.2.3 -  1-Jun-21
