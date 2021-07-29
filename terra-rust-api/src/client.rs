@@ -286,7 +286,7 @@ impl<'a> Terra<'a> {
         }
     }
     /// helper function to generate a 'StdSignMsg' & 'Signature' blocks to be used to broadcast a transaction
-
+    #[allow(clippy::too_many_arguments)]
     fn generate_transaction_to_broadcast_fees(
         chain_id: String,
         account_number: u64,

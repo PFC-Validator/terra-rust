@@ -24,6 +24,7 @@
 /// Error Messages
 pub mod errors;
 
+use crate::errors::KeyringErrorAdapter;
 //#[macro_use]
 //extern crate error_chain;
 use crate::errors::TerraRustWalletError;
@@ -59,7 +60,9 @@ impl<'a> Wallet<'a> {
         let wallet_list_name = &wallet.full_list_name();
         let keyring = keyring::Keyring::new(wallet_name, wallet_list_name);
         let wallet_internal = WalletInternal { keys: vec![] };
-        keyring.set_password(&serde_json::to_string(&wallet_internal)?)?;
+        keyring
+            .set_password(&serde_json::to_string(&wallet_internal)?)
+            .map_err(KeyringErrorAdapter::from)?;
         let string_key_name: String = String::from(wallet_name);
 
         match Wallet::get_wallets() {
@@ -98,7 +101,7 @@ impl<'a> Wallet<'a> {
     ) -> anyhow::Result<PrivateKey> {
         let full_key_name = self.full_key_name(key_name);
         let keyring = keyring::Keyring::new(&self.name, &full_key_name);
-        let phrase = &keyring.get_password()?;
+        let phrase = &keyring.get_password().map_err(KeyringErrorAdapter::from)?;
 
         match seed {
             None => Ok(PrivateKey::from_words(secp, phrase)?),
@@ -122,7 +125,9 @@ impl<'a> Wallet<'a> {
         let full_key_name = self.full_key_name(key_name);
 
         let keyring = keyring::Keyring::new(&self.name, &full_key_name);
-        keyring.set_password(pk.words().unwrap())?;
+        keyring
+            .set_password(pk.words().unwrap())
+            .map_err(KeyringErrorAdapter::from)?;
         let old_list = self.get_keys()?;
         let string_key_name: String = String::from(key_name);
         let mut new_list: Vec<String> = vec![];
@@ -142,7 +147,9 @@ impl<'a> Wallet<'a> {
     pub fn delete_key(&self, key_name: &str) -> anyhow::Result<bool> {
         let full_key_name = self.full_key_name(key_name);
         let keyring = keyring::Keyring::new(&self.name, &full_key_name);
-        keyring.delete_password()?;
+        keyring
+            .delete_password()
+            .map_err(KeyringErrorAdapter::from)?;
         let old_list = self.get_keys()?;
         let mut new_list = vec![];
         for s in old_list {
@@ -168,7 +175,9 @@ impl<'a> Wallet<'a> {
         }
         let wallet_list_name = self.full_list_name();
         let keyring = keyring::Keyring::new(&self.name, &wallet_list_name);
-        keyring.delete_password()?;
+        keyring
+            .delete_password()
+            .map_err(KeyringErrorAdapter::from)?;
         let old_list = Wallet::get_wallets()?;
         // let string_key_name: String = String::from(self.name);
         let mut new_list: Vec<String> = vec![];
@@ -202,7 +211,7 @@ impl<'a> Wallet<'a> {
             .get_password()
             .map_err(|source| TerraRustWalletError::KeyNotFound {
                 key: wallet_list_name,
-                source,
+                source: KeyringErrorAdapter::from(source),
             })?;
 
         let wallet_internal: WalletInternal = serde_json::from_str(&pass)?;
@@ -214,7 +223,8 @@ impl<'a> Wallet<'a> {
         let wallet_list_name = Wallet::wallet_list_name();
         let keyring = keyring::Keyring::new(&wallet_list_name, "wallets");
 
-        let wallet_internal: WalletListInternal = serde_json::from_str(&keyring.get_password()?)?;
+        let wallet_internal: WalletListInternal =
+            serde_json::from_str(&keyring.get_password().map_err(KeyringErrorAdapter::from)?)?;
         Ok(wallet_internal.wallets)
     }
 
@@ -223,7 +233,9 @@ impl<'a> Wallet<'a> {
         let wallet_list_name = self.full_list_name();
         let keyring = keyring::Keyring::new(&self.name, &wallet_list_name);
 
-        keyring.set_password(&serde_json::to_string(int)?)?;
+        keyring
+            .set_password(&serde_json::to_string(int)?)
+            .map_err(KeyringErrorAdapter::from)?;
         Ok(())
     }
     /// update list of wallets
@@ -231,7 +243,9 @@ impl<'a> Wallet<'a> {
         let wallet_list_name = Wallet::wallet_list_name();
         let keyring = keyring::Keyring::new(&wallet_list_name, "wallets");
 
-        keyring.set_password(&serde_json::to_string(int)?)?;
+        keyring
+            .set_password(&serde_json::to_string(int)?)
+            .map_err(KeyringErrorAdapter::from)?;
         Ok(())
     }
 }
