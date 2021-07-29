@@ -1,6 +1,7 @@
 # Changes
 
 ## 0.2
+### 0.2.7 - Devel
 ### 0.2.6 - 29-July-21
 * PR #2 linux build by [@snoberg](https://github.com/snoyberg)
 * PR #3 ability to use rusttls [@snoberg](https://github.com/snoyberg)

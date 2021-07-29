@@ -1,6 +1,6 @@
 [package]
 name = "terra-rust-api"
-version = "0.2.6"
+version = "0.2.7"
 authors = ["PFC-Validator <PFC-Validator@protonmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
