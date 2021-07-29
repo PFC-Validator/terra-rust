@@ -219,7 +219,7 @@ impl<'a> StdTx<'a> {
         StdTx {
             mode,
             tx: StdTxInner {
-                msg: &std_sign_msg.msgs,
+                msg: std_sign_msg.msgs,
                 fee: &std_sign_msg.fee,
                 signatures,
                 memo: &std_sign_msg.memo,

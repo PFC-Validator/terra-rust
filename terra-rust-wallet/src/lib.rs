@@ -100,7 +100,7 @@ impl<'a> Wallet<'a> {
         seed: Option<&'a str>,
     ) -> anyhow::Result<PrivateKey> {
         let full_key_name = self.full_key_name(key_name);
-        let keyring = keyring::Keyring::new(&self.name, &full_key_name);
+        let keyring = keyring::Keyring::new(self.name, &full_key_name);
         let phrase = &keyring.get_password().map_err(KeyringErrorAdapter::from)?;
 
         match seed {
@@ -117,14 +117,14 @@ impl<'a> Wallet<'a> {
     ) -> anyhow::Result<PublicKey> {
         let private_key: PrivateKey = self.get_private_key(secp, key_name, seed)?;
 
-        let pub_key = private_key.public_key(&secp);
+        let pub_key = private_key.public_key(secp);
         Ok(pub_key)
     }
     /// stores the private key into the keyring
     pub fn store_key(&self, key_name: &str, pk: &PrivateKey) -> anyhow::Result<bool> {
         let full_key_name = self.full_key_name(key_name);
 
-        let keyring = keyring::Keyring::new(&self.name, &full_key_name);
+        let keyring = keyring::Keyring::new(self.name, &full_key_name);
         keyring
             .set_password(pk.words().unwrap())
             .map_err(KeyringErrorAdapter::from)?;
@@ -146,7 +146,7 @@ impl<'a> Wallet<'a> {
     /// deletes the private key from the keyring
     pub fn delete_key(&self, key_name: &str) -> anyhow::Result<bool> {
         let full_key_name = self.full_key_name(key_name);
-        let keyring = keyring::Keyring::new(&self.name, &full_key_name);
+        let keyring = keyring::Keyring::new(self.name, &full_key_name);
         keyring
             .delete_password()
             .map_err(KeyringErrorAdapter::from)?;
@@ -174,7 +174,7 @@ impl<'a> Wallet<'a> {
             self.delete_key(&key)?;
         }
         let wallet_list_name = self.full_list_name();
-        let keyring = keyring::Keyring::new(&self.name, &wallet_list_name);
+        let keyring = keyring::Keyring::new(self.name, &wallet_list_name);
         keyring
             .delete_password()
             .map_err(KeyringErrorAdapter::from)?;
@@ -206,7 +206,7 @@ impl<'a> Wallet<'a> {
     /// get list of keys in a wallet
     fn get_keys(&self) -> anyhow::Result<Vec<String>> {
         let wallet_list_name = self.full_list_name();
-        let keyring = keyring::Keyring::new(&self.name, &wallet_list_name);
+        let keyring = keyring::Keyring::new(self.name, &wallet_list_name);
         let pass = keyring
             .get_password()
             .map_err(|source| TerraRustWalletError::KeyNotFound {
@@ -231,7 +231,7 @@ impl<'a> Wallet<'a> {
     /// update keys in a wallet
     fn set_keys(&self, int: &WalletInternal) -> anyhow::Result<()> {
         let wallet_list_name = self.full_list_name();
-        let keyring = keyring::Keyring::new(&self.name, &wallet_list_name);
+        let keyring = keyring::Keyring::new(self.name, &wallet_list_name);
 
         keyring
             .set_password(&serde_json::to_string(int)?)

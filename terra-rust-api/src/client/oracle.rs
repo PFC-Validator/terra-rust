@@ -19,7 +19,7 @@ impl<'a> Oracle<'a> {
         Ok(response)
     }
     pub fn voters(&self, validator: &'a str) -> Voters<'a> {
-        Voters::create(&self.terra, validator)
+        Voters::create(self.terra, validator)
     }
 }
 pub struct Voters<'a> {

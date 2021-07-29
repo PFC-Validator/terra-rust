@@ -137,31 +137,31 @@ impl<'a> Terra<'a> {
     }
     /// Auth API functions
     pub fn auth(&self) -> auth::Auth {
-        auth::Auth::create(&self)
+        auth::Auth::create(self)
     }
     /// Staking API functions
     pub fn staking(&self) -> staking::Staking {
-        staking::Staking::create(&self)
+        staking::Staking::create(self)
     }
     /// Market API functions
     pub fn market(&self) -> market::Market {
-        market::Market::create(&self)
+        market::Market::create(self)
     }
     /// Oracle API functions
     pub fn oracle(&self) -> oracle::Oracle {
-        oracle::Oracle::create(&self)
+        oracle::Oracle::create(self)
     }
     /// Tendermint (MISC) API Functions
     pub fn tendermint(&self) -> tendermint::Tendermint {
-        tendermint::Tendermint::create(&self)
+        tendermint::Tendermint::create(self)
     }
     /// TXS API Functions
     pub fn tx(&self) -> tx::TX {
-        tx::TX::create(&self)
+        tx::TX::create(self)
     }
     /// WASM module / smart contract API Functions
     pub fn wasm(&self) -> wasm::Wasm {
-        wasm::Wasm::create(&self)
+        wasm::Wasm::create(self)
     }
 
     fn construct_headers() -> HeaderMap {
@@ -312,7 +312,7 @@ impl<'a> Terra<'a> {
         let js = serde_json::to_string(&std_sign_msg)?;
         log::debug!("TO SIGN - {}", js);
         // eprintln!("Client.rs:311\n{}", js);
-        let sig = from.sign(&secp, &js)?;
+        let sig = from.sign(secp, &js)?;
         let sigs: Vec<StdSignature> = vec![sig];
 
         Ok((std_sign_msg, sigs))
@@ -334,7 +334,7 @@ impl<'a> Terra<'a> {
         self.auth()
             .account(&from_account)
             .map_ok(move |auth_result| {
-                self.calc_fees(&messages).map_ok(move |std_fee| {
+                self.calc_fees(messages).map_ok(move |std_fee| {
                     Terra::generate_transaction_to_broadcast_fees(
                         self.chain_id.into(),
                         auth_result.result.value.account_number,

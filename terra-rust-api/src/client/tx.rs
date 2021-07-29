@@ -21,7 +21,7 @@ impl<'a> TX<'a> {
         std_sign_msg: &'a StdSignMsg<'a>,
         sigs: &[StdSignature],
     ) -> anyhow::Result<TXResultAsync> {
-        let std_tx: StdTx = StdTx::from_StdSignMsg(&std_sign_msg, &sigs, "async");
+        let std_tx: StdTx = StdTx::from_StdSignMsg(std_sign_msg, sigs, "async");
 
         //  let js_sig = serde_json::to_string(&std_tx)?;
         let response = self
@@ -37,7 +37,7 @@ impl<'a> TX<'a> {
         std_sign_msg: &'a StdSignMsg<'a>,
         sigs: &[StdSignature],
     ) -> anyhow::Result<TXResultSync> {
-        let std_tx: StdTx = StdTx::from_StdSignMsg(&std_sign_msg, &sigs, "sync");
+        let std_tx: StdTx = StdTx::from_StdSignMsg(std_sign_msg, sigs, "sync");
         //    let js_sig = serde_json::to_string(&std_tx)?;
         log::info!("{}", serde_json::to_string(&std_tx)?);
         let response = self
@@ -54,7 +54,7 @@ impl<'a> TX<'a> {
         sigs: &[StdSignature],
     ) -> anyhow::Result<TXResultBlock> {
         log::warn!("Broadcast_block is not recommended to be used in production situations");
-        let std_tx: StdTx = StdTx::from_StdSignMsg(&std_sign_msg, &sigs, "block");
+        let std_tx: StdTx = StdTx::from_StdSignMsg(std_sign_msg, sigs, "block");
         //    let js_sig = serde_json::to_string(&std_tx)?;
         let response = self
             .terra
