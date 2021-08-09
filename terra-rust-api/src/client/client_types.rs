@@ -7,7 +7,8 @@ pub mod terra_datetime_format {
     use serde::{self, Deserialize, Deserializer, Serializer};
 
     const FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f";
-    const FORMAT_SHORT: &str = "%Y-%m-%dT%H:%M:%SZ";
+    const FORMAT_TZ_SUPPLIED: &str = "%Y-%m-%dT%H:%M:%S.%f%:z";
+    const FORMAT_SHORT_Z: &str = "%Y-%m-%dT%H:%M:%SZ";
 
     // The signature of a serialize_with function must follow the pattern:
     //
@@ -46,14 +47,16 @@ pub mod terra_datetime_format {
             len
         };
 
-        // match Utc.datetime_from_str(&s, FORMAT) {
         let sliced = &s[0..slice_len];
         match NaiveDateTime::parse_from_str(sliced, FORMAT) {
-            Err(_e) => match NaiveDateTime::parse_from_str(sliced, FORMAT_SHORT) {
-                Err(_e2) => {
-                    eprintln!("DateTime Fail {} {:#?}", sliced, _e);
-                    Err(serde::de::Error::custom(_e))
-                }
+            Err(_e) => match NaiveDateTime::parse_from_str(&s, FORMAT_TZ_SUPPLIED) {
+                Err(_e2) => match NaiveDateTime::parse_from_str(sliced, FORMAT_SHORT_Z) {
+                    Err(_e3) => {
+                        eprintln!("DateTime Fail {} {:#?}", s, _e);
+                        Err(serde::de::Error::custom(_e))
+                    }
+                    Ok(dt) => Ok(Utc.from_utc_datetime(&dt)),
+                },
                 Ok(dt) => Ok(Utc.from_utc_datetime(&dt)),
             },
             Ok(dt) => Ok(Utc.from_utc_datetime(&dt)),
