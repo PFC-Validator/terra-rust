@@ -34,10 +34,12 @@ mod wasm_types;
 
 use crate::errors::TerraRustAPIError;
 use crate::messages::Message;
+use crate::AddressBook;
 use crate::PrivateKey;
 use bitcoin::secp256k1::{All, Secp256k1};
 use futures::TryFutureExt;
 use rust_decimal_macros::dec;
+use std::fs::File;
 
 /// Version # of package sent out on requests to help with debugging
 const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
@@ -99,6 +101,9 @@ pub struct Terra<'a> {
     pub debug: bool,
 }
 impl<'a> Terra<'a> {
+    const NETWORK_PROD_ADDRESS_BOOK: &'a str = "https://network.terra.dev/addrbook.json";
+    const NETWORK_TEST_ADDRESS_BOOK: &'a str = "https://network.terra.dev/testnet/addrbook.json";
+
     /// Create a FULL client interface
     pub async fn lcd_client(
         url: &'a str,
@@ -164,7 +169,7 @@ impl<'a> Terra<'a> {
         wasm::Wasm::create(self)
     }
 
-    fn construct_headers() -> HeaderMap {
+    pub fn construct_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
 
         headers.insert(
@@ -350,6 +355,27 @@ impl<'a> Terra<'a> {
             .await?
             .await?
     }
+    /// fetch the address book for the production network
+    pub async fn production_address_book() -> anyhow::Result<AddressBook> {
+        Self::address_book(Self::NETWORK_PROD_ADDRESS_BOOK).await
+    }
+    /// fetch the address book for the testnet network
+    pub async fn testnet_address_book() -> anyhow::Result<AddressBook> {
+        Self::address_book(Self::NETWORK_TEST_ADDRESS_BOOK).await
+    }
+    /// fetch a address book json structure
+    pub async fn address_book(addr_url: &str) -> anyhow::Result<AddressBook> {
+        if addr_url.starts_with("file://") {
+            let file = File::open(&addr_url[7..]).unwrap();
+            let add: AddressBook = serde_json::from_reader(file)?;
+            Ok(add)
+        } else {
+            let client = reqwest::Client::new();
+
+            let req = client.get(addr_url).headers(Self::construct_headers());
+            Self::resp::<AddressBook>(addr_url, req).await
+        }
+    }
 }
 #[cfg(test)]
 mod tst {
@@ -361,7 +387,7 @@ mod tst {
 
     #[test]
     pub fn test_send() -> anyhow::Result<()> {
-        let str_1 =  "island relax shop such yellow opinion find know caught erode blue dolphin behind coach tattoo light focus snake common size analyst imitate employ walnut";
+        let str_1 = "island relax shop such yellow opinion find know caught erode blue dolphin behind coach tattoo light focus snake common size analyst imitate employ walnut";
         let secp = Secp256k1::new();
         let pk = PrivateKey::from_words(&secp, str_1)?;
         let pub_k = pk.public_key(&secp);
@@ -405,7 +431,7 @@ mod tst {
 
     #[test]
     pub fn test_wasm() -> anyhow::Result<()> {
-        let key_words="sell raven long age tooth still predict idea quit march gasp bamboo hurdle problem voyage east tiger divide machine brain hole tiger find smooth";
+        let key_words = "sell raven long age tooth still predict idea quit march gasp bamboo hurdle problem voyage east tiger divide machine brain hole tiger find smooth";
         let secp = Secp256k1::new();
         let private = PrivateKey::from_words(&secp, key_words)?;
         let public_key = private.public_key(&secp);
@@ -448,6 +474,23 @@ mod tst {
         let js_sig = serde_json::to_string(&std_tx)?;
         let js_sig_eq = r#"{"tx":{"msg":[{"type":"wasm/MsgExecuteContract","value":{"coins":[],"contract":"terra16ckeuu7c6ggu52a8se005mg5c0kd2kmuun63cu","execute_msg":"eyJjYXN0X3ZvdGUiOnsicG9sbF9pZCI6NDQsInZvdGUiOiJ5ZXMiLCJhbW91bnQiOiIxMDAwMDAwIn19","sender":"terra1vr0e7kylhu9am44v0s3gwkccmz7k3naxysrwew"}}],"fee":{"amount":[{"amount":"70000","denom":"uluna"}],"gas":"200000"},"signatures":[{"signature":"pCkd+nBaz1U3DYw0oY2Arxqc+3jI8QRdaXtYbIle9uh60POxvcUHVk2aN7VklgvnPKF7XGIF04U0sxpq/05Vqg==","pub_key":{"type":"tendermint/PubKeySecp256k1","value":"A3K4ruHQP1yY4dkCp41Djnx6z7KfMjDcvkIB93L3Po9C"}}],"memo":"PFC-terra-rust-anchor/0.1.1"},"mode":"sync"}"#;
         assert_eq!(js_sig, js_sig_eq);
+        Ok(())
+    }
+
+    #[tokio::test]
+    pub async fn test_address_book() -> anyhow::Result<()> {
+        let prod = Terra::production_address_book().await?;
+        assert!(prod.addrs.len() > 0);
+        let test = Terra::testnet_address_book().await?;
+        assert!(test.addrs.len() > 0);
+        let file_version = Terra::address_book("file://resources/addressbook.json").await?;
+        assert_eq!(file_version.key, "775cf30a073ca5e97fb07a00");
+        assert!(file_version.addrs.len() > 1);
+        assert_eq!(
+            file_version.addrs[0].addr.id,
+            "ebca6b5d3cc2da9dfdfe4b1c045043fce686f143"
+        );
+
         Ok(())
     }
 }

@@ -68,6 +68,8 @@
 * }
 * ```
 */
+/// address book definition
+pub mod addressbook;
 /// APIs
 pub mod client;
 /// Error Messages
@@ -75,6 +77,7 @@ pub mod errors;
 mod keys;
 /// definitions of the different type of Messages we have implemented
 pub mod messages;
+
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
@@ -90,6 +93,7 @@ pub use crate::client_types::{
     terra_datetime_format, terra_decimal_format, terra_f64_format, terra_opt_decimal_format,
     terra_opt_u64_format, terra_u64_format,
 };
+pub use addressbook::AddressBook;
 pub use client::{auth_types, client_types, core_types, market_types, staking_types};
 pub use client::{GasOptions, Terra};
 pub use keys::{PrivateKey, PublicKey};
