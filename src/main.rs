@@ -13,14 +13,17 @@ use structopt::StructOpt;
 mod bank;
 mod contract;
 
+mod auth;
 mod keys;
 mod oracle;
 mod staking;
 mod tendermint;
 mod validator;
 mod wallet;
+
 use anyhow::Result;
 
+use crate::auth::{auth_cmd_parse, AuthCommand};
 use crate::bank::{bank_cmd_parse, BankCommand};
 use crate::contract::{contract_cmd_parse, ContractCommand};
 use crate::keys::{key_cmd_parse, KeysCommand};
@@ -149,7 +152,7 @@ enum Command {
     /// Market Operations
     Market(Market),
     /// Auth operations
-    Auth(Auth),
+    Auth(AuthCommand),
     /// wallet ops
     Wallet(WalletCommand),
     /// Bank Transactions
@@ -180,14 +183,7 @@ enum Market {
         ask: String,
     },
 }
-#[derive(StructOpt)]
-enum Auth {
-    #[structopt(name = "account")]
-    Account {
-        #[structopt(name = "address", help = "the address to query")]
-        address: String,
-    },
-}
+
 /// Input to the /txs/XXXX query
 #[derive(StructOpt)]
 pub struct TxCommand {
@@ -234,14 +230,7 @@ async fn run() -> anyhow::Result<()> {
             println!("{}", serde_json::to_string_pretty(&resp)?);
             Ok(())
         }
-        Command::Auth(auth_cmd) => match auth_cmd {
-            Auth::Account { address } => {
-                let sw = t.auth().account(&address).await?;
-
-                println!("{}", serde_json::to_string_pretty(&sw)?);
-                Ok(())
-            }
-        },
+        Command::Auth(auth_cmd) => auth_cmd_parse(&t, &wallet, seed, auth_cmd).await,
         Command::Wallet(wallet_cmd) => wallet_cmd_parse(&t, &wallet, seed, wallet_cmd),
         Command::Staking(cmd) => staking_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::ValidatorSets(cmd) => validator_sets_cmd_parse(&t, cmd).await,

@@ -29,6 +29,19 @@ pub enum ValidatorCommand {
         /// the validator to get more info on. try PFC
         moniker: String,
     },
+    #[structopt(name = "delegations")]
+    Delegations {
+        #[structopt(name = "validator", help = "the validator's terravaloper address")]
+        // the validator to get more info on. hint: use the terravaloper address. try terravaloper12g4nkvsjjnl0t7fvq3hdcw7y8dc9fq69nyeu9q
+        validator: String,
+    },
+    #[structopt(name = "unbonding")]
+    Unbonding {
+        #[structopt(name = "validator", help = "the validator's terravaloper address")]
+        // the validator to get more info on. hint: use the terravaloper address. try terravaloper12g4nkvsjjnl0t7fvq3hdcw7y8dc9fq69nyeu9q
+        validator: String,
+    },
+
     #[structopt(name = "voter")]
     Voters {
         /// the validator to get more info on. hint: use the terravaloper address. try terravaloper12g4nkvsjjnl0t7fvq3hdcw7y8dc9fq69nyeu9q
@@ -42,13 +55,6 @@ pub async fn validator_cmd_parse(terra: &Terra<'_>, cmd: ValidatorCommand) -> Re
     match cmd {
         ValidatorCommand::List => {
             let list = terra.staking().validators().await?;
-            /*
-            if !list.result.is_empty() {
-                let v1 = list.result.get(0).unwrap();
-                println!("{:#?}", v1);
-            }
-
-             */
             println!("{:#?}", list.result);
         }
         ValidatorCommand::Describe { validator } => {
@@ -58,6 +64,17 @@ pub async fn validator_cmd_parse(terra: &Terra<'_>, cmd: ValidatorCommand) -> Re
         ValidatorCommand::Moniker { moniker } => {
             let v = terra.staking().validator_by_moniker(&moniker).await?;
             println!("{:#?}", v);
+        }
+        ValidatorCommand::Delegations { validator } => {
+            let v = terra.staking().validator_delegations(&validator).await?;
+            println!("{:#?}", v.result);
+        }
+        ValidatorCommand::Unbonding { validator } => {
+            let v = terra
+                .staking()
+                .validator_unbonding_delegations(&validator)
+                .await?;
+            println!("{:#?}", v.result);
         }
 
         ValidatorCommand::Voters { .. } => {

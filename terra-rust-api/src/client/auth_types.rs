@@ -1,5 +1,6 @@
 use crate::client::client_types::terra_u64_format;
 
+use crate::client::staking_types::Validator;
 use crate::core_types::{Coin, PubKeySig};
 use serde::{Deserialize, Serialize};
 
@@ -34,4 +35,12 @@ pub struct AuthAccountResult {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
     pub result: AuthAccountTv,
+}
+
+#[allow(missing_docs)]
+#[derive(Deserialize, Debug)]
+pub struct AccountDelegatedValidatorResult {
+    #[serde(with = "terra_u64_format")]
+    pub height: u64,
+    pub result: Vec<Validator>,
 }

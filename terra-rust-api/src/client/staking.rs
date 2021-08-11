@@ -1,4 +1,7 @@
-use crate::client::staking_types::{ValidatorListResult, ValidatorResult};
+use crate::client::staking_types::{
+    ValidatorDelegationResult, ValidatorListResult, ValidatorResult,
+    ValidatorUnbondingDelegationResult,
+};
 use crate::staking_types::Validator;
 use crate::Terra;
 
@@ -14,9 +17,6 @@ impl Staking<'_> {
         self.terra
             .send_cmd::<ValidatorResult>("/staking/validators/", Some(key))
             .await
-        //  let req = self.terra.client.get(url);
-        //let response = req.send().await?;
-        //Ok(response.json::<ValidatorResult>().await?)
     }
     /// Get list of validators
     pub async fn validators(&self) -> anyhow::Result<ValidatorListResult> {
@@ -34,5 +34,30 @@ impl Staking<'_> {
             None => Ok(None),
             Some(v) => Ok(Some(v.to_owned())),
         }
+    }
+    /// all delegations for a given validator
+    pub async fn validator_delegations(
+        &self,
+        key: &str,
+    ) -> anyhow::Result<ValidatorDelegationResult> {
+        self.terra
+            .send_cmd::<ValidatorDelegationResult>(
+                &format!("/staking/validators/{}/delegations", key),
+                None,
+            )
+            .await
+    }
+
+    /// all unbondings for a given validator
+    pub async fn validator_unbonding_delegations(
+        &self,
+        key: &str,
+    ) -> anyhow::Result<ValidatorUnbondingDelegationResult> {
+        self.terra
+            .send_cmd::<ValidatorUnbondingDelegationResult>(
+                &format!("/staking/validators/{}/unbonding_delegations", key),
+                None,
+            )
+            .await
     }
 }

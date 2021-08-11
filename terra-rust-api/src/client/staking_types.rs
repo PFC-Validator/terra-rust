@@ -1,5 +1,8 @@
-use crate::client::client_types::{terra_datetime_format, terra_f64_format, terra_u64_format};
+use crate::client::client_types::{
+    terra_datetime_format, terra_decimal_format, terra_f64_format, terra_u64_format,
+};
 use chrono::{DateTime, Utc};
+use rust_decimal::Decimal;
 use serde::Deserialize;
 
 /// Information provided by the validator for their validation node.
@@ -81,4 +84,68 @@ pub struct ValidatorListResult {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
     pub result: Vec<Validator>,
+}
+
+/// Validator Delegation amount
+#[derive(Deserialize, Clone, Debug)]
+pub struct ValidatorDelegationBalance {
+    /// token name
+    pub denom: String,
+    /// amount delegated
+    #[serde(with = "terra_decimal_format")]
+    pub amount: Decimal,
+}
+/// Validator Delegation amount
+#[derive(Deserialize, Clone, Debug)]
+pub struct ValidatorDelegation {
+    /// account delegating the funds
+    pub delegator_address: String,
+    /// validator oper address
+    pub validator_address: String,
+    /// amount delegated
+    #[serde(with = "terra_decimal_format")]
+    pub shares: Decimal,
+    // balance amount
+    pub balance: ValidatorDelegationBalance,
+}
+#[allow(missing_docs)]
+#[derive(Deserialize, Debug)]
+pub struct ValidatorDelegationResult {
+    #[serde(with = "terra_u64_format")]
+    pub height: u64,
+    pub result: Vec<ValidatorDelegation>,
+}
+
+/// Validator Delegation amount
+#[derive(Deserialize, Clone, Debug)]
+pub struct ValidatorUnbondingDelegationEntry {
+    /// block # when unbonding happened
+    #[serde(with = "terra_u64_format")]
+    pub creation_height: u64,
+    /// time when it will complete
+    #[serde(with = "terra_datetime_format")]
+    pub completion_time: DateTime<Utc>,
+    /// initial balance
+    #[serde(with = "terra_u64_format")]
+    pub initial_balance: u64,
+    /// balance
+    #[serde(with = "terra_u64_format")]
+    pub balance: u64,
+}
+/// Validator Delegation amount
+#[derive(Deserialize, Clone, Debug)]
+pub struct ValidatorUnbondingDelegation {
+    /// account delegating the funds
+    pub delegator_address: String,
+    /// validator 'oper' address
+    pub validator_address: String,
+    /// delegation entries
+    pub entries: Vec<ValidatorUnbondingDelegationEntry>,
+}
+#[allow(missing_docs)]
+#[derive(Deserialize, Debug)]
+pub struct ValidatorUnbondingDelegationResult {
+    #[serde(with = "terra_u64_format")]
+    pub height: u64,
+    pub result: Vec<ValidatorUnbondingDelegation>,
 }
