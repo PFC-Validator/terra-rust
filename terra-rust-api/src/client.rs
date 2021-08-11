@@ -365,8 +365,8 @@ impl<'a> Terra<'a> {
     }
     /// fetch a address book json structure
     pub async fn address_book(addr_url: &str) -> anyhow::Result<AddressBook> {
-        if addr_url.starts_with("file://") {
-            let file = File::open(&addr_url[7..]).unwrap();
+        if let Some(file_name) = addr_url.strip_prefix("file://") {
+            let file = File::open(file_name).unwrap();
             let add: AddressBook = serde_json::from_reader(file)?;
             Ok(add)
         } else {
