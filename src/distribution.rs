@@ -39,9 +39,6 @@ pub enum DistributionCommand {
     Withdraw {
         /// delegator. The nickname in the wallet used to sign the transaction, and transfer the initial amount
         delegator: String,
-        #[structopt(name = "validator", help = "the validator's terravaloper address")]
-        ///  the validator's oper terravaloper1XXXXXXXXX.
-        validator: String,
     },
 }
 
@@ -115,11 +112,12 @@ pub async fn distribution_cmd_parse<'a>(
         }
         DistributionCommand::Withdraw {
             delegator,
-            validator,
+            //validator,
         } => {
             log::info!("Delegator {}", &delegator);
             let delegator_key = wallet.get_private_key(&secp, &delegator, seed)?;
             let delegator_account = delegator_key.public_key(&secp).account()?;
+            let validator = delegator_key.public_key(&secp).operator_address()?;
 
             log::info!("Validator {}", &validator);
             let msg_commission = MsgWithdrawValidatorCommission::create(validator.clone());
