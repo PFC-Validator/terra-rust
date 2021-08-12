@@ -48,8 +48,8 @@ pub async fn bank_cmd_parse<'a>(
             let send = MsgSend::create(from_account, to, vec![coin]);
 
             let messages: Vec<Message> = vec![send];
-            let (std_sign_msg, sigs) = terra
-                .generate_transaction_to_broadcast(
+            let resp = terra
+                .submit_transaction_sync(
                     &secp,
                     &from_key,
                     &messages,
@@ -61,16 +61,8 @@ pub async fn bank_cmd_parse<'a>(
                 )
                 .await?;
 
-            let resp = terra.tx().broadcast_sync(&std_sign_msg, &sigs).await?;
-            match resp.code {
-                Some(code) => {
-                    log::error!("{}", serde_json::to_string(&resp)?);
-                    eprintln!("Transaction returned a {} {}", code, resp.txhash)
-                }
-                None => {
-                    println!("{}", resp.txhash)
-                }
-            }
+            println!("{}", resp.txhash);
+            log::info!("{}", resp.raw_log);
         }
     };
     Ok(())

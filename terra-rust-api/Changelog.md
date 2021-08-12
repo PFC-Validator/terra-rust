@@ -5,6 +5,9 @@
 * Add timezone support (used on tendermint dates in addressbook)
 * Add functions to fetch address book
 * Add functions to display delegations/undelegations
+* Helper functions submit_transaction_{async|sync}
+* Add messages for delegator rewards, and around staking/unstaking
+
 ### 0.2.6 - 29-July-21
 * PR #2 linux build by [@snoberg](https://github.com/snoyberg)
 * PR #3 ability to use rusttls [@snoberg](https://github.com/snoyberg)

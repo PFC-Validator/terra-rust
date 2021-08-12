@@ -126,3 +126,74 @@ impl MsgEditValidator {
         }
     }
 }
+
+/// edit undelegate message
+#[derive(Serialize, Debug)]
+pub struct MsgUndelegate {
+    pub amount: Coin,
+    pub delegator_address: String,
+    pub validator_address: String,
+}
+impl MsgInternal for MsgUndelegate {}
+impl MsgUndelegate {
+    pub fn create(delegator_address: String, validator_address: String, amount: Coin) -> Message {
+        let internal = MsgUndelegate {
+            amount,
+            delegator_address,
+            validator_address,
+        };
+        Message {
+            s_type: "staking/MsgUndelegate".into(),
+            value: Box::new(internal),
+        }
+    }
+}
+/// edit undelegate message
+#[derive(Serialize, Debug)]
+pub struct MsgDelegate {
+    pub amount: Coin,
+    pub delegator_address: String,
+    pub validator_address: String,
+}
+impl MsgInternal for MsgDelegate {}
+impl MsgDelegate {
+    pub fn create(delegator_address: String, validator_address: String, amount: Coin) -> Message {
+        let internal = MsgDelegate {
+            amount,
+            delegator_address,
+            validator_address,
+        };
+        Message {
+            s_type: "staking/MsgDelegate".into(),
+            value: Box::new(internal),
+        }
+    }
+}
+/// edit undelegate message
+#[derive(Serialize, Debug)]
+pub struct MsgBeginRedelegate {
+    pub amount: Coin,
+    pub delegator_address: String,
+    pub validator_dst_address: String,
+    pub validator_src_address: String,
+}
+impl MsgInternal for MsgBeginRedelegate {}
+impl MsgBeginRedelegate {
+    pub fn create(
+        delegator_address: String,
+        validator_dst_address: String,
+        validator_src_address: String,
+        amount: Coin,
+    ) -> Message {
+        let internal = MsgBeginRedelegate {
+            amount,
+            delegator_address,
+            validator_src_address,
+            validator_dst_address,
+        };
+        Message {
+            s_type: "staking/MsgBeginRedelegate".into(),
+            value: Box::new(internal),
+        }
+    }
+}

@@ -66,8 +66,8 @@ pub async fn oracle_cmd_parse<'a>(
             let delegate_msg = MsgDelegateFeedConsent::create(from_operator, delegate);
 
             let messages: Vec<Message> = vec![delegate_msg];
-            let (std_sign_msg, sigs) = terra
-                .generate_transaction_to_broadcast(
+            let resp = terra
+                .submit_transaction_sync(
                     &secp,
                     &from_key,
                     &messages,
@@ -79,16 +79,8 @@ pub async fn oracle_cmd_parse<'a>(
                 )
                 .await?;
 
-            let resp = terra.tx().broadcast_sync(&std_sign_msg, &sigs).await?;
-            match resp.code {
-                Some(code) => {
-                    log::error!("{}", serde_json::to_string(&resp)?);
-                    eprintln!("Transaction returned a {} {}", code, resp.txhash)
-                }
-                None => {
-                    println!("{}", resp.txhash)
-                }
-            }
+            println!("{}", resp.txhash);
+            log::info!("{}", resp.raw_log);
         }
         OracleCommand::Voters { validator, cmd } => {
             let voter = terra.oracle().voters(&validator);

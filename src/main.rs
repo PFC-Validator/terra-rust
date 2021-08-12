@@ -6,14 +6,13 @@
 // use std::io::BufWriter;
 #![warn(missing_docs)]
 use dotenv::dotenv;
-// use log::{error, info};
-// use serde::{Deserialize, Serialize};
-// use std::env;
+
 use structopt::StructOpt;
 mod bank;
 mod contract;
 
 mod auth;
+mod distribution;
 mod keys;
 mod oracle;
 mod staking;
@@ -26,6 +25,7 @@ use anyhow::Result;
 use crate::auth::{auth_cmd_parse, AuthCommand};
 use crate::bank::{bank_cmd_parse, BankCommand};
 use crate::contract::{contract_cmd_parse, ContractCommand};
+use crate::distribution::{distribution_cmd_parse, DistributionCommand};
 use crate::keys::{key_cmd_parse, KeysCommand};
 use crate::oracle::{oracle_cmd_parse, OracleCommand};
 use crate::staking::{staking_cmd_parse, StakingCommand};
@@ -165,6 +165,8 @@ enum Command {
     Tx(TxCommand),
     /// Staking Commands
     Staking(StakingCommand),
+    /// Staking Commands
+    Distribution(DistributionCommand),
     /// WASM Module / Smart Contract commands
     Contract(ContractCommand),
     /// Tendermint ValidatorSets commands
@@ -233,6 +235,7 @@ async fn run() -> anyhow::Result<()> {
         Command::Auth(auth_cmd) => auth_cmd_parse(&t, &wallet, seed, auth_cmd).await,
         Command::Wallet(wallet_cmd) => wallet_cmd_parse(&t, &wallet, seed, wallet_cmd),
         Command::Staking(cmd) => staking_cmd_parse(&t, &wallet, seed, cmd).await,
+        Command::Distribution(cmd) => distribution_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::ValidatorSets(cmd) => validator_sets_cmd_parse(&t, cmd).await,
     }
 }

@@ -1,10 +1,11 @@
 /// Bank API Transactions
 pub mod bank;
+pub mod distribution;
 /// Oracle API Transactions
 pub mod oracle;
 /// messages around staking
 pub mod staking;
-/// regulat contract interactions
+/// regular contract interactions
 pub mod wasm;
 
 use crate::core_types::MsgInternal;

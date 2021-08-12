@@ -1,5 +1,5 @@
 // use crate::errors::{ErrorKind, Result};
-use crate::client::tx_types::TxFeeResult;
+use crate::client::tx_types::{TXResultAsync, TXResultSync, TxFeeResult};
 use crate::core_types::{Coin, StdFee, StdSignMsg, StdSignature};
 use reqwest::header::{HeaderMap, CONTENT_TYPE, USER_AGENT};
 use reqwest::{Client, RequestBuilder};
@@ -33,6 +33,7 @@ mod wasm;
 mod wasm_types;
 
 use crate::errors::TerraRustAPIError;
+use crate::errors::TerraRustAPIError::TxResultError;
 use crate::messages::Message;
 use crate::AddressBook;
 use crate::PrivateKey;
@@ -355,6 +356,39 @@ impl<'a> Terra<'a> {
             .await?
             .await?
     }
+    /// helper: sign & submit the transaction sync
+    pub async fn submit_transaction_sync(
+        &self,
+        secp: &Secp256k1<All>,
+        from: &'a PrivateKey,
+        messages: &'a [Message],
+        memo: Option<String>,
+    ) -> anyhow::Result<TXResultSync> {
+        let (std_sign_msg, sigs) = self
+            .generate_transaction_to_broadcast(secp, from, messages, memo)
+            .await?;
+        let resp = self.tx().broadcast_sync(&std_sign_msg, &sigs).await?;
+
+        match resp.code {
+            Some(code) => Err(TxResultError(code, resp.txhash, resp.raw_log).into()),
+            None => Ok(resp),
+        }
+    }
+    /// helper: sign & submit the transaction async
+    pub async fn submit_transaction_async(
+        &self,
+        secp: &Secp256k1<All>,
+        from: &'a PrivateKey,
+        messages: &'a [Message],
+        memo: Option<String>,
+    ) -> anyhow::Result<TXResultAsync> {
+        let (std_sign_msg, sigs) = self
+            .generate_transaction_to_broadcast(secp, from, messages, memo)
+            .await?;
+        let resp = self.tx().broadcast_async(&std_sign_msg, &sigs).await?;
+        Ok(resp)
+    }
+
     /// fetch the address book for the production network
     pub async fn production_address_book() -> anyhow::Result<AddressBook> {
         Self::address_book(Self::NETWORK_PROD_ADDRESS_BOOK).await

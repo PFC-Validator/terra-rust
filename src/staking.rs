@@ -7,7 +7,8 @@ use bitcoin::secp256k1::Secp256k1;
 use rust_decimal::Decimal;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::messages::staking::{
-    MsgCreateValidator, MsgEditValidator, ValidatorCommission, ValidatorDescription,
+    MsgBeginRedelegate, MsgCreateValidator, MsgDelegate, MsgEditValidator, MsgUndelegate,
+    ValidatorCommission, ValidatorDescription,
 };
 use terra_rust_api::messages::Message;
 use terra_rust_wallet::Wallet;
@@ -84,6 +85,8 @@ pub enum StakingCommand {
     #[structopt(name = "delegate")]
     /// Delegate uLuna to a validator
     Delegate {
+        /// delegator. The nickname in the wallet used to sign the transaction,use
+        delegator: String,
         #[structopt(
             name = "validator",
             help = "the validator's terravaloper address to delegate too"
@@ -95,6 +98,8 @@ pub enum StakingCommand {
     #[structopt(name = "redelegate")]
     /// move your delegated uLuna from one validator to another
     ReDelegate {
+        /// delegator. The nickname in the wallet used to sign the transaction,use
+        delegator: String,
         #[structopt(name = "source", help = "the source validator's terravaloper address")]
         /// the validator to transfer funds from. hint: use the terravaloper address.
         source: String,
@@ -110,8 +115,11 @@ pub enum StakingCommand {
     #[structopt(name = "unbond")]
     /// start the unbonding process that removes your uLuna from being staked on a validator
     UnBond {
+        /// delegator. The nickname in the wallet used to sign the transaction,use
+        delegator: String,
+
         #[structopt(name = "validator", help = "the validator's terravaloper address")]
-        /// the validator to transfer funds from. hint: use the terravaloper address.
+        /// the validator to unbond funds from. hint: use the terravaloper address.
         validator: String,
         /// the amount of uLuna to transfer
         amount: Decimal,
@@ -124,6 +132,7 @@ pub async fn staking_cmd_parse<'a>(
     seed: Option<&str>,
     cmd: StakingCommand,
 ) -> Result<()> {
+    let secp = Secp256k1::new();
     match cmd {
         StakingCommand::CreateValidator {
             delegator,
@@ -152,7 +161,7 @@ pub async fn staking_cmd_parse<'a>(
                 max_rate,
                 rate,
             };
-            let secp = Secp256k1::new();
+
             log::info!("Delegator {}", &delegator);
             let delegator_key = wallet.get_private_key(&secp, &delegator, seed)?;
             let delegator_account = delegator_key.public_key(&secp).account()?;
@@ -170,8 +179,8 @@ pub async fn staking_cmd_parse<'a>(
                 coin,
             );
             let messages: Vec<Message> = vec![msg];
-            let (std_sign_msg, sigs) = terra
-                .generate_transaction_to_broadcast(
+            let resp = terra
+                .submit_transaction_sync(
                     &secp,
                     &delegator_key,
                     &messages,
@@ -183,16 +192,8 @@ pub async fn staking_cmd_parse<'a>(
                 )
                 .await?;
 
-            let resp = terra.tx().broadcast_sync(&std_sign_msg, &sigs).await?;
-            match resp.code {
-                Some(code) => {
-                    log::error!("{}", serde_json::to_string(&resp)?);
-                    eprintln!("Transaction returned a {} {}", code, resp.txhash)
-                }
-                None => {
-                    println!("{}", resp.txhash)
-                }
-            };
+            println!("{}", resp.txhash);
+            log::info!("{}", resp.raw_log);
 
             Ok(())
         }
@@ -213,14 +214,13 @@ pub async fn staking_cmd_parse<'a>(
                 security_contact,
                 website,
             );
-            let secp = Secp256k1::new();
             log::info!("Validator {}", &validator);
             let validator_key = wallet.get_private_key(&secp, &validator, seed)?;
             let validator_operator = validator_key.public_key(&secp).operator_address()?;
             let msg = MsgEditValidator::create(desc, validator_operator, rate, min_self_delegation);
             let messages: Vec<Message> = vec![msg];
-            let (std_sign_msg, sigs) = terra
-                .generate_transaction_to_broadcast(
+            let resp = terra
+                .submit_transaction_sync(
                     &secp,
                     &validator_key,
                     &messages,
@@ -232,27 +232,99 @@ pub async fn staking_cmd_parse<'a>(
                 )
                 .await?;
 
-            let resp = terra.tx().broadcast_sync(&std_sign_msg, &sigs).await?;
-            match resp.code {
-                Some(code) => {
-                    log::error!("{}", serde_json::to_string(&resp)?);
-                    eprintln!("Transaction returned a {} {}", code, resp.txhash)
-                }
-                None => {
-                    println!("{}", resp.txhash)
-                }
-            };
+            println!("{}", resp.txhash);
+            log::info!("{}", resp.raw_log);
 
             Ok(())
         }
-        StakingCommand::Delegate { .. } => {
-            todo!()
+        StakingCommand::Delegate {
+            delegator,
+            validator,
+            amount,
+        } => {
+            log::info!("Delegator {}", &delegator);
+            let delegator_key = wallet.get_private_key(&secp, &delegator, seed)?;
+            let delegator_account = delegator_key.public_key(&secp).account()?;
+            let msg =
+                MsgDelegate::create(delegator_account, validator, Coin::create("uluna", amount));
+            let messages: Vec<Message> = vec![msg];
+            let resp = terra
+                .submit_transaction_sync(
+                    &secp,
+                    &delegator_key,
+                    &messages,
+                    Some(format!(
+                        "PFC-{}/{}",
+                        NAME.unwrap_or("TERRARUST"),
+                        VERSION.unwrap_or("DEV")
+                    )),
+                )
+                .await?;
+
+            println!("{}", resp.txhash);
+            log::info!("{}", resp.raw_log);
+            Ok(())
         }
-        StakingCommand::ReDelegate { .. } => {
-            todo!()
+        StakingCommand::ReDelegate {
+            delegator,
+            source,
+            destination,
+            amount,
+        } => {
+            log::info!("Delegator {}", &delegator);
+            let delegator_key = wallet.get_private_key(&secp, &delegator, seed)?;
+            let delegator_account = delegator_key.public_key(&secp).account()?;
+            let msg = MsgBeginRedelegate::create(
+                delegator_account,
+                destination,
+                source,
+                Coin::create("uluna", amount),
+            );
+            let messages: Vec<Message> = vec![msg];
+            let resp = terra
+                .submit_transaction_sync(
+                    &secp,
+                    &delegator_key,
+                    &messages,
+                    Some(format!(
+                        "PFC-{}/{}",
+                        NAME.unwrap_or("TERRARUST"),
+                        VERSION.unwrap_or("DEV")
+                    )),
+                )
+                .await?;
+
+            println!("{}", resp.txhash);
+            log::info!("{}", resp.raw_log);
+            Ok(())
         }
-        StakingCommand::UnBond { .. } => {
-            todo!()
+        StakingCommand::UnBond {
+            delegator,
+            validator,
+            amount,
+        } => {
+            log::info!("Delegator {}", &delegator);
+            let delegator_key = wallet.get_private_key(&secp, &delegator, seed)?;
+            let delegator_account = delegator_key.public_key(&secp).account()?;
+            let msg =
+                MsgUndelegate::create(delegator_account, validator, Coin::create("uluna", amount));
+            let messages: Vec<Message> = vec![msg];
+            let resp = terra
+                .submit_transaction_sync(
+                    &secp,
+                    &delegator_key,
+                    &messages,
+                    Some(format!(
+                        "PFC-{}/{}",
+                        NAME.unwrap_or("TERRARUST"),
+                        VERSION.unwrap_or("DEV")
+                    )),
+                )
+                .await?;
+
+            println!("{}", resp.txhash);
+            log::info!("{}", resp.raw_log);
+            Ok(())
         }
     }
 }
