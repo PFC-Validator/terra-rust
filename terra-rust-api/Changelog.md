@@ -1,6 +1,7 @@
 # Changes
 
 ## 0.2
+### 0.2.8 - devel
 ### 0.2.7 - 12-Aug-21
 * Add timezone support (used on tendermint dates in addressbook)
 * Add functions to fetch address book

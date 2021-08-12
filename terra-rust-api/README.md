@@ -49,27 +49,18 @@ let from_account = from_public_key.account()?;
 let send: MsgSend = MsgSend::create(from_account, "terra1usws7c2c6cs7nuc8vma9qzaky5pkgvm2uag6rh", vec![coin]);
 // generate the transaction & calc fees
 let messages = vec![send];
-let (std_sign_msg, sigs) = terra
-                .generate_transaction_to_broadcast(
+// and submit the message(s) to the chain
+let resp = terra.submit_transaction_sync(
                     &secp,
                     &from_key,
                     &messages,
                     None
                 )
                 .await?;
-// send it out
- let resp = terra.tx().broadcast_sync(&std_sign_msg, &sigs).await?;
- match resp.code {
-     Some(code) => {
-         log::error!("{}", serde_json::to_string(&resp)?);
-         eprintln!("Transaction returned a {} {}", code, resp.txhash)
-     }
-     None => {
-         println!("{}", resp.txhash)
-     }
- }
+ println!("{}", resp.txhash)
+ 
 ```
 
 # Docs 
 * [API Documentation](https://docs.rs/terra-rust-api)
-* see [Change log](./Changelog.md) for more detailed change summaries
+* see [Change log](https://github.com/PFC-Validator/terra-rust/blob/main/terra-rust-api/Changelog.md) for more detailed change summaries
