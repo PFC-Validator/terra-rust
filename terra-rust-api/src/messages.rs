@@ -3,6 +3,8 @@ pub mod bank;
 pub mod distribution;
 /// Oracle API Transactions
 pub mod oracle;
+/// slashing messages
+pub mod slashing;
 /// messages around staking
 pub mod staking;
 /// regular contract interactions

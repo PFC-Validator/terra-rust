@@ -15,6 +15,7 @@ mod auth;
 mod distribution;
 mod keys;
 mod oracle;
+mod slashing;
 mod staking;
 mod tendermint;
 mod validator;
@@ -28,6 +29,7 @@ use crate::contract::{contract_cmd_parse, ContractCommand};
 use crate::distribution::{distribution_cmd_parse, DistributionCommand};
 use crate::keys::{key_cmd_parse, KeysCommand};
 use crate::oracle::{oracle_cmd_parse, OracleCommand};
+use crate::slashing::{slashing_cmd_parse, SlashingCommand};
 use crate::staking::{staking_cmd_parse, StakingCommand};
 use crate::tendermint::{
     block_cmd_parse, validator_sets_cmd_parse, BlockCommand, ValidatorSetsCommand,
@@ -163,6 +165,8 @@ enum Command {
     Block(BlockCommand),
     /// Transaction Commands
     Tx(TxCommand),
+    /// Slashing Commands
+    Slashing(SlashingCommand),
     /// Staking Commands
     Staking(StakingCommand),
     /// Staking Commands
@@ -234,6 +238,7 @@ async fn run() -> anyhow::Result<()> {
         }
         Command::Auth(auth_cmd) => auth_cmd_parse(&t, &wallet, seed, auth_cmd).await,
         Command::Wallet(wallet_cmd) => wallet_cmd_parse(&t, &wallet, seed, wallet_cmd),
+        Command::Slashing(cmd) => slashing_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::Staking(cmd) => staking_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::Distribution(cmd) => distribution_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::ValidatorSets(cmd) => validator_sets_cmd_parse(&t, cmd).await,
