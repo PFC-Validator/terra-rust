@@ -14,6 +14,7 @@ mod contract;
 mod auth;
 mod distribution;
 mod keys;
+mod market;
 mod oracle;
 mod slashing;
 mod staking;
@@ -28,6 +29,7 @@ use crate::bank::{bank_cmd_parse, BankCommand};
 use crate::contract::{contract_cmd_parse, ContractCommand};
 use crate::distribution::{distribution_cmd_parse, DistributionCommand};
 use crate::keys::{key_cmd_parse, KeysCommand};
+use crate::market::{market_cmd_parse, MarketCommand};
 use crate::oracle::{oracle_cmd_parse, OracleCommand};
 use crate::slashing::{slashing_cmd_parse, SlashingCommand};
 use crate::staking::{staking_cmd_parse, StakingCommand};
@@ -36,7 +38,6 @@ use crate::tendermint::{
 };
 use crate::validator::{validator_cmd_parse, ValidatorCommand};
 use crate::wallet::{wallet_cmd_parse, WalletCommand};
-use rust_decimal::Decimal;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::{GasOptions, Terra};
 use terra_rust_wallet::Wallet;
@@ -104,14 +105,14 @@ struct Cli {
     #[structopt(
         name = "gas-prices",
         env = "TERRARUST_GAS_PRICES",
-        default_value = "",
+        default_value = "180.0ukrw",
         long = "gas-prices",
         help = "the gas price to use to calculate fee. Format is NNNtoken eg. 1000uluna. note we only support a single price for now"
     )]
     gas_price: String,
     #[structopt(
         name = "gas-adjustment",
-        default_value = "1.0",
+        default_value = "1.4",
         env = "TERRARUST_GAS_ADJUSTMENT",
         long = "gas-adjustment",
         help = "the adjustment to multiply the estimate to calculate the fee"
@@ -152,7 +153,7 @@ enum Command {
     /// validator operations
     Validator(ValidatorCommand),
     /// Market Operations
-    Market(Market),
+    Market(MarketCommand),
     /// Auth operations
     Auth(AuthCommand),
     /// wallet ops
@@ -175,19 +176,6 @@ enum Command {
     Contract(ContractCommand),
     /// Tendermint ValidatorSets commands
     ValidatorSets(ValidatorSetsCommand),
-}
-
-#[derive(StructOpt)]
-enum Market {
-    #[structopt(name = "swap")]
-    Swap {
-        #[structopt(name = "denom", help = "token symbol. remember we are uXXX not XXX")]
-        denom: String,
-        #[structopt(name = "amount", help = "the amount. remember we are uXXX not XXX")]
-        amount: Decimal,
-        #[structopt(name = "ask", help = "what to swap the amount into")]
-        ask: String,
-    },
 }
 
 /// Input to the /txs/XXXX query
@@ -222,15 +210,8 @@ async fn run() -> anyhow::Result<()> {
         Command::Validator(cmd) => validator_cmd_parse(&t, cmd).await,
         Command::Block(cmd) => block_cmd_parse(&t, cmd).await,
         Command::Contract(cmd) => contract_cmd_parse(&t, &wallet, seed, cmd).await,
-        Command::Market(market_cmd) => match market_cmd {
-            Market::Swap { denom, ask, amount } => {
-                let coin = Coin::create(&denom, amount);
-                let sw = t.market().swap(&coin, &ask).await?;
+        Command::Market(cmd) => market_cmd_parse(&t, &wallet, seed, cmd).await,
 
-                println!("{}", serde_json::to_string_pretty(&sw)?);
-                Ok(())
-            }
-        },
         Command::Tx(cmd) => {
             let resp = t.tx().get(&cmd.hash).await?;
             println!("{}", serde_json::to_string_pretty(&resp)?);

@@ -1,6 +1,8 @@
 /// Bank API Transactions
 pub mod bank;
 pub mod distribution;
+/// market messages
+pub mod market;
 /// Oracle API Transactions
 pub mod oracle;
 /// slashing messages
