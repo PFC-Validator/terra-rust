@@ -42,8 +42,8 @@ impl Market<'_> {
             .value
             .coins
             .into_iter()
-            .filter(|c| c.denom != to_coin)
-            .collect::<Vec<Coin>>();
+            .filter(|c| c.denom != to_coin);
+        //.collect::<Vec<Coin>>();
         let into_currency_futures = potential_coins
             .into_iter()
             .map(|c| async {
@@ -52,7 +52,7 @@ impl Market<'_> {
                     .market()
                     .swap(&c.clone(), &to_coin)
                     .await
-                    .and_then(|f| Ok((c, f.result)));
+                    .map(|f| (c, f.result));
                 resp
             })
             .collect::<Vec<_>>();
@@ -90,7 +90,7 @@ impl Market<'_> {
         match err {
             Some(e) => Err(e),
             None => Ok(to_convert
-                .into_iter()
+                .iter()
                 .map(|f| MsgSwap::create(f.0.clone(), to_coin.clone(), from.clone()))
                 .collect::<Vec<_>>()),
         }

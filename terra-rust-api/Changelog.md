@@ -1,10 +1,11 @@
 # Changes
 
 ## 0.2
-### 0.2.8 - 18-Aug-21
+### 0.2.9 - 18-Aug-21
 * Add slashing/Unjail
 * Add market/Swap 
 * Add "sweep" function to mass swap tokens above a certain threshold
+### 0.2.8 - not usable
 ### 0.2.7 - 12-Aug-21
 * Add timezone support (used on tendermint dates in addressbook)
 * Add functions to fetch address book
