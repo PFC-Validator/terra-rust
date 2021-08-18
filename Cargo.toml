@@ -8,7 +8,8 @@ homepage = "https://github.com/PFC-Validator/terra-rust/"
 repository = "https://github.com/PFC-Validator/terra-rust/"
 keywords = ["terra", "blockchain"]
 categories = ["cli"]
-
+license = "Apache-2.0"
+description="CLI for Terra blockchain network, that is multi-platform"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
 members = [
@@ -29,7 +30,7 @@ terra-rust-api = { path = "./terra-rust-api", version = "0.2.9", default-feature
 terra-rust-wallet = { path = "./terra-rust-wallet", version = "0.1" }
 anyhow="1.0"
 async-anyhow-logger = "0.1.0"
-tokio = { version = "1.6", features = ["full"] }
+tokio = { version = "1.10", features = ["full"] }
 structopt = "0.3"
 env_logger = "0.8.3"
 log="0.4"
