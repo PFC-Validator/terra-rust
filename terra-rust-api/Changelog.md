@@ -1,6 +1,7 @@
 # Changes
 
 ## 0.2
+### 0.2.10 - devel
 ### 0.2.9 - 18-Aug-21
 * Add slashing/Unjail
 * Add market/Swap 
