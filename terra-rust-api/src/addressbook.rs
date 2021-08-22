@@ -2,11 +2,16 @@ use crate::terra_datetime_format;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, Hash, PartialEq, Eq)]
 pub struct NodeIDIPPort {
     pub id: String,
     pub ip: String,
     pub port: usize,
+}
+impl ToString for NodeIDIPPort {
+    fn to_string(&self) -> String {
+        format!("{}@{}:{}", self.id, self.ip, self.port)
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
