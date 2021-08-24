@@ -1,7 +1,7 @@
 # Changes
 
 ## 0.1
-### 0.1.4 - Devel
+### 0.1.4 - 24-Aug-2021
 * Upgrade to terra-rust-api 0.3
 ### 0.1.3 - 29-July-2021
 * Fix compilations on linux around KeyringError - PR#2/3 by [@snoberg](https://github.com/snoyberg)
