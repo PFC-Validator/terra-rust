@@ -1,6 +1,7 @@
 # Changes
 
 ## 0.3
+### 0.3.2 - Devel
 ### 0.3.1 - 24-Aug-21
 * Switched LCD query responses to generic type (API Change)
 * RPC endpoint API started
