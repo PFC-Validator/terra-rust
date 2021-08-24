@@ -1,8 +1,13 @@
 # Changes
 
-## 0.2
-### 0.2.10 - devel
+## 0.3
+### 0.3.1 - devel
+* Switched LCD query responses to generic type (API Change)
+* RPC endpoint API started
+* FCD endpoint API started
+* can now fetch gas prices from FCD
 * add Eq/ToString to NodeIpPort
+## 0.2
 ### 0.2.9 - 18-Aug-21
 * Add slashing/Unjail
 * Add market/Swap 

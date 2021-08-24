@@ -71,20 +71,6 @@ pub struct Validator {
     #[serde(with = "terra_u64_format")]
     pub min_self_delegation: u64,
 }
-#[allow(missing_docs)]
-#[derive(Deserialize, Debug)]
-pub struct ValidatorResult {
-    #[serde(with = "terra_u64_format")]
-    pub height: u64,
-    pub result: Validator,
-}
-#[allow(missing_docs)]
-#[derive(Deserialize, Debug)]
-pub struct ValidatorListResult {
-    #[serde(with = "terra_u64_format")]
-    pub height: u64,
-    pub result: Vec<Validator>,
-}
 
 /// Validator Delegation amount
 #[derive(Deserialize, Clone, Debug)]
@@ -107,13 +93,6 @@ pub struct ValidatorDelegation {
     pub shares: Decimal,
     // balance amount
     pub balance: ValidatorDelegationBalance,
-}
-#[allow(missing_docs)]
-#[derive(Deserialize, Debug)]
-pub struct ValidatorDelegationResult {
-    #[serde(with = "terra_u64_format")]
-    pub height: u64,
-    pub result: Vec<ValidatorDelegation>,
 }
 
 /// Validator Delegation amount
@@ -141,11 +120,4 @@ pub struct ValidatorUnbondingDelegation {
     pub validator_address: String,
     /// delegation entries
     pub entries: Vec<ValidatorUnbondingDelegationEntry>,
-}
-#[allow(missing_docs)]
-#[derive(Deserialize, Debug)]
-pub struct ValidatorUnbondingDelegationResult {
-    #[serde(with = "terra_u64_format")]
-    pub height: u64,
-    pub result: Vec<ValidatorUnbondingDelegation>,
 }

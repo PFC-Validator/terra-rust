@@ -1,5 +1,5 @@
-use crate::client::tendermint_types::{BlockResult, ValidatorSetResponse};
-use crate::Terra;
+use crate::client::tendermint_types::{BlockResult, ValidatorSetResult};
+use crate::{LCDResult, Terra};
 
 pub struct Tendermint<'a> {
     terra: &'a Terra<'a>,
@@ -29,7 +29,7 @@ impl Tendermint<'_> {
         &self,
         page: usize,
         limit: usize,
-    ) -> anyhow::Result<ValidatorSetResponse> {
+    ) -> anyhow::Result<LCDResult<ValidatorSetResult>> {
         let args = if page == 0 {
             format!("?limit={}", limit)
         } else {
@@ -37,7 +37,7 @@ impl Tendermint<'_> {
         };
         let response = self
             .terra
-            .send_cmd::<ValidatorSetResponse>("/validatorsets/latest", Some(&args))
+            .send_cmd::<LCDResult<ValidatorSetResult>>("/validatorsets/latest", Some(&args))
             .await?;
         Ok(response)
     }
@@ -47,7 +47,7 @@ impl Tendermint<'_> {
         height: u64,
         page: usize,
         limit: usize,
-    ) -> anyhow::Result<ValidatorSetResponse> {
+    ) -> anyhow::Result<LCDResult<ValidatorSetResult>> {
         let args = if page == 0 {
             format!("?limit={}", limit)
         } else {
@@ -55,7 +55,10 @@ impl Tendermint<'_> {
         };
         let response = self
             .terra
-            .send_cmd::<ValidatorSetResponse>(&format!("/validatorsets/{}", height), Some(&args))
+            .send_cmd::<LCDResult<ValidatorSetResult>>(
+                &format!("/validatorsets/{}", height),
+                Some(&args),
+            )
             .await?;
         Ok(response)
     }

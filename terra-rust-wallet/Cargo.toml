@@ -15,7 +15,7 @@ documentation = "https://docs.rs/terra-rust-wallet"
 [dependencies]
 thiserror = "1.0"
 anyhow="1.0"
-terra-rust-api = { path = "../terra-rust-api", version = "0.2" }
+terra-rust-api = { path = "../terra-rust-api", version = "0.3" }
 bitcoin="0.26.0"
 keyring = "0.10.1"
 log="0.4"

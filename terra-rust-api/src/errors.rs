@@ -41,7 +41,8 @@ pub enum TerraRustAPIError {
     CoinParseErr(String),
     #[error("TX submit returned `{0}` - {1} '{2}'")]
     TxResultError(usize, String, String),
-
+    #[error("No price found for Gas using denom {0}")]
+    GasPriceError(String),
     #[error("unknown Terra-Rust API error")]
     Unknown,
 }

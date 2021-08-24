@@ -1,7 +1,6 @@
 use crate::client::core_types::Coin;
-use crate::client::market_types::SwapResult;
 
-use crate::{Message, Terra};
+use crate::{LCDResult, Message, Terra};
 use rust_decimal::Decimal;
 
 use crate::messages::market::MsgSwap;
@@ -15,10 +14,10 @@ impl Market<'_> {
         Market { terra }
     }
     /// obtain how much a coin is worth in a secondary coin
-    pub async fn swap(&self, offer: &Coin, ask_denom: &str) -> anyhow::Result<SwapResult> {
+    pub async fn swap(&self, offer: &Coin, ask_denom: &str) -> anyhow::Result<LCDResult<Coin>> {
         let response = self
             .terra
-            .send_cmd::<SwapResult>(
+            .send_cmd::<LCDResult<Coin>>(
                 "/market/swap",
                 Some(&format!(
                     "?offer_coin={}&ask_denom={}",

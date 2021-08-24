@@ -82,12 +82,6 @@ pub struct BlockResult {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct ValidatorSetResponse {
-    #[serde(with = "terra_u64_format")]
-    pub height: u64,
-    pub result: ValidatorSetResult,
-}
-#[derive(Deserialize, Serialize, Debug)]
 pub struct ValidatorSetResult {
     #[serde(with = "terra_u64_format")]
     pub block_height: u64,

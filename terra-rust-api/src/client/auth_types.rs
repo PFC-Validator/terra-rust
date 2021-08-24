@@ -1,6 +1,5 @@
 use crate::client::client_types::terra_u64_format;
 
-use crate::client::staking_types::Validator;
 use crate::core_types::{Coin, PubKeySig};
 use serde::{Deserialize, Serialize};
 
@@ -21,26 +20,4 @@ pub struct AuthAccount {
     /// The sequence. This is used to avoid 'double transmitting' a transaction
     #[serde(with = "terra_u64_format")]
     pub sequence: u64,
-}
-#[allow(missing_docs)]
-#[derive(Deserialize, Serialize, Debug)]
-pub struct AuthAccountTv {
-    #[serde(rename = "type")]
-    pub stype: String,
-    pub value: AuthAccount,
-}
-#[allow(missing_docs)]
-#[derive(Deserialize, Serialize, Debug)]
-pub struct AuthAccountResult {
-    #[serde(with = "terra_u64_format")]
-    pub height: u64,
-    pub result: AuthAccountTv,
-}
-
-#[allow(missing_docs)]
-#[derive(Deserialize, Debug)]
-pub struct AccountDelegatedValidatorResult {
-    #[serde(with = "terra_u64_format")]
-    pub height: u64,
-    pub result: Vec<Validator>,
 }

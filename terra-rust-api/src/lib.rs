@@ -27,11 +27,10 @@
 * use terra_rust_api::{Terra, GasOptions, PrivateKey};
 * use terra_rust_api::core_types::{Coin, StdSignMsg, StdSignature};
 * use terra_rust_api::messages::{MsgSend, Message};
-* use terra_rust_api::auth_types::AuthAccountResult;
 * use bitcoin::secp256k1::Secp256k1;
 *
 *
-* async fn demo() -> anyhow::Result<()>{
+* async fn demo() -> anyhow::Result<()> {
 * // set up the LCD client
 * let gas_opts = GasOptions::create_with_gas_estimate("50ukrw",1.4)?;
 * let terra = Terra::lcd_client("https://tequila-lcd.terra.dev/", "tequila-0004", &gas_opts,None).await?;
@@ -94,7 +93,8 @@ pub use crate::client_types::{
     terra_opt_u64_format, terra_u64_format,
 };
 pub use addressbook::AddressBook;
-pub use client::{auth_types, client_types, core_types, market_types, staking_types};
+pub use client::lcd_types::{LCDResult, LCDTypeValue};
+pub use client::{auth_types, client_types, core_types, staking_types};
 pub use client::{GasOptions, Terra};
 pub use keys::{PrivateKey, PublicKey};
 pub use messages::bank;

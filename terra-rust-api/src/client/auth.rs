@@ -1,8 +1,6 @@
-use crate::client::auth_types::AuthAccountResult;
-//use crate::errors::Result;
-use crate::auth_types::AccountDelegatedValidatorResult;
-use crate::client::staking_types::{ValidatorDelegationResult, ValidatorUnbondingDelegationResult};
-use crate::Terra;
+use crate::auth_types::AuthAccount;
+use crate::staking_types::{Validator, ValidatorDelegation, ValidatorUnbondingDelegation};
+use crate::{LCDResult, LCDTypeValue, Terra};
 
 pub struct Auth<'a> {
     terra: &'a Terra<'a>,
@@ -11,10 +9,16 @@ impl Auth<'_> {
     pub fn create<'a>(terra: &'a Terra) -> Auth<'a> {
         Auth { terra }
     }
-    pub async fn account(&self, account_address: &str) -> anyhow::Result<AuthAccountResult> {
+    pub async fn account(
+        &self,
+        account_address: &str,
+    ) -> anyhow::Result<LCDResult<LCDTypeValue<AuthAccount>>> {
         let response = self
             .terra
-            .send_cmd::<AuthAccountResult>(&format!("/auth/accounts/{}", account_address), None)
+            .send_cmd::<LCDResult<LCDTypeValue<AuthAccount>>>(
+                &format!("/auth/accounts/{}", account_address),
+                None,
+            )
             .await?;
         Ok(response)
     }
@@ -22,9 +26,9 @@ impl Auth<'_> {
     pub async fn validator_delegations(
         &self,
         account_address: &str,
-    ) -> anyhow::Result<ValidatorDelegationResult> {
+    ) -> anyhow::Result<LCDResult<ValidatorDelegation>> {
         self.terra
-            .send_cmd::<ValidatorDelegationResult>(
+            .send_cmd::<LCDResult<ValidatorDelegation>>(
                 &format!("/staking/delegators/{}/delegations", account_address),
                 None,
             )
@@ -34,9 +38,9 @@ impl Auth<'_> {
     pub async fn validator_unbonding_delegations(
         &self,
         account_address: &str,
-    ) -> anyhow::Result<ValidatorUnbondingDelegationResult> {
+    ) -> anyhow::Result<LCDResult<ValidatorUnbondingDelegation>> {
         self.terra
-            .send_cmd::<ValidatorUnbondingDelegationResult>(
+            .send_cmd::<LCDResult<ValidatorUnbondingDelegation>>(
                 &format!(
                     "/staking/delegators/{}/unbonding_delegations",
                     account_address
@@ -49,9 +53,9 @@ impl Auth<'_> {
     pub async fn delegated_validators(
         &self,
         account_address: &str,
-    ) -> anyhow::Result<AccountDelegatedValidatorResult> {
+    ) -> anyhow::Result<LCDResult<Vec<Validator>>> {
         self.terra
-            .send_cmd::<AccountDelegatedValidatorResult>(
+            .send_cmd::<LCDResult<Vec<Validator>>>(
                 &format!("/staking/delegators/{}/validators", account_address),
                 None,
             )

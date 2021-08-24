@@ -13,9 +13,11 @@ mod contract;
 
 mod auth;
 mod distribution;
+mod fcd;
 mod keys;
 mod market;
 mod oracle;
+mod rpc;
 mod slashing;
 mod staking;
 mod tendermint;
@@ -28,9 +30,11 @@ use crate::auth::{auth_cmd_parse, AuthCommand};
 use crate::bank::{bank_cmd_parse, BankCommand};
 use crate::contract::{contract_cmd_parse, ContractCommand};
 use crate::distribution::{distribution_cmd_parse, DistributionCommand};
+use crate::fcd::{fcd_cmd_parse, FCDCommand};
 use crate::keys::{key_cmd_parse, KeysCommand};
 use crate::market::{market_cmd_parse, MarketCommand};
 use crate::oracle::{oracle_cmd_parse, OracleCommand};
+use crate::rpc::{rpc_cmd_parse, RPCCommand};
 use crate::slashing::{slashing_cmd_parse, SlashingCommand};
 use crate::staking::{staking_cmd_parse, StakingCommand};
 use crate::tendermint::{
@@ -52,7 +56,7 @@ struct Cli {
     #[structopt(
         name = "lcd",
         env = "TERRARUST_LCD",
-        default_value = "https://tequila-lcd.terra.dev",
+        default_value = "https://lcd.terra.dev",
         short,
         long = "lcd-client-url",
         help = "https://lcd.terra.dev is main-net"
@@ -60,9 +64,18 @@ struct Cli {
     // Terra cli Client daemon
     lcd: String,
     #[structopt(
+        name = "fcd",
+        env = "TERRARUST_FCD",
+        default_value = "https://fcd.terra.dev",
+        long = "fcd-client-url",
+        help = "https://fcd.terra.dev is main-net. currently only used to fetch gas prices"
+    )]
+    // Terra cli Client daemon
+    fcd: String,
+    #[structopt(
         name = "chain",
         env = "TERRARUST_CHAIN",
-        default_value = "tequila-0004",
+        default_value = "columbus-4",
         short,
         long = "chain",
         help = "tequila-0004 is testnet, columbus-4 is main-net"
@@ -105,11 +118,19 @@ struct Cli {
     #[structopt(
         name = "gas-prices",
         env = "TERRARUST_GAS_PRICES",
-        default_value = "180.0ukrw",
+        default_value = "auto",
         long = "gas-prices",
-        help = "the gas price to use to calculate fee. Format is NNNtoken eg. 1000uluna. note we only support a single price for now"
+        help = "the gas price to use to calculate fee. Format is NNNtoken eg. 1000uluna. note we only support a single price for now. if auto. it will use FCD"
     )]
     gas_price: String,
+    #[structopt(
+        name = "gas-denom",
+        env = "TERRARUST_GAS_DENOM",
+        default_value = "ukrw",
+        long = "gas-denom",
+        help = "the denomination/currency to use to pay fee. Format is uXXXX."
+    )]
+    gas_price_denom: String,
     #[structopt(
         name = "gas-adjustment",
         default_value = "1.4",
@@ -125,28 +146,43 @@ struct Cli {
     cmd: Command,
 }
 impl Cli {
-    pub fn gas_opts(&self) -> Result<GasOptions> {
-        let fees = Coin::parse(&self.fees)?;
+    pub async fn gas_opts(&self) -> Result<GasOptions> {
+        if self.gas_price == "auto" {
+            let terra = Terra::lcd_client_no_tx(&self.lcd, &self.chain_id).await?;
+            let fcd = terra.fcd(&self.fcd);
+            let gas_opts =
+                GasOptions::create_with_fcd(&fcd, &self.gas_price_denom, self.gas_adjustment)
+                    .await?;
+            if let Some(gas_price) = &gas_opts.gas_price {
+                println!("Using Gas price of {}", gas_price);
+            }
 
-        let gas_str = &self.gas;
-        let (estimate_gas, gas) = if gas_str == "auto" {
-            (true, None)
+            Ok(gas_opts)
         } else {
-            let g = &self.gas.parse::<u64>()?;
-            (false, Some(*g))
-        };
-        let gas_price = Coin::parse(&self.gas_price)?;
-        let gas_adjustment = Some(self.gas_adjustment);
-        Ok(GasOptions {
-            fees,
-            estimate_gas,
-            gas,
-            gas_price,
-            gas_adjustment,
-        })
+            let fees = Coin::parse(&self.fees)?;
+            let gas_str = &self.gas;
+            let (estimate_gas, gas) = if gas_str == "auto" {
+                (true, None)
+            } else {
+                let g = &self.gas.parse::<u64>()?;
+                (false, Some(*g))
+            };
+
+            let gas_price = Coin::parse(&self.gas_price)?;
+            let gas_adjustment = Some(self.gas_adjustment);
+
+            Ok(GasOptions {
+                fees,
+                estimate_gas,
+                gas,
+                gas_price,
+                gas_adjustment,
+            })
+        }
     }
 }
 #[derive(StructOpt)]
+#[allow(clippy::upper_case_acronyms)]
 enum Command {
     /// Key Operations
     Keys(KeysCommand),
@@ -176,6 +212,10 @@ enum Command {
     Contract(ContractCommand),
     /// Tendermint ValidatorSets commands
     ValidatorSets(ValidatorSetsCommand),
+    /// Tendermint ValidatorSets commands
+    RPC(RPCCommand),
+    /// FCD commands
+    FCD(FCDCommand),
 }
 
 /// Input to the /txs/XXXX query
@@ -189,7 +229,7 @@ pub struct TxCommand {
 async fn run() -> anyhow::Result<()> {
     let cli: Cli = Cli::from_args();
 
-    let gas_opts: GasOptions = cli.gas_opts()?;
+    let gas_opts: GasOptions = cli.gas_opts().await?;
     let t = Terra::lcd_client(
         &cli.lcd,
         &cli.chain_id,
@@ -223,6 +263,8 @@ async fn run() -> anyhow::Result<()> {
         Command::Staking(cmd) => staking_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::Distribution(cmd) => distribution_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::ValidatorSets(cmd) => validator_sets_cmd_parse(&t, cmd).await,
+        Command::RPC(cmd) => rpc_cmd_parse(&t, cmd).await,
+        Command::FCD(cmd) => fcd_cmd_parse(&t, &cli.fcd, cmd).await,
     }
 }
 #[tokio::main]

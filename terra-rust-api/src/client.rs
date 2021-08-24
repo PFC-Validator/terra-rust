@@ -13,12 +13,16 @@ pub mod client_types;
 /// Common Structures throughout the library
 pub mod core_types;
 mod market;
-/// Structures used for Market APIs
-pub mod market_types;
 /// APIs to perform oracle related things
 pub mod oracle;
 /// Structures used for Oracle APIs
 pub mod oracle_types;
+/// tendermint RPC
+pub mod rpc;
+pub mod rpc_types;
+
+pub mod fcd;
+pub mod lcd_types;
 mod staking;
 /// Structures used for Staking APIs
 pub mod staking_types;
@@ -29,11 +33,11 @@ mod tx;
 /// Structures used for sending transactions to LCD
 pub mod tx_types;
 /// wasm module/contract related apis
-mod wasm;
-mod wasm_types;
+pub mod wasm;
+pub mod wasm_types;
 
 use crate::errors::TerraRustAPIError;
-use crate::errors::TerraRustAPIError::TxResultError;
+use crate::errors::TerraRustAPIError::{GasPriceError, TxResultError};
 use crate::messages::Message;
 use crate::AddressBook;
 use crate::PrivateKey;
@@ -75,6 +79,7 @@ impl GasOptions {
         })
     }
     /// for when you want the validator to give you an estimate on the amounts
+
     pub fn create_with_gas_estimate(
         gas_price: &str,
         gas_adjustment: f64,
@@ -87,6 +92,26 @@ impl GasOptions {
             gas_adjustment: Some(gas_adjustment),
         })
     }
+    pub async fn create_with_fcd(
+        fcd: &fcd::FCD<'_>,
+        gas_denom: &str,
+        gas_adjustment: f64,
+    ) -> anyhow::Result<GasOptions> {
+        let prices = fcd.gas_prices().await?;
+        if let Some(price) = prices.get(gas_denom) {
+            let gas_coin = Coin::create(gas_denom, *price);
+            let gas_price = Some(gas_coin);
+            Ok(GasOptions {
+                fees: None,
+                estimate_gas: true,
+                gas: None,
+                gas_price,
+                gas_adjustment: Some(gas_adjustment),
+            })
+        } else {
+            Err(GasPriceError(gas_denom.into()).into())
+        }
+    }
 }
 
 /// The main structure that all API calls are generated from
@@ -95,6 +120,7 @@ pub struct Terra<'a> {
     client: Client,
     /// The URL of the LCD
     url: &'a str,
+
     /// The Chain of the network
     pub chain_id: &'a str,
     /// Gas Options used to help with gas/fee generation of transactions
@@ -105,7 +131,7 @@ impl<'a> Terra<'a> {
     const NETWORK_PROD_ADDRESS_BOOK: &'a str = "https://network.terra.dev/addrbook.json";
     const NETWORK_TEST_ADDRESS_BOOK: &'a str = "https://network.terra.dev/testnet/addrbook.json";
 
-    /// Create a FULL client interface
+    /// Create a LCD client interface
     pub async fn lcd_client(
         url: &'a str,
         chain_id: &'a str,
@@ -165,6 +191,14 @@ impl<'a> Terra<'a> {
     pub fn tx(&self) -> tx::TX {
         tx::TX::create(self)
     }
+    /// RPC Api Functions
+    pub fn rpc(&self, tendermint_url: &'a str) -> rpc::RPC {
+        rpc::RPC::create(self, tendermint_url)
+    }
+    /// FCD Api Functions
+    pub fn fcd(&self, fcd_url: &'a str) -> fcd::FCD {
+        fcd::FCD::create(self, fcd_url)
+    }
     /// WASM module / smart contract API Functions
     pub fn wasm(&self) -> wasm::Wasm {
         wasm::Wasm::create(self)
@@ -193,9 +227,18 @@ impl<'a> Terra<'a> {
         path: &str,
         args: Option<&str>,
     ) -> anyhow::Result<T> {
+        self.send_cmd_url(self.url, path, args).await
+    }
+    /// used to send a GET command to any URL
+    pub async fn send_cmd_url<T: for<'de> Deserialize<'de>>(
+        &self,
+        url: &str,
+        path: &str,
+        args: Option<&str>,
+    ) -> anyhow::Result<T> {
         let request_url = match args {
-            Some(a) => format!("{}{}{}", self.url.to_owned(), path, a),
-            None => format!("{}{}", self.url.to_owned(), path),
+            Some(a) => format!("{}{}{}", url.to_owned(), path, a),
+            None => format!("{}{}", url.to_owned(), path),
         };
 
         if self.debug {
