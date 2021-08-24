@@ -148,11 +148,16 @@ struct Cli {
 impl Cli {
     pub async fn gas_opts(&self) -> Result<GasOptions> {
         if self.gas_price == "auto" {
-            let terra = Terra::lcd_client_no_tx(&self.lcd, &self.chain_id).await?;
-            let fcd = terra.fcd(&self.fcd);
-            let gas_opts =
-                GasOptions::create_with_fcd(&fcd, &self.gas_price_denom, self.gas_adjustment)
-                    .await?;
+            //            let terra = Terra::lcd_client_no_tx(&self.lcd, &self.chain_id).await?;
+            //      let fcd = terra.fcd(&self.fcd);
+            let client = reqwest::Client::new();
+            let gas_opts = GasOptions::create_with_fcd(
+                &client,
+                &self.fcd,
+                &self.gas_price_denom,
+                self.gas_adjustment,
+            )
+            .await?;
             if let Some(gas_price) = &gas_opts.gas_price {
                 println!("Using Gas price of {}", gas_price);
             }

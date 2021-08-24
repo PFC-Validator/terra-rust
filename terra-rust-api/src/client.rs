@@ -93,11 +93,12 @@ impl GasOptions {
         })
     }
     pub async fn create_with_fcd(
-        fcd: &fcd::FCD<'_>,
+        client: &reqwest::Client,
+        fcd_url: &str,
         gas_denom: &str,
         gas_adjustment: f64,
     ) -> anyhow::Result<GasOptions> {
-        let prices = fcd.gas_prices().await?;
+        let prices = fcd::FCD::fetch_gas_prices(client, fcd_url).await?;
         if let Some(price) = prices.get(gas_denom) {
             let gas_coin = Coin::create(gas_denom, *price);
             let gas_price = Some(gas_coin);
@@ -248,6 +249,21 @@ impl<'a> Terra<'a> {
             .client
             .get(&request_url)
             .headers(Terra::construct_headers());
+
+        Terra::resp::<T>(&request_url, req).await
+    }
+    pub async fn fetch_url<T: for<'de> Deserialize<'de>>(
+        client: &reqwest::Client,
+        url: &str,
+        path: &str,
+        args: Option<&str>,
+    ) -> anyhow::Result<T> {
+        let request_url = match args {
+            Some(a) => format!("{}{}{}", url.to_owned(), path, a),
+            None => format!("{}{}", url.to_owned(), path),
+        };
+
+        let req = client.get(&request_url).headers(Terra::construct_headers());
 
         Terra::resp::<T>(&request_url, req).await
     }
