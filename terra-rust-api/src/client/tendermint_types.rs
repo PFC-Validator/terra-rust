@@ -65,7 +65,7 @@ pub struct BlockCommit {
 }
 #[derive(Deserialize, Serialize, Debug)]
 pub struct BlockData {
-    pub txs: Vec<String>,
+    pub txs: Option<Vec<String>>,
 }
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Block {

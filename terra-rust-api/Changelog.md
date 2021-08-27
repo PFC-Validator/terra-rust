@@ -1,6 +1,8 @@
 # Changes
 
 ## 0.3
+### 0.3.3 - 27-Aug-21
+* tendermint_types:Block structure can have 'data' as null.
 ### 0.3.2 - 24-Aug-21
 * Switched LCD query responses to generic type (API Change)
 * RPC endpoint API started
