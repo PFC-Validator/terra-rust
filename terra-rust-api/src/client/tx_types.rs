@@ -30,18 +30,18 @@ pub struct TXResultSync {
     pub raw_log: String,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct TxResultBlockAttribute {
     pub key: String,
-    pub value: String,
+    pub value: Option<String>,
 }
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Clone, Serialize, Debug)]
 pub struct TxResultBlockEvent {
     #[serde(rename = "type")]
     pub sytpe: String,
     pub attributes: Vec<TxResultBlockAttribute>,
 }
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Clone, Serialize, Debug)]
 pub struct TxResultBlockMsg {
     pub msg_index: usize,
     pub log: String,

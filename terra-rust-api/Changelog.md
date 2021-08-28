@@ -1,6 +1,9 @@
 # Changes
 
 ## 0.3
+### 0.3.4 - devel
+* TX Block Attributes can have 'value' as null
+* Add 'Clone' to various structures
 ### 0.3.3 - 27-Aug-21
 * tendermint_types:Block structure can have 'data' as null.
 ### 0.3.2 - 24-Aug-21
