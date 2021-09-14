@@ -1,6 +1,7 @@
 # Changes
 
 ## 0.3
+### 0.3.5 - devel
 ### 0.3.4 - 13-Sep-21
 * TX Block Attributes can have 'value' as null
 * Add 'Clone' to various structures
