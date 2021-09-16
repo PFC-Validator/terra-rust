@@ -1945,7 +1945,7 @@ dependencies = [
 
 [[package]]
 name = "terra-rust-api"
-version = "0.3.5-devel"
+version = "0.3.5"
 dependencies = [
  "anyhow",
  "base64",

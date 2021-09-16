@@ -87,7 +87,7 @@ pub struct ValidatorSetResult {
     pub block_height: u64,
     pub validators: Vec<Validator>,
 }
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Clone, Serialize, Debug)]
 pub struct Validator {
     pub address: String,
     pub pub_key: String,
