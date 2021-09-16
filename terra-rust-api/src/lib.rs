@@ -94,7 +94,7 @@ pub use crate::client_types::{
 };
 pub use addressbook::AddressBook;
 pub use client::lcd_types::{LCDResult, LCDTypeValue};
-pub use client::{auth_types, client_types, core_types, staking_types};
+pub use client::{auth_types, client_types, core_types, staking_types, tendermint_types};
 pub use client::{GasOptions, Terra};
 pub use keys::{PrivateKey, PublicKey};
 pub use messages::bank;

@@ -1,7 +1,7 @@
 # Changes
 
 ## 0.3
-### 0.3.5 - 16-Sep-21
+### 0.3.6 - 16-Sep-21
 * Add 'Clone' to tendermint/validator
 ### 0.3.4 - 13-Sep-21
 * TX Block Attributes can have 'value' as null
