@@ -1,6 +1,8 @@
 # Changes
 
 ## 0.3
+### 0.3.7 - 17-Sep-21
+* new API(s) tendermint.validatorsets_full(_at_height) - fetch ALL the validator, bypassing the hardcoded limit 
 ### 0.3.6 - 16-Sep-21
 * Add 'Clone' to tendermint/validator
 ### 0.3.4 - 13-Sep-21

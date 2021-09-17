@@ -43,6 +43,8 @@ pub enum TerraRustAPIError {
     TxResultError(usize, String, String),
     #[error("No price found for Gas using denom {0}")]
     GasPriceError(String),
+    #[error("Attempting to fetch validator set in parts, and failed Height mismatch {0} {1}")]
+    TendermintValidatorSet(u64, u64),
     #[error("unknown Terra-Rust API error")]
     Unknown,
 }
