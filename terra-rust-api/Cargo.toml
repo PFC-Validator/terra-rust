@@ -45,7 +45,7 @@ futures="0.3.14"
 # so far the only need for this is in the message to create a validator
 ed25519 = "1"
 ed25519-dalek = { version = "1", features = ["serde"] }
-tendermint = "0.19.0"
+#tendermint = "0.21.0.0"
 base64 = "0.13.0"
 
 [dev-dependencies]

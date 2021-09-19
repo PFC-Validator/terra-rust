@@ -484,17 +484,17 @@ mod tst {
         let public_key = "4A25C6640A1F72B9C975338294EF51B6D1C33158BB6ECBA69FBC3FB5A33C9DCE";
         let ed = Ed25519::from_bytes(&hex::decode(public_key)?)?;
         let foo_v8 = PublicKey::pubkey_from_ed25519_public_key(&ed.to_bytes());
-        let ed2: tendermint::PublicKey =
-            tendermint::PublicKey::from_raw_ed25519(&hex::decode(public_key)?).unwrap();
+        //  let ed2: tendermint::PublicKey =
+        //      tendermint::PublicKey::from_raw_ed25519(&hex::decode(public_key)?).unwrap();
 
         match encode("cosmosvalconspub", foo_v8.to_base32()) {
             Ok(cosmospub) => assert_eq!("cosmosvalconspub1zcjduepqfgjuveq2raetnjt4xwpffm63kmguxv2chdhvhf5lhslmtgeunh8qmf7exk", cosmospub),
             Err(_) => assert!(false, "bad encoding"),
         };
-        assert_eq!(
-            "cosmosvalconspub1zcjduepqfgjuveq2raetnjt4xwpffm63kmguxv2chdhvhf5lhslmtgeunh8qmf7exk",
-            ed2.to_bech32("cosmosvalconspub")
-        );
+        //   assert_eq!(
+        //       "cosmosvalconspub1zcjduepqfgjuveq2raetnjt4xwpffm63kmguxv2chdhvhf5lhslmtgeunh8qmf7exk",
+        //       ed2.to_bech32("cosmosvalconspub")
+        //   );
 
         match encode("terravalconspub", foo_v8.to_base32()) {
             Ok(tendermint) => {
