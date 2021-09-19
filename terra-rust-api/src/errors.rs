@@ -28,6 +28,8 @@ pub enum TerraRustAPIError {
     ConversionED25519,
     #[error("Expected Key length of 82 or 83 length was {0}")]
     ConversionLength(usize),
+    #[error("Expected Key length of 40 length was {0}")]
+    ConversionLengthED25519Hex(usize),
     #[error("Expected ED25519 key of length 32 with a BECH32 ED25519 prefix of 5 chars - Len {0} - Hex {1}")]
     ConversionPrefixED25519(usize, String),
     #[error("Can't call Transactions without some gas rules")]

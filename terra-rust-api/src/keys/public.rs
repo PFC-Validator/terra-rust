@@ -96,17 +96,17 @@ impl PublicKey {
                             source,
                         }
                     })?;
-                    log::debug!("{:#?}", hex::encode(&vu8));
+                    //   log::debug!("{:#?}", hex::encode(&vu8));
                     log::info!("ED25519 public keys are not fully supported");
                     if vu8.starts_with(&BECH32_PUBKEY_DATA_PREFIX_ED25519) {
                         //   let public_key = PublicKey::pubkey_from_ed25519_public_key(&vu8);
-                        let _raw = PublicKey::address_from_public_ed25519_key(&vu8)?;
+                        let raw = PublicKey::address_from_public_ed25519_key(&vu8)?;
                         Ok(PublicKey {
                             raw_pub_key: Some(vu8),
-                            raw_address: None,
+                            raw_address: Some(raw),
                         })
                     } else {
-                        eprintln!("{}", hex::encode(&vu8));
+                        //     eprintln!("{}", hex::encode(&vu8));
                         Err(TerraRustAPIError::ConversionED25519.into())
                     }
                 })
@@ -114,6 +114,20 @@ impl PublicKey {
             /* */
         } else {
             Err(TerraRustAPIError::ConversionLength(len).into())
+        }
+    }
+    /// build a terravalcons address from a tendermint hex key
+    /// the tendermint_hex_address should be a hex code of 40 length
+    pub fn from_tendermint_address(tendermint_hex_address: &str) -> anyhow::Result<PublicKey> {
+        let len = tendermint_hex_address.len();
+        if len == 40 {
+            let raw = hex::decode(tendermint_hex_address)?;
+            Ok(PublicKey {
+                raw_pub_key: None,
+                raw_address: Some(raw),
+            })
+        } else {
+            Err(TerraRustAPIError::ConversionLengthED25519Hex(len).into())
         }
     }
     /// Generate a Operator address for this public key (used by the validator)
@@ -211,13 +225,10 @@ impl PublicKey {
         let mut sha = Sha256::new();
         let mut sha_result: [u8; 32] = [0; 32];
         let mut ripe_result: [u8; 20] = [0; 20];
-
         sha.input(public_key);
         sha.result(&mut sha_result);
-
         hasher.input(&sha_result);
         hasher.result(&mut ripe_result);
-
         let address: Vec<u8> = ripe_result.to_vec();
         address
     }
@@ -238,7 +249,7 @@ impl PublicKey {
             )
             .into())
         } else {
-            eprintln!("a_pub_ed_key {}", hex::encode(public_key));
+            // eprintln!("a_pub_ed_key {}", hex::encode(public_key));
             log::debug!(
                 "address_from_public_ed25519_key public key - {}",
                 hex::encode(public_key)
@@ -249,7 +260,7 @@ impl PublicKey {
             //  let mut ripe_result: [u8; 20] = [0; 20];
             // let v = &public_key[5..37];
 
-            sha.input(public_key);
+            sha.input(&public_key[5..]);
             sha.result(&mut sha_result);
             //    hasher.input(public_key);
             //hasher.input(v);
@@ -258,7 +269,7 @@ impl PublicKey {
 
             let address: Vec<u8> = sha_result[0..20].to_vec();
             // let address: Vec<u8> = ripe_result.to_vec();
-            eprintln!("address_from_public_ed_key {}", hex::encode(&address));
+            //     eprintln!("address_from_public_ed_key {}", hex::encode(&address));
             log::debug!(
                 "address_from_public_ed25519_key sha result - {}",
                 hex::encode(&address)
@@ -353,7 +364,10 @@ impl PublicKey {
 #[cfg(test)]
 mod tst {
     use super::*;
-
+    #[allow(unused_imports)]
+    use dotenv::dotenv;
+    #[allow(unused_imports)]
+    use env_logger;
     #[test]
     pub fn tst_conv() -> anyhow::Result<()> {
         let pub_key = PublicKey::from_account("terra1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztv3qqm")?;
@@ -432,10 +446,10 @@ mod tst {
             &tendermint_pub_key_ed25519.tendermint_pubkey()?
         );
         /*
-        assert_eq!(
-            "terravaloper1z5tzp4kdl9h3k29dhp636fy5g97ram29kpxcwh",
-            &tendermint_pub_key_ed25519.operator_address()?
-        );
+                assert_eq!(
+                    "terravaloper1z5tzp4kdl9h3k29dhp636fy5g97ram29kpxcwh",
+                    &tendermint_pub_key_ed25519.operator_address()?
+                );
 
         eprintln!("P2");
 
@@ -445,13 +459,15 @@ mod tst {
             &tendermint_pub_key_ed25519.account()?
         );
 
+         */
+        /*
         assert_eq!(
             "terravalcons1usws7c2c6cs7nuc8vma9qzaky5pkgvm2gphml9",
             //            "terravalcons1zcjduepqxrwvps0dn88x9s09h6nwrgrpv2vp5dz99309erlp0qmrx8y9ckmq27ayxy",
             &tendermint_pub_key_ed25519.tendermint()?
         );
 
-         */
+          */
         Ok(())
     }
     #[test]
@@ -490,6 +506,23 @@ mod tst {
             }
             Err(_) => assert!(false, "bad encoding"),
         };
+        Ok(())
+    }
+    #[test]
+    pub fn test_proposer() -> anyhow::Result<()> {
+        //   dotenv().ok();
+        //   env_logger::init();
+
+        let hex_str = "75161033EF6E116BB345F07910A493030B08AD12";
+        let cons_str = "terravalcons1w5tpqvl0dcgkhv697pu3pfynqv9s3tgj2d6q6l";
+        let cons_pub_str =
+            "terravalconspub1zcjduepqpxp3kxmn8yty9eh8a0e6tasdna04q7zsl88u7dyup7fv7t06pl9q342a8t";
+        let pk = PublicKey::from_tendermint_key(cons_pub_str)?;
+        assert_eq!(cons_str, pk.tendermint()?);
+        assert_eq!(hex_str, hex::encode_upper(&pk.raw_address.unwrap()));
+
+        let pk2 = PublicKey::from_tendermint_address(hex_str)?;
+        assert_eq!(cons_str, &pk2.tendermint()?);
         Ok(())
     }
 }

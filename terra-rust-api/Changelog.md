@@ -1,6 +1,9 @@
 # Changes
 
 ## 0.3
+### 0.3.8 - Devel
+* parse tendermint hex-addresses and display tendermint_address()
+* API function PublicKey::from_tendermint_address() 
 ### 0.3.7 - 17-Sep-21
 * new API(s) tendermint.validatorsets_full(_at_height) - fetch ALL the validator, bypassing the hardcoded limit 
 ### 0.3.6 - 16-Sep-21
