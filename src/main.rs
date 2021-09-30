@@ -56,7 +56,7 @@ struct Cli {
     #[structopt(
         name = "lcd",
         env = "TERRARUST_LCD",
-        default_value = "https://lcd.terra.dev",
+        default_value = "https://bombay-lcd.terra.dev",
         short,
         long = "lcd-client-url",
         help = "https://lcd.terra.dev is main-net"
@@ -66,7 +66,7 @@ struct Cli {
     #[structopt(
         name = "fcd",
         env = "TERRARUST_FCD",
-        default_value = "https://fcd.terra.dev",
+        default_value = "https://bombay-fcd.terra.dev",
         long = "fcd-client-url",
         help = "https://fcd.terra.dev is main-net. currently only used to fetch gas prices"
     )]
@@ -75,10 +75,10 @@ struct Cli {
     #[structopt(
         name = "chain",
         env = "TERRARUST_CHAIN",
-        default_value = "columbus-4",
+        default_value = "bombay-11",
         short,
         long = "chain",
-        help = "tequila-0004 is testnet, columbus-4 is main-net"
+        help = "bombay-11 is testnet, columbus-5 is main-net"
     )]
     chain_id: String,
     // Wallet name

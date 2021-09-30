@@ -1,5 +1,8 @@
 # Changes
 
+## 1.0 
+### 1.0.1 - 30-Sep-21
+* Switch to Col-5
 ## 0.3
 ### 0.3.8 - Devel
 * parse tendermint hex-addresses and display tendermint_address()
