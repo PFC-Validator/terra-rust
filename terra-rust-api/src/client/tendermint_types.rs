@@ -88,9 +88,16 @@ pub struct ValidatorSetResult {
     pub validators: Vec<Validator>,
 }
 #[derive(Deserialize, Clone, Serialize, Debug)]
+
+pub struct TendermintPublicKey {
+    #[serde(rename = "type")]
+    pub s_type: String,
+    pub value: String,
+}
+#[derive(Deserialize, Clone, Serialize, Debug)]
 pub struct Validator {
     pub address: String,
-    pub pub_key: String,
+    pub pub_key: TendermintPublicKey,
     #[serde(with = "terra_i64_format")]
     pub proposer_priority: i64,
     #[serde(with = "terra_u64_format")]
