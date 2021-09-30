@@ -43,8 +43,8 @@ pub struct TxResultBlockEvent {
 }
 #[derive(Deserialize, Clone, Serialize, Debug)]
 pub struct TxResultBlockMsg {
-    pub msg_index: usize,
-    pub log: String,
+    //pub msg_index: Option<usize>,
+    // pub log: Option<String>,
     pub events: Vec<TxResultBlockEvent>,
 }
 #[allow(clippy::upper_case_acronyms)]
