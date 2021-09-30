@@ -1,6 +1,8 @@
 use crate::client::client_types::{
-    terra_datetime_format, terra_decimal_format, terra_f64_format, terra_u64_format,
+    terra_datetime_format, terra_decimal_format, terra_f64_format, terra_opt_u64_format,
+    terra_u64_format,
 };
+use crate::tendermint_types::TendermintPublicKey;
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::Deserialize;
@@ -11,13 +13,13 @@ pub struct ValidatorDescription {
     /// Displayed in public
     pub moniker: String,
     /// link to keybase.io ID
-    pub identity: String,
+    pub identity: Option<String>,
     /// web URL
-    pub website: String,
+    pub website: Option<String>,
     /// a way to contact the human behind the validator
-    pub security_contact: String,
+    pub security_contact: Option<String>,
     /// a blurb describing how fantastic the validator is, and why you should validate with them
-    pub details: String,
+    pub details: Option<String>,
 }
 /// Commission Rates
 #[derive(Deserialize, Clone, Debug)]
@@ -45,9 +47,9 @@ pub struct Validator {
     /// The reference address for the validator
     pub operator_address: String,
     /// used in block generation
-    pub consensus_pubkey: String,
+    pub consensus_pubkey: TendermintPublicKey,
     /// Is this validator in the active validator set
-    pub jailed: bool,
+    pub jailed: Option<bool>,
     /// represents the process of being jailed.
     pub status: u16,
 
@@ -59,9 +61,10 @@ pub struct Validator {
     pub delegator_shares: f64,
     /// The validator description structure
     pub description: ValidatorDescription,
-    #[serde(with = "terra_u64_format")]
+    // TODO: FIX OPT
+    //    #[serde(with = "terra_opt_u64_format")]
     /// For Jailed / soon to be jailed validators. The height of the chain that it occurred
-    pub unbonding_height: u64,
+    //  pub unbonding_height: Option<u64>,
     /// For Jailed / soon to be jailed validators. When that occurred
     #[serde(with = "terra_datetime_format")]
     pub unbonding_time: DateTime<Utc>,
