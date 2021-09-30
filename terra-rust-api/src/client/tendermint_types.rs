@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct BlockIdParts {
-    #[serde(with = "terra_u64_format")]
-    pub total: u64,
+    // #[serde(with = "terra_u64_format")]
+    pub total: usize,
     pub hash: String,
 }
 
@@ -18,8 +18,8 @@ pub struct BlockId {
 pub struct BlockHeaderVersion {
     #[serde(with = "terra_u64_format")]
     pub block: u64,
-    #[serde(with = "terra_u64_format")]
-    pub app: u64,
+    //  #[serde(with = "terra_u64_format")]
+    //  pub app: u64,
 }
 #[derive(Deserialize, Serialize, Debug)]
 pub struct BlockHeader {
@@ -58,8 +58,8 @@ pub struct BlockSignature {
 pub struct BlockCommit {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
-    #[serde(with = "terra_u64_format")]
-    pub round: u64,
+    // #[serde(with = "terra_u64_format")]
+    pub round: usize,
     pub block_id: BlockId,
     pub signatures: Vec<BlockSignature>,
 }

@@ -1,5 +1,7 @@
 use crate::client::client_types::{
-    terra_datetime_format, terra_decimal_format, terra_f64_format, terra_opt_u64_format,
+    terra_datetime_format,
+    terra_decimal_format,
+    terra_f64_format, // terra_opt_u64_format,
     terra_u64_format,
 };
 use crate::tendermint_types::TendermintPublicKey;
