@@ -1,6 +1,8 @@
 # Changes
 
 ## 1.0 
+### 1.0.6 - 1-Oct-21
+* fix up estimation/can send basic txs
 ### 1.0.1 - 30-Sep-21
 * Switch to Col-5
 ## 0.3

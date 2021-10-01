@@ -73,12 +73,13 @@ pub struct TxBaseReq<'a> {
     pub from: String,
     #[serde(with = "terra_f64_format")]
     pub gas_adjustment: f64,
+    pub gas: String,
     pub gas_prices: &'a [&'a Coin],
 }
 #[derive(Serialize)]
 pub struct TxEstimate<'a> {
     pub base_req: TxBaseReq<'a>,
-    pub tx: TxEstimate2<'a>,
+    pub msgs: &'a [Message],
 }
 impl<'a> TxEstimate<'a> {
     pub fn create(
@@ -91,11 +92,12 @@ impl<'a> TxEstimate<'a> {
         TxEstimate {
             base_req: TxBaseReq {
                 from: sender.into(),
+                gas: "auto".into(),
                 chain_id: chain_id.into(),
                 gas_adjustment,
                 gas_prices,
             },
-            tx: TxEstimate2 { msg },
+            msgs: msg,
         }
     }
 }

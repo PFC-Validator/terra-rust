@@ -252,7 +252,7 @@ async fn run() -> anyhow::Result<()> {
         Command::Keys(key_cmd) => key_cmd_parse(&t, &wallet, seed, key_cmd),
         Command::Bank(bank_cmd) => bank_cmd_parse(&t, &wallet, seed, bank_cmd).await,
         Command::Oracle(cmd) => oracle_cmd_parse(&t, &wallet, seed, cmd).await,
-        Command::Validator(cmd) => validator_cmd_parse(&t, cmd).await,
+        Command::Validator(cmd) => validator_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::Block(cmd) => block_cmd_parse(&t, cmd).await,
         Command::Contract(cmd) => contract_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::Market(cmd) => market_cmd_parse(&t, &wallet, seed, cmd).await,

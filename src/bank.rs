@@ -66,7 +66,13 @@ pub async fn bank_cmd_parse<'a>(
             log::info!("{}", resp.raw_log);
         }
         BankCommand::Balance { account } => {
-            let sw = terra.bank().balances(&account).await?;
+            let account_id = if !account.starts_with("terra1") {
+                let secp = Secp256k1::new();
+                wallet.get_account(&secp, &account, seed)?
+            } else {
+                account
+            };
+            let sw = terra.bank().balances(&account_id).await?;
             println!("{}", serde_json::to_string_pretty(&sw)?);
         }
     };

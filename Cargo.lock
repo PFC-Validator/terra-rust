@@ -1709,7 +1709,7 @@ dependencies = [
 
 [[package]]
 name = "terra-rust-api"
-version = "1.0.5"
+version = "1.0.6"
 dependencies = [
  "anyhow",
  "base64",
@@ -1742,7 +1742,7 @@ dependencies = [
 
 [[package]]
 name = "terra-rust-wallet"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "bitcoin",

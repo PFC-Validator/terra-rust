@@ -2,6 +2,7 @@ use anyhow::Result;
 use structopt::StructOpt;
 use terra_rust_api::Terra;
 
+use bitcoin::secp256k1::Secp256k1;
 use terra_rust_wallet::Wallet;
 #[derive(StructOpt)]
 pub enum AuthCommand {
@@ -35,29 +36,53 @@ pub enum AuthCommand {
 
 pub async fn auth_cmd_parse<'a>(
     terra: &Terra<'a>,
-    _wallet: &Wallet<'a>,
-    _seed: Option<&str>,
+    wallet: &Wallet<'a>,
+    seed: Option<&str>,
     auth_cmd: AuthCommand,
 ) -> Result<()> {
     match auth_cmd {
         AuthCommand::Account { address } => {
-            let sw = terra.auth().account(&address).await?;
+            let account_id = if !address.starts_with("terra1") {
+                let secp = Secp256k1::new();
+                wallet.get_account(&secp, &address, seed)?
+            } else {
+                address
+            };
+            let sw = terra.auth().account(&account_id).await?;
 
             println!("{}", serde_json::to_string_pretty(&sw)?);
         }
         AuthCommand::Delegations { address } => {
-            let v = terra.auth().validator_delegations(&address).await?;
+            let account_id = if !address.starts_with("terra1") {
+                let secp = Secp256k1::new();
+                wallet.get_account(&secp, &address, seed)?
+            } else {
+                address
+            };
+            let v = terra.auth().validator_delegations(&account_id).await?;
             println!("{:#?}", v.result);
         }
         AuthCommand::Unbonding { address } => {
+            let account_id = if !address.starts_with("terra1") {
+                let secp = Secp256k1::new();
+                wallet.get_account(&secp, &address, seed)?
+            } else {
+                address
+            };
             let v = terra
                 .auth()
-                .validator_unbonding_delegations(&address)
+                .validator_unbonding_delegations(&account_id)
                 .await?;
             println!("{:#?}", v.result);
         }
         AuthCommand::Validators { address } => {
-            let v = terra.auth().delegated_validators(&address).await?;
+            let account_id = if !address.starts_with("terra1") {
+                let secp = Secp256k1::new();
+                wallet.get_account(&secp, &address, seed)?
+            } else {
+                address
+            };
+            let v = terra.auth().delegated_validators(&account_id).await?;
             println!("{:#?}", v.result);
         }
     };

@@ -120,6 +120,18 @@ impl<'a> Wallet<'a> {
         let pub_key = private_key.public_key(secp);
         Ok(pub_key)
     }
+
+    /// get account from key name
+    pub fn get_account(
+        &self,
+        secp: &Secp256k1<All>,
+        key_name: &str,
+        seed: Option<&str>,
+    ) -> anyhow::Result<String> {
+        let pub_key = self.get_public_key(secp, key_name, seed)?;
+        let account = pub_key.account()?;
+        Ok(account)
+    }
     /// stores the private key into the keyring
     pub fn store_key(&self, key_name: &str, pk: &PrivateKey) -> anyhow::Result<bool> {
         let full_key_name = self.full_key_name(key_name);

@@ -1,6 +1,9 @@
 use anyhow::Result;
 use structopt::StructOpt;
 use terra_rust_api::Terra;
+use terra_rust_wallet::Wallet;
+
+use bitcoin::secp256k1::Secp256k1;
 //use crate::errors::Result;
 #[derive(StructOpt)]
 pub enum VoterCommand {
@@ -51,14 +54,27 @@ pub enum ValidatorCommand {
     },
 }
 
-pub async fn validator_cmd_parse(terra: &Terra<'_>, cmd: ValidatorCommand) -> Result<()> {
+pub async fn validator_cmd_parse<'a>(
+    terra: &Terra<'a>,
+    wallet: &Wallet<'a>,
+    seed: Option<&str>,
+    cmd: ValidatorCommand,
+) -> Result<()> {
     match cmd {
         ValidatorCommand::List => {
             let list = terra.staking().validators().await?;
             println!("{:#?}", list.result);
         }
         ValidatorCommand::Describe { validator } => {
-            let v = terra.staking().validator(&validator).await?;
+            let account_id = if !validator.starts_with("terravaloper1") {
+                let secp = Secp256k1::new();
+                wallet
+                    .get_public_key(&secp, &validator, seed)?
+                    .operator_address()?
+            } else {
+                validator
+            };
+            let v = terra.staking().validator(&account_id).await?;
             println!("{:#?}", v.result);
         }
         ValidatorCommand::Moniker { moniker } => {
@@ -66,13 +82,29 @@ pub async fn validator_cmd_parse(terra: &Terra<'_>, cmd: ValidatorCommand) -> Re
             println!("{:#?}", v);
         }
         ValidatorCommand::Delegations { validator } => {
-            let v = terra.staking().validator_delegations(&validator).await?;
+            let account_id = if !validator.starts_with("terravaloper1") {
+                let secp = Secp256k1::new();
+                wallet
+                    .get_public_key(&secp, &validator, seed)?
+                    .operator_address()?
+            } else {
+                validator
+            };
+            let v = terra.staking().validator_delegations(&account_id).await?;
             println!("{:#?}", v.result);
         }
         ValidatorCommand::Unbonding { validator } => {
+            let account_id = if !validator.starts_with("terravaloper1") {
+                let secp = Secp256k1::new();
+                wallet
+                    .get_public_key(&secp, &validator, seed)?
+                    .operator_address()?
+            } else {
+                validator
+            };
             let v = terra
                 .staking()
-                .validator_unbonding_delegations(&validator)
+                .validator_unbonding_delegations(&account_id)
                 .await?;
             println!("{:#?}", v.result);
         }

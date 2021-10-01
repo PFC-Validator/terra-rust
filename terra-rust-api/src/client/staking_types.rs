@@ -88,7 +88,7 @@ pub struct ValidatorDelegationBalance {
 }
 /// Validator Delegation amount
 #[derive(Deserialize, Clone, Debug)]
-pub struct ValidatorDelegation {
+pub struct ValidatorDelegationComponent {
     /// account delegating the funds
     pub delegator_address: String,
     /// validator oper address
@@ -96,6 +96,12 @@ pub struct ValidatorDelegation {
     /// amount delegated
     #[serde(with = "terra_decimal_format")]
     pub shares: Decimal,
+}
+/// Validator Delegation amount
+#[derive(Deserialize, Clone, Debug)]
+pub struct ValidatorDelegation {
+    pub delegation: ValidatorDelegationComponent,
+
     // balance amount
     pub balance: ValidatorDelegationBalance,
 }

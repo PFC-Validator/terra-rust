@@ -1,5 +1,8 @@
 # Changes
 
+## 1.0
+### 1.0.2 - 1-Oct-2021
+* convenience function - wallet.get_account( ... ) gets the account associated with the stored key 
 ## 0.1
 ### 0.1.5 - devel
 ### 0.1.4 - 24-Aug-2021

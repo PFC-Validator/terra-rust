@@ -20,7 +20,7 @@ pub enum DistributionCommand {
         delegator: String,
         #[structopt(
             name = "validator",
-            help = "the validator's terravaloper address. If blank withdrawls from ALL"
+            help = "the validator's terravaloper address. If blank withdraws from ALL"
         )]
         /// the validator's oper terravaloper1XXXXXXXXX. if blank, withdraws from ALL validators (todo)
         validator: Option<String>,

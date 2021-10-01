@@ -1,6 +1,6 @@
 use crate::auth_types::AuthAccount;
 use crate::staking_types::{Validator, ValidatorDelegation, ValidatorUnbondingDelegation};
-use crate::{LCDResult, LCDTypeValue, Terra};
+use crate::{LCDResult, LCDResultVec, LCDTypeValue, Terra};
 
 pub struct Auth<'a> {
     terra: &'a Terra<'a>,
@@ -26,9 +26,9 @@ impl Auth<'_> {
     pub async fn validator_delegations(
         &self,
         account_address: &str,
-    ) -> anyhow::Result<LCDResult<ValidatorDelegation>> {
+    ) -> anyhow::Result<LCDResultVec<ValidatorDelegation>> {
         self.terra
-            .send_cmd::<LCDResult<ValidatorDelegation>>(
+            .send_cmd::<LCDResultVec<ValidatorDelegation>>(
                 &format!("/staking/delegators/{}/delegations", account_address),
                 None,
             )
