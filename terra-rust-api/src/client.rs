@@ -412,7 +412,7 @@ impl<'a> Terra<'a> {
         let from_account = from_public.account()?;
         let auth = self.auth().account(&from_account).await?;
         let fees = self.calc_fees(&auth.result.value, messages).await?;
-        let txn = Terra::generate_transaction_to_broadcast_fees(
+        Terra::generate_transaction_to_broadcast_fees(
             self.chain_id.into(),
             &auth.result.value,
             fees,
@@ -420,8 +420,7 @@ impl<'a> Terra<'a> {
             from,
             messages,
             memo,
-        );
-        return txn;
+        )
     }
     /// helper: sign & submit the transaction sync
     pub async fn submit_transaction_sync(
