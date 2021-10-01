@@ -15,16 +15,16 @@ It's best to always use sync.
 #[derive(Deserialize, Serialize, Debug)]
 pub struct TXResultAsync {
     /// height of the chain when submitted
-    #[serde(with = "terra_u64_format")]
-    pub height: u64,
+    //  #[serde(with = "terra_u64_format")]
+    //  pub height: u64,
     /// Transaction hash of the transaction
     pub txhash: String,
 }
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct TXResultSync {
-    #[serde(with = "terra_u64_format")]
-    pub height: u64,
+    //  #[serde(with = "terra_u64_format")]
+    //  pub height: u64,
     pub txhash: String,
     pub code: Option<usize>,
     pub raw_log: String,
@@ -68,34 +68,52 @@ pub struct TxEstimate2<'a> {
     pub msg: &'a [Message],
 }
 #[derive(Serialize)]
-pub struct TxEstimate<'a> {
-    pub tx: TxEstimate2<'a>,
+pub struct TxBaseReq<'a> {
+    pub chain_id: String,
+    pub from: String,
     #[serde(with = "terra_f64_format")]
     pub gas_adjustment: f64,
     pub gas_prices: &'a [&'a Coin],
 }
+#[derive(Serialize)]
+pub struct TxEstimate<'a> {
+    pub base_req: TxBaseReq<'a>,
+    pub tx: TxEstimate2<'a>,
+}
 impl<'a> TxEstimate<'a> {
     pub fn create(
+        chain_id: &str,
+        sender: &str,
         msg: &'a [Message],
         gas_adjustment: f64,
         gas_prices: &'a [&'a Coin],
     ) -> TxEstimate<'a> {
         TxEstimate {
+            base_req: TxBaseReq {
+                from: sender.into(),
+                chain_id: chain_id.into(),
+                gas_adjustment,
+                gas_prices,
+            },
             tx: TxEstimate2 { msg },
-            gas_adjustment,
-            gas_prices,
         }
     }
 }
 #[derive(Deserialize, Serialize, Debug)]
-pub struct TxFeeBlock {
-    pub fees: Vec<Coin>,
+pub struct TxFeeResult {
+    pub fee: TxFee,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct TxFee {
+    pub amount: Vec<Coin>,
     #[serde(with = "terra_u64_format")]
     pub gas: u64,
 }
+/*
 #[derive(Deserialize, Serialize, Debug)]
 pub struct TxFeeResult {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
     pub result: TxFeeBlock,
 }
+*/

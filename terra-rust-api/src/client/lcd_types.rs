@@ -9,6 +9,15 @@ pub struct LCDResult<T> {
     /// the LCD response
     pub result: T,
 }
+#[derive(Deserialize, Serialize, Debug)]
+/// ALL interactions with LCD will return a LCD result
+pub struct LCDResultVec<T> {
+    /// height of chain
+    #[serde(with = "terra_u64_format")]
+    pub height: u64,
+    /// the LCD response
+    pub result: Vec<T>,
+}
 #[allow(missing_docs)]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct LCDTypeValue<T> {

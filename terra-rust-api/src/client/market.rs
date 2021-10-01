@@ -35,11 +35,9 @@ impl Market<'_> {
         to_coin: String,
         threshold: Decimal,
     ) -> anyhow::Result<Vec<Message>> {
-        let account_balances = self.terra.auth().account(&from).await?;
+        let account_balances = self.terra.bank().balances(&from).await?;
         let potential_coins = account_balances
             .result
-            .value
-            .coins
             .into_iter()
             .filter(|c| c.denom != to_coin);
         //.collect::<Vec<Coin>>();
@@ -57,16 +55,6 @@ impl Market<'_> {
             .collect::<Vec<_>>();
 
         let into_currency = join_all(into_currency_futures).await;
-        /*
-        let has_err = into_currency.into_iter().find(|f| f.is_err());
-        match has_err {
-            Some(err) => {
-                err?;
-            }
-            None => {}
-        };
-
-         */
 
         let mut err = None;
         let to_convert = &into_currency

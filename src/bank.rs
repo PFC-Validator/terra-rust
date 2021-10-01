@@ -1,8 +1,6 @@
 use anyhow::Result;
 use structopt::StructOpt;
 use terra_rust_api::Terra;
-//use crate::errors::Result;
-//use crate::keys::get_private_key;
 
 use bitcoin::secp256k1::Secp256k1;
 use terra_rust_api::messages::{Message, MsgSend};
@@ -24,6 +22,9 @@ pub enum BankCommand {
         amount: Decimal,
         /// denom
         denom: String,
+    },
+    Balance {
+        account: String,
     },
 }
 
@@ -63,6 +64,10 @@ pub async fn bank_cmd_parse<'a>(
 
             println!("{}", resp.txhash);
             log::info!("{}", resp.raw_log);
+        }
+        BankCommand::Balance { account } => {
+            let sw = terra.bank().balances(&account).await?;
+            println!("{}", serde_json::to_string_pretty(&sw)?);
         }
     };
     Ok(())

@@ -4,7 +4,7 @@ use crate::client::tx_types::{
 };
 use crate::core_types::{Coin, StdSignMsg, StdSignature, StdTx};
 use crate::messages::Message;
-use crate::Terra;
+use crate::{LCDResult, Terra};
 
 #[allow(clippy::upper_case_acronyms)]
 pub struct TX<'a> {
@@ -73,17 +73,23 @@ impl<'a> TX<'a> {
     /// Estimate the StdFee structure based on the gas used
     pub async fn estimate_fee(
         &self,
+        sender: &str,
         msgs: &[Message],
-        //msgs: &[Box<dyn Msg>],
         gas_adjustment: f64,
         gas_prices: &[&Coin],
-    ) -> anyhow::Result<TxFeeResult> {
-        let tx_est = TxEstimate::create(msgs, gas_adjustment, gas_prices);
+    ) -> anyhow::Result<LCDResult<TxFeeResult>> {
+        let tx_est = TxEstimate::create(
+            self.terra.chain_id,
+            sender,
+            msgs,
+            gas_adjustment,
+            gas_prices,
+        );
 
-        log::info!("#Messages = {}", serde_json::to_string(&tx_est)?);
+        log::info!("Estimate Transaction = {}", serde_json::to_string(&tx_est)?);
         let resp = self
             .terra
-            .post_cmd::<TxEstimate, TxFeeResult>("/txs/estimate_fee", &tx_est)
+            .post_cmd::<TxEstimate, LCDResult<TxFeeResult>>("/txs/estimate_fee", &tx_est)
             .await?;
         Ok(resp)
     }

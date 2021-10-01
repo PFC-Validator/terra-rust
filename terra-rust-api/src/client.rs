@@ -21,6 +21,7 @@ pub mod oracle_types;
 pub mod rpc;
 pub mod rpc_types;
 
+pub mod bank;
 pub mod fcd;
 pub mod lcd_types;
 mod staking;
@@ -36,13 +37,13 @@ pub mod tx_types;
 pub mod wasm;
 pub mod wasm_types;
 
+use crate::auth_types::AuthAccount;
 use crate::errors::TerraRustAPIError;
 use crate::errors::TerraRustAPIError::{GasPriceError, TxResultError};
 use crate::messages::Message;
-use crate::AddressBook;
 use crate::PrivateKey;
+use crate::{AddressBook, LCDResult};
 use bitcoin::secp256k1::{All, Secp256k1};
-use futures::TryFutureExt;
 use rust_decimal_macros::dec;
 use std::fs::File;
 
@@ -171,6 +172,10 @@ impl<'a> Terra<'a> {
     /// Auth API functions
     pub fn auth(&self) -> auth::Auth {
         auth::Auth::create(self)
+    }
+    /// Bank  API functions
+    pub fn bank(&self) -> bank::Bank {
+        bank::Bank::create(self)
     }
     /// Staking API functions
     pub fn staking(&self) -> staking::Staking {
@@ -305,7 +310,11 @@ impl<'a> Terra<'a> {
     /// Generate Fee structure, either by estimation method or hardcoded
     ///
 
-    pub async fn calc_fees(&self, messages: &[Message]) -> anyhow::Result<StdFee> {
+    pub async fn calc_fees(
+        &self,
+        auth_account: &AuthAccount,
+        messages: &[Message],
+    ) -> anyhow::Result<StdFee> {
         if self.gas_options.is_none() {
             return Err(TerraRustAPIError::NoGasOpts.into());
         }
@@ -323,16 +332,21 @@ impl<'a> Terra<'a> {
                             Some(c) => c,
                             None => &default_gas_coin,
                         };
-                        let res: TxFeeResult = self
+                        let res: LCDResult<TxFeeResult> = self
                             .tx()
-                            .estimate_fee(messages, gas.gas_adjustment.unwrap_or(1.0), &[gas_coin])
+                            .estimate_fee(
+                                &auth_account.address,
+                                messages,
+                                gas.gas_adjustment.unwrap_or(1.0),
+                                &[gas_coin],
+                            )
                             .await?;
                         //  let gas_amount = gas.gas_adjustment.unwrap_or(1.0) * res.result.gas as f64;
                         let mut fees: Vec<Coin> = vec![];
-                        for fee in res.result.fees {
+                        for fee in res.result.fee.amount {
                             fees.push(Coin::create(&fee.denom, fee.amount))
                         }
-                        StdFee::create(fees, res.result.gas as u64)
+                        StdFee::create(fees, res.result.fee.gas as u64)
                     }
                     false => {
                         let mut fees: Vec<Coin> = vec![];
@@ -354,14 +368,15 @@ impl<'a> Terra<'a> {
     #[allow(clippy::too_many_arguments)]
     fn generate_transaction_to_broadcast_fees(
         chain_id: String,
-        account_number: u64,
-        sequence: u64,
+        auth_account: &AuthAccount,
         fee: StdFee,
         secp: &Secp256k1<All>,
         from: &'a PrivateKey,
         messages: &'a [Message],
         memo: Option<String>,
     ) -> anyhow::Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
+        let account_number = auth_account.account_number;
+        let sequence = auth_account.sequence;
         let std_sign_msg = StdSignMsg {
             chain_id, //: String::from(self.chain_id),
             account_number,
@@ -395,25 +410,18 @@ impl<'a> Terra<'a> {
     ) -> anyhow::Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
         let from_public = from.public_key(secp);
         let from_account = from_public.account()?;
-
-        self.auth()
-            .account(&from_account)
-            .map_ok(move |auth_result| {
-                self.calc_fees(messages).map_ok(move |std_fee| {
-                    Terra::generate_transaction_to_broadcast_fees(
-                        self.chain_id.into(),
-                        auth_result.result.value.account_number,
-                        auth_result.result.value.sequence,
-                        std_fee,
-                        secp,
-                        from,
-                        messages,
-                        memo,
-                    )
-                })
-            })
-            .await?
-            .await?
+        let auth = self.auth().account(&from_account).await?;
+        let fees = self.calc_fees(&auth.result.value, messages).await?;
+        let txn = Terra::generate_transaction_to_broadcast_fees(
+            self.chain_id.into(),
+            &auth.result.value,
+            fees,
+            secp,
+            from,
+            messages,
+            memo,
+        );
+        return txn;
     }
     /// helper: sign & submit the transaction sync
     pub async fn submit_transaction_sync(
@@ -473,6 +481,7 @@ impl<'a> Terra<'a> {
 #[cfg(test)]
 mod tst {
     use super::*;
+    use crate::client::auth::Auth;
     use crate::core_types::{Coin, StdTx};
     use crate::messages::MsgSend;
     use crate::{MsgExecuteContract, PrivateKey, Terra};
@@ -499,10 +508,15 @@ mod tst {
         let std_fee = StdFee::create_single(Coin::parse("50000uluna")?.unwrap(), 90000);
 
         let messages: Vec<Message> = vec![send];
+        let auth_account = AuthAccount {
+            address: "terra1n3g37dsdlv7ryqftlkef8mhgqj4ny7p8v78lg7".to_string(),
+            public_key: None,
+            account_number: 43045,
+            sequence: 3,
+        };
         let (sign_message, signatures) = Terra::generate_transaction_to_broadcast_fees(
             "tequila-0004".into(),
-            43045,
-            3,
+            &auth_account,
             std_fee,
             &secp,
             &pk,
@@ -545,12 +559,16 @@ mod tst {
 
         assert_eq!(json, json_eq);
         let std_fee = StdFee::create_single(Coin::parse("70000uluna")?.unwrap(), 200000);
-
+        let auth_account = AuthAccount {
+            address: "terra1vr0e7kylhu9am44v0s3gwkccmz7k3naxysrwew".to_string(),
+            public_key: None,
+            account_number: 49411,
+            sequence: 0,
+        };
         let messages: Vec<Message> = vec![msg];
         let (sign_message, signatures) = Terra::generate_transaction_to_broadcast_fees(
             "tequila-0004".into(),
-            49411,
-            0,
+            &auth_account,
             std_fee,
             &secp,
             &private,

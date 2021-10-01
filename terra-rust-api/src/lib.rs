@@ -93,7 +93,7 @@ pub use crate::client_types::{
     terra_opt_u64_format, terra_u64_format,
 };
 pub use addressbook::AddressBook;
-pub use client::lcd_types::{LCDResult, LCDTypeValue};
+pub use client::lcd_types::{LCDResult, LCDResultVec, LCDTypeValue};
 pub use client::{auth_types, client_types, core_types, staking_types, tendermint_types};
 pub use client::{GasOptions, Terra};
 pub use keys::{PrivateKey, PublicKey};

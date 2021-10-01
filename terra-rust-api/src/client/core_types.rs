@@ -136,7 +136,7 @@ pub struct StdSignMsg<'a> {
 }
 
 /// The structure used in sending the public key in a transaction
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct PubKeySig {
     #[allow(missing_docs)]
     #[serde(rename = "type")]

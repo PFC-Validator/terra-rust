@@ -59,7 +59,7 @@ struct Cli {
         default_value = "https://lcd.terra.dev",
         short,
         long = "lcd-client-url",
-        help = "https://lcd.terra.dev is main-net"
+        help = "https://lcd.terra.dev is main-net, https://bombay-lcd.terra.dev"
     )]
     // Terra cli Client daemon
     lcd: String,
