@@ -16,6 +16,6 @@ pub struct AuthAccount {
     /// The account number
     pub account_number: u64,
     /// The sequence. This is used to avoid 'double transmitting' a transaction
-    #[serde(with = "terra_u64_format")]
-    pub sequence: u64,
+    #[serde(with = "terra_opt_u64_format")]
+    pub sequence: Option<u64>,
 }

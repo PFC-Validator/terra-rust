@@ -376,7 +376,7 @@ impl<'a> Terra<'a> {
         memo: Option<String>,
     ) -> anyhow::Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
         let account_number = auth_account.account_number;
-        let sequence = auth_account.sequence;
+        let sequence = auth_account.sequence.unwrap_or(0);
         let std_sign_msg = StdSignMsg {
             chain_id, //: String::from(self.chain_id),
             account_number,
@@ -481,7 +481,7 @@ impl<'a> Terra<'a> {
 #[cfg(test)]
 mod tst {
     use super::*;
-    use crate::client::auth::Auth;
+    //use crate::client::auth::Auth;
     use crate::core_types::{Coin, StdTx};
     use crate::messages::MsgSend;
     use crate::{MsgExecuteContract, PrivateKey, Terra};
@@ -512,7 +512,7 @@ mod tst {
             address: "terra1n3g37dsdlv7ryqftlkef8mhgqj4ny7p8v78lg7".to_string(),
             public_key: None,
             account_number: 43045,
-            sequence: 3,
+            sequence: Some(3),
         };
         let (sign_message, signatures) = Terra::generate_transaction_to_broadcast_fees(
             "tequila-0004".into(),
@@ -563,7 +563,7 @@ mod tst {
             address: "terra1vr0e7kylhu9am44v0s3gwkccmz7k3naxysrwew".to_string(),
             public_key: None,
             account_number: 49411,
-            sequence: 0,
+            sequence: Some(0),
         };
         let messages: Vec<Message> = vec![msg];
         let (sign_message, signatures) = Terra::generate_transaction_to_broadcast_fees(

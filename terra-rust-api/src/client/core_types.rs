@@ -79,7 +79,7 @@ impl fmt::Display for Coin {
         if self.amount == dec!(0.0) {
             write!(f, "0.0{}", self.denom)
         } else {
-            write!(f, "{:0.9}{}", self.amount, self.denom)
+            write!(f, "{:.}{}", self.amount, self.denom)
         }
     }
 }
