@@ -6,6 +6,7 @@ use rust_decimal::Decimal;
 use crate::messages::market::MsgSwap;
 use futures::future::join_all;
 
+/// Market functions. mainly around swapping tokens
 pub struct Market<'a> {
     terra: &'a Terra<'a>,
 }

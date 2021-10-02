@@ -43,13 +43,13 @@ pub enum StakingCommand {
         /// the minimum amount required for the validator to be active. going under this amount will force the validator to be jailed
         min_self_delegation: Decimal,
 
-        /// [Optional] the keybase.io PGP identity string.
+        /// \[Optional\] the keybase.io PGP identity string.
         identity: Option<String>,
-        /// [Optional] public URL
+        /// \[Optional\] public URL
         website: Option<String>,
-        /// [Optional] public contact point. (usually email)
+        /// \[Optional\] public contact point. (usually email)
         security_contact: Option<String>,
-        /// [Optional] general text describing the validator
+        /// \[Optional\] general text describing the validator
         details: Option<String>,
     },
     #[structopt(name = "edit-validator")]

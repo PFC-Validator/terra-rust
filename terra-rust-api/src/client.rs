@@ -5,14 +5,19 @@ use reqwest::header::{HeaderMap, CONTENT_TYPE, USER_AGENT};
 use reqwest::{Client, RequestBuilder};
 use serde::{Deserialize, Serialize};
 
-mod auth;
+pub mod auth;
 /// Structures used in account authentication
 pub mod auth_types;
+/// APIs around bank module (get balances)
+pub mod bank;
 /// JSON Serializer/Deserializer helpers
 pub mod client_types;
 /// Common Structures throughout the library
 pub mod core_types;
-mod market;
+pub mod fcd;
+pub mod lcd_types;
+/// APIs around market operations (swap)
+pub mod market;
 /// APIs to perform oracle related things
 pub mod oracle;
 /// Structures used for Oracle APIs
@@ -20,17 +25,16 @@ pub mod oracle_types;
 /// tendermint RPC
 pub mod rpc;
 pub mod rpc_types;
-
-pub mod bank;
-pub mod fcd;
-pub mod lcd_types;
-mod staking;
+/// staking routines
+pub mod staking;
 /// Structures used for Staking APIs
 pub mod staking_types;
-mod tendermint;
+/// tendermint level APIs
+pub mod tendermint;
 /// Structures used for Tendermint / Misc APIs
 pub mod tendermint_types;
-mod tx;
+/// operations around the transaction itself
+pub mod tx;
 /// Structures used for sending transactions to LCD
 pub mod tx_types;
 /// wasm module/contract related apis
