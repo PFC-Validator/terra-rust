@@ -1,49 +1,13 @@
-/*!
- CLI for terrad networks
-*/
-// (Buf) Uncomment these lines to have the output buffered, this can provide
-// better performance but is not always intuitive behaviour.
-// use std::io::BufWriter;
-#![warn(missing_docs)]
+use anyhow::Result;
+use bitcoin::secp256k1::{All, Secp256k1};
 use dotenv::dotenv;
+use std::path::Path;
+use terra_rust_api::core_types::Coin;
+use terra_rust_api::{GasOptions, Message, PrivateKey, Terra};
 
 use structopt::StructOpt;
-mod bank;
-mod contract;
-
-mod auth;
-mod distribution;
-mod fcd;
-mod keys;
-mod market;
-mod oracle;
-mod rpc;
-mod slashing;
-mod staking;
-mod tendermint;
-mod validator;
-mod wallet;
-
-use anyhow::Result;
-
-use crate::auth::{auth_cmd_parse, AuthCommand};
-use crate::bank::{bank_cmd_parse, BankCommand};
-use crate::contract::{contract_cmd_parse, ContractCommand};
-use crate::distribution::{distribution_cmd_parse, DistributionCommand};
-use crate::fcd::{fcd_cmd_parse, FCDCommand};
-use crate::keys::{key_cmd_parse, KeysCommand};
-use crate::market::{market_cmd_parse, MarketCommand};
-use crate::oracle::{oracle_cmd_parse, OracleCommand};
-use crate::rpc::{rpc_cmd_parse, RPCCommand};
-use crate::slashing::{slashing_cmd_parse, SlashingCommand};
-use crate::staking::{staking_cmd_parse, StakingCommand};
-use crate::tendermint::{
-    block_cmd_parse, validator_sets_cmd_parse, BlockCommand, ValidatorSetsCommand,
-};
-use crate::validator::{validator_cmd_parse, ValidatorCommand};
-use crate::wallet::{wallet_cmd_parse, WalletCommand};
-use terra_rust_api::core_types::Coin;
-use terra_rust_api::{GasOptions, Terra};
+use terra_rust_api::client::tx_types::TXResultSync;
+use terra_rust_api::messages::wasm::{MsgInstantiateContract, MsgStoreCode};
 use terra_rust_wallet::Wallet;
 
 /// VERSION number of package
@@ -139,11 +103,27 @@ struct Cli {
         help = "the adjustment to multiply the estimate to calculate the fee"
     )]
     gas_adjustment: f64,
-    #[structopt(short, long, parse(from_flag))]
-    debug: std::sync::atomic::AtomicBool,
+    #[structopt(name = "sender", help = "the sender account")]
+    sender: String,
+    #[structopt(name = "contract", help = "WASM file to set")]
+    wasm: String,
+    #[structopt(
+        name = "admin",
+        long = "admin",
+        help = "the admin account",
+        default_value = ""
+    )]
+    admin: String,
+    #[structopt(
+        name = "coins",
+        long = "coins",
+        help = "initial coins",
+        default_value = ""
+    )]
+    coins: String,
 
-    #[structopt(subcommand)]
-    cmd: Command,
+    #[structopt(name = "json", help = "the json init file.")]
+    json: String,
 }
 impl Cli {
     pub async fn gas_opts(&self) -> Result<GasOptions> {
@@ -159,7 +139,7 @@ impl Cli {
             )
             .await?;
             if let Some(gas_price) = &gas_opts.gas_price {
-                println!("Using Gas price of {}", gas_price);
+                log::info!("Using Gas price of {}", gas_price);
             }
 
             Ok(gas_opts)
@@ -186,92 +166,121 @@ impl Cli {
         }
     }
 }
-#[derive(StructOpt)]
-#[allow(clippy::upper_case_acronyms)]
-enum Command {
-    /// Key Operations
-    Keys(KeysCommand),
-    /// validator operations
-    Validator(ValidatorCommand),
-    /// Market Operations
-    Market(MarketCommand),
-    /// Auth operations
-    Auth(AuthCommand),
-    /// wallet ops
-    Wallet(WalletCommand),
-    /// Bank Transactions
-    Bank(BankCommand),
-    /// Oracle Transactions
-    Oracle(OracleCommand),
-    /// Block commands
-    Block(BlockCommand),
-    /// Transaction Commands
-    Tx(TxCommand),
-    /// Slashing Commands
-    Slashing(SlashingCommand),
-    /// Staking Commands
-    Staking(StakingCommand),
-    /// Staking Commands
-    Distribution(DistributionCommand),
-    /// WASM Module / Smart Contract commands
-    Contract(ContractCommand),
-    /// Tendermint ValidatorSets commands
-    ValidatorSets(ValidatorSetsCommand),
-    /// Tendermint ValidatorSets commands
-    RPC(RPCCommand),
-    /// FCD commands
-    FCD(FCDCommand),
-}
-
-/// Input to the /txs/XXXX query
-#[derive(StructOpt)]
-pub struct TxCommand {
-    #[structopt(name = "hash", help = "hash to inquire about")]
-    /// The hash to inquire about
-    hash: String,
-}
 
 async fn run() -> anyhow::Result<()> {
     let cli: Cli = Cli::from_args();
 
     let gas_opts: GasOptions = cli.gas_opts().await?;
-    let t = Terra::lcd_client(
-        &cli.lcd,
-        &cli.chain_id,
-        &gas_opts,
-        Some(cli.debug.into_inner()),
-    )
-    .await?;
+    let terra = Terra::lcd_client(&cli.lcd, &cli.chain_id, &gas_opts, None).await?;
+    let secp = Secp256k1::new();
+    let wallet = Wallet::create(&cli.wallet);
+
     let seed: Option<&str> = if cli.seed.is_empty() {
         None
     } else {
         Some(&cli.seed)
     };
-    let wallet = Wallet::create(&cli.wallet);
-    match cli.cmd {
-        Command::Keys(key_cmd) => key_cmd_parse(&t, &wallet, seed, key_cmd),
-        Command::Bank(bank_cmd) => bank_cmd_parse(&t, &wallet, seed, bank_cmd).await,
-        Command::Oracle(cmd) => oracle_cmd_parse(&t, &wallet, seed, cmd).await,
-        Command::Validator(cmd) => validator_cmd_parse(&t, &wallet, seed, cmd).await,
-        Command::Block(cmd) => block_cmd_parse(&t, cmd).await,
-        Command::Contract(cmd) => contract_cmd_parse(&t, &wallet, seed, cmd).await,
-        Command::Market(cmd) => market_cmd_parse(&t, &wallet, seed, cmd).await,
-
-        Command::Tx(cmd) => {
-            let resp = t.tx().get(&cmd.hash).await?;
-            println!("{}", serde_json::to_string_pretty(&resp)?);
-            Ok(())
+    let admin: Option<String> = if cli.admin.is_empty() {
+        None
+    } else {
+        if cli.admin.starts_with("terra1") {
+            Some(cli.admin)
+        } else {
+            let admin_key = wallet.get_public_key(&secp, &cli.admin, seed)?;
+            let admin_account = admin_key.account()?;
+            Some(admin_account.clone())
         }
-        Command::Auth(auth_cmd) => auth_cmd_parse(&t, &wallet, seed, auth_cmd).await,
-        Command::Wallet(wallet_cmd) => wallet_cmd_parse(&t, &wallet, seed, wallet_cmd),
-        Command::Slashing(cmd) => slashing_cmd_parse(&t, &wallet, seed, cmd).await,
-        Command::Staking(cmd) => staking_cmd_parse(&t, &wallet, seed, cmd).await,
-        Command::Distribution(cmd) => distribution_cmd_parse(&t, &wallet, seed, cmd).await,
-        Command::ValidatorSets(cmd) => validator_sets_cmd_parse(&t, cmd).await,
-        Command::RPC(cmd) => rpc_cmd_parse(&t, cmd).await,
-        Command::FCD(cmd) => fcd_cmd_parse(&t, &cli.fcd, cmd).await,
+    };
+    let coins: Vec<Coin> = if cli.coins.is_empty() {
+        vec![]
+    } else {
+        Coin::parse_coins(&cli.coins)?
+    };
+
+    let from_key = wallet.get_private_key(&secp, &cli.sender, seed)?;
+
+    let from_public_key = from_key.public_key(&secp);
+
+    let wasm = Path::new(&cli.wasm);
+
+    let store_message = MsgStoreCode::create_from_file(&from_public_key.account()?, wasm)?;
+    let messages: Vec<Message> = vec![store_message];
+
+    let resp = terra
+        .submit_transaction_sync(
+            &secp,
+            &from_key,
+            &messages,
+            Some(format!(
+                "PFC-{}/{}",
+                NAME.unwrap_or("TERRARUST"),
+                VERSION.unwrap_or("DEV")
+            )),
+        )
+        .await?;
+
+    log::info!("{:?}", &resp);
+
+    let hash = resp.txhash;
+    let tx = terra
+        .tx()
+        .get_and_wait(&hash, 5, tokio::time::Duration::from_secs(1))
+        .await?;
+    let codes = tx.get_attribute_from_result_logs("store_code", "code_id");
+    if let Some(code) = codes.first() {
+        let code_id: u64 = code.1.parse()?;
+
+        // let code_id = 11129;
+        log::info!("Code instantiation is TBD");
+        if false {
+            log::info!("Code id = {}", code_id);
+            let resp = init_code(
+                &terra,
+                &secp,
+                &from_key,
+                admin,
+                code_id,
+                &Path::new(&cli.json),
+                coins,
+            )
+            .await?;
+            log::info!("{:?}", &resp);
+        }
     }
+
+    Ok(())
 }
+async fn init_code<'a>(
+    terra: &'a Terra<'a>,
+    secp: &Secp256k1<All>,
+    from_key: &PrivateKey,
+    admin: Option<String>,
+    code_id: u64,
+    init_file: &Path,
+    init_coins: Vec<Coin>,
+) -> anyhow::Result<TXResultSync> {
+    let sender = from_key.public_key(secp).account()?;
+    let init_message =
+        MsgInstantiateContract::create_from_file(&sender, admin, code_id, init_file, init_coins)?;
+    log::info!("INIT = {}", serde_json::to_string_pretty(&init_message)?);
+    let init_messages: Vec<Message> = vec![init_message];
+    let resp = terra
+        .submit_transaction_sync(
+            &secp,
+            &from_key,
+            &init_messages,
+            Some(format!(
+                "PFC-{}/{}",
+                NAME.unwrap_or("TERRARUST"),
+                VERSION.unwrap_or("DEV")
+            )),
+        )
+        .await?;
+
+    log::info!("{:?}", &resp);
+    Ok(resp)
+}
+
 #[tokio::main]
 async fn main() {
     dotenv().ok();

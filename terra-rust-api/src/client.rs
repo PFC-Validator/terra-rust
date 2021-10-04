@@ -236,7 +236,7 @@ impl<'a> Terra<'a> {
         &self,
         path: &str,
         args: Option<&str>,
-    ) -> anyhow::Result<T> {
+    ) -> Result<T, TerraRustAPIError> {
         self.send_cmd_url(self.url, path, args).await
     }
     /// used to send a GET command to any URL
@@ -245,7 +245,7 @@ impl<'a> Terra<'a> {
         url: &str,
         path: &str,
         args: Option<&str>,
-    ) -> anyhow::Result<T> {
+    ) -> Result<T, TerraRustAPIError> {
         let request_url = match args {
             Some(a) => format!("{}{}{}", url.to_owned(), path, a),
             None => format!("{}{}", url.to_owned(), path),
@@ -266,7 +266,7 @@ impl<'a> Terra<'a> {
         url: &str,
         path: &str,
         args: Option<&str>,
-    ) -> anyhow::Result<T> {
+    ) -> Result<T, TerraRustAPIError> {
         let request_url = match args {
             Some(a) => format!("{}{}{}", url.to_owned(), path, a),
             None => format!("{}{}", url.to_owned(), path),
@@ -281,7 +281,7 @@ impl<'a> Terra<'a> {
         &self,
         path: &str,
         args: &R,
-    ) -> anyhow::Result<T> {
+    ) -> Result<T, TerraRustAPIError> {
         let request_url = format!("{}{}", self.url.to_owned(), path);
 
         if self.debug {
@@ -299,13 +299,14 @@ impl<'a> Terra<'a> {
     async fn resp<T: for<'de> Deserialize<'de>>(
         request_url: &str,
         req: RequestBuilder,
-    ) -> anyhow::Result<T> {
+    ) -> Result<T, TerraRustAPIError> {
         let response = req.send().await?;
-        if !response.status().is_success() {
+        let status = response.status();
+        if !&status.is_success() {
             let status_text = response.text().await?;
             //  eprintln!("{}", &request_url);
-            log::error!("URL={} - {}", &request_url, &status_text);
-            Err(TerraRustAPIError::Terra(status_text).into())
+            log::debug!("URL={} - {}", &request_url, &status_text);
+            Err(TerraRustAPIError::TerraLCDResponse(status, status_text).into())
         } else {
             let struct_response: T = response.json::<T>().await?;
             Ok(struct_response)
@@ -382,7 +383,7 @@ impl<'a> Terra<'a> {
         let account_number = auth_account.account_number;
         let sequence = auth_account.sequence.unwrap_or(0);
         let std_sign_msg = StdSignMsg {
-            chain_id, //: String::from(self.chain_id),
+            chain_id: chain_id.clone(), //: String::from(self.chain_id),
             account_number,
             sequence,
             fee,
@@ -394,7 +395,18 @@ impl<'a> Terra<'a> {
             )),
         };
         let js = serde_json::to_string(&std_sign_msg)?;
-        log::debug!("TO SIGN - {}", js);
+        if js.len() > 1000 {
+            log::debug!(
+                "TO SIGN - {} {} {} #messages {}",
+                &chain_id,
+                account_number,
+                sequence,
+                messages.len()
+            );
+        } else {
+            log::debug!("TO SIGN - {}", js);
+        }
+
         // eprintln!("Client.rs:311\n{}", js);
         let sig = from.sign(secp, &js)?;
         let sigs: Vec<StdSignature> = vec![sig];
@@ -477,7 +489,7 @@ impl<'a> Terra<'a> {
             let client = reqwest::Client::new();
 
             let req = client.get(addr_url).headers(Self::construct_headers());
-            Self::resp::<AddressBook>(addr_url, req).await
+            Ok(Self::resp::<AddressBook>(addr_url, req).await?)
         }
     }
 }

@@ -1,6 +1,11 @@
 # Changes
 
-## 1.0 
+## 1.0
+### 1.0.8 - (In Development)
+* HTTP responses now TerraLCDResponse error types
+* TX response work.
+* new example 'set_code' .. instantiate code TBD
+* Error's returned are now TerraRustAPIError
 ### 1.0.7 - 2-Oct-21
 * fix up some documentation links (Thx @PSchlutermann)
 ### 1.0.6 - 1-Oct-21

@@ -20,6 +20,7 @@ pub struct TXResultAsync {
     /// Transaction hash of the transaction
     pub txhash: String,
 }
+
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct TXResultSync {
@@ -28,8 +29,9 @@ pub struct TXResultSync {
     pub txhash: String,
     pub code: Option<usize>,
     pub raw_log: String,
+    pub logs: Option<Vec<TxResultBlockEvent>>,
 }
-
+impl TXResultSync {}
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct TxResultBlockAttribute {
     pub key: String,
@@ -38,12 +40,12 @@ pub struct TxResultBlockAttribute {
 #[derive(Deserialize, Clone, Serialize, Debug)]
 pub struct TxResultBlockEvent {
     #[serde(rename = "type")]
-    pub sytpe: String,
+    pub s_type: String,
     pub attributes: Vec<TxResultBlockAttribute>,
 }
 #[derive(Deserialize, Clone, Serialize, Debug)]
 pub struct TxResultBlockMsg {
-    //pub msg_index: Option<usize>,
+    pub msg_index: Option<usize>,
     // pub log: Option<String>,
     pub events: Vec<TxResultBlockEvent>,
 }
@@ -56,18 +58,53 @@ pub struct TXResultBlock {
     pub codespace: Option<String>,
     pub code: Option<usize>,
     pub raw_log: String,
-    pub logs: Option<Vec<TxResultBlockMsg>>,
+    pub logs: Vec<TxResultBlockMsg>,
     // #[serde(with = "terra_u64_format")]
     // pub gas_wanted: u64,
     // #[serde(with = "terra_u64_format")]
     // pub gas_used: u64,
 }
+impl TXResultBlock {
+    /// find a attribute's value from TX logs.
+    /// returns: msg_index and value
+    pub fn get_attribute_from_result_logs(
+        &self,
 
+        event_type: &str,
+        attribute_key: &str,
+    ) -> Vec<(usize, String)> {
+        let mut response: Vec<(usize, String)> = Default::default();
+        for log_part in &self.logs {
+            let msg_index = log_part.msg_index.unwrap_or_default();
+            let events = &log_part.events;
+            //      log::info!("logs{:?}", events);
+            let events_filtered = events
+                .iter()
+                .filter(|event| event.s_type == event_type)
+                .collect::<Vec<_>>();
+            //      log::info!("Filtered Events {:?}", events_filtered);
+            if let Some(event) = events_filtered.first() {
+                let attributes_filtered = event
+                    .attributes
+                    .iter()
+                    .filter(|attr| attr.key == attribute_key)
+                    .map(|f| f.value.clone())
+                    .flatten()
+                    .collect::<Vec<_>>();
+
+                if let Some(attr_key) = attributes_filtered.first() {
+                    response.push((msg_index, attr_key.clone()));
+                }
+            }
+        }
+        response
+    }
+}
 #[derive(Serialize)]
 pub struct TxEstimate2<'a> {
     pub msg: &'a [Message],
 }
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct TxBaseReq<'a> {
     pub chain_id: String,
     pub from: String,

@@ -1,0 +1,10 @@
+{
+  "decimals": 6,
+  "initial_balances": [],
+  "mint": {
+    "minter": "##SENDER##"
+  },
+  "name": "TerraRust Example Token",
+  "symbol": "TERRARUST"
+}
+

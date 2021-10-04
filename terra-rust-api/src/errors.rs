@@ -1,4 +1,6 @@
 #![allow(missing_docs)]
+
+use reqwest::StatusCode;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -7,6 +9,8 @@ pub enum TerraRustAPIError {
     ReqwestError(#[from] ::reqwest::Error),
     #[error("Terra `{0}` CLI Error")]
     Terra(String),
+    #[error("Terra `{0}` LCD - {1}")]
+    TerraLCDResponse(StatusCode, String),
     #[error("Bech32 Decode Error")]
     Bech32DecodeErr,
     #[error("Bech32 Decode Error: Key Failed prefix {0} or length {1} Wanted:{2}/{3}")]
@@ -47,6 +51,8 @@ pub enum TerraRustAPIError {
     GasPriceError(String),
     #[error("Attempting to fetch validator set in parts, and failed Height mismatch {0} {1}")]
     TendermintValidatorSet(u64, u64),
+    #[error("Transaction not found after {0} attempts")]
+    TXNotFound(usize),
     #[error("unknown Terra-Rust API error")]
     Unknown,
 }

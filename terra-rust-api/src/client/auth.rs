@@ -1,4 +1,5 @@
 use crate::auth_types::AuthAccount;
+use crate::errors::TerraRustAPIError;
 use crate::staking_types::{Validator, ValidatorDelegation, ValidatorUnbondingDelegation};
 use crate::{LCDResult, LCDResultVec, LCDTypeValue, Terra};
 
@@ -12,21 +13,19 @@ impl Auth<'_> {
     pub async fn account(
         &self,
         account_address: &str,
-    ) -> anyhow::Result<LCDResult<LCDTypeValue<AuthAccount>>> {
-        let response = self
-            .terra
+    ) -> Result<LCDResult<LCDTypeValue<AuthAccount>>, TerraRustAPIError> {
+        self.terra
             .send_cmd::<LCDResult<LCDTypeValue<AuthAccount>>>(
                 &format!("/auth/accounts/{}", account_address),
                 None,
             )
-            .await?;
-        Ok(response)
+            .await
     }
     /// all delegations for a given account
     pub async fn validator_delegations(
         &self,
         account_address: &str,
-    ) -> anyhow::Result<LCDResultVec<ValidatorDelegation>> {
+    ) -> Result<LCDResultVec<ValidatorDelegation>, TerraRustAPIError> {
         self.terra
             .send_cmd::<LCDResultVec<ValidatorDelegation>>(
                 &format!("/staking/delegators/{}/delegations", account_address),
@@ -38,7 +37,7 @@ impl Auth<'_> {
     pub async fn validator_unbonding_delegations(
         &self,
         account_address: &str,
-    ) -> anyhow::Result<LCDResult<ValidatorUnbondingDelegation>> {
+    ) -> Result<LCDResult<ValidatorUnbondingDelegation>, TerraRustAPIError> {
         self.terra
             .send_cmd::<LCDResult<ValidatorUnbondingDelegation>>(
                 &format!(
@@ -53,7 +52,7 @@ impl Auth<'_> {
     pub async fn delegated_validators(
         &self,
         account_address: &str,
-    ) -> anyhow::Result<LCDResult<Vec<Validator>>> {
+    ) -> Result<LCDResult<Vec<Validator>>, TerraRustAPIError> {
         self.terra
             .send_cmd::<LCDResult<Vec<Validator>>>(
                 &format!("/staking/delegators/{}/validators", account_address),

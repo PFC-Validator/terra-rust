@@ -102,7 +102,7 @@ impl<'a> Wallet<'a> {
         let full_key_name = self.full_key_name(key_name);
         let keyring = keyring::Keyring::new(self.name, &full_key_name);
         let phrase = &keyring.get_password().map_err(KeyringErrorAdapter::from)?;
-
+        log::info!("{}", phrase);
         match seed {
             None => Ok(PrivateKey::from_words(secp, phrase)?),
             Some(seed_str) => Ok(PrivateKey::from_words_seed(secp, phrase, seed_str)?),

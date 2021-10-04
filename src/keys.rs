@@ -111,7 +111,7 @@ pub fn key_cmd_parse(
             let secp = Secp256k1::new();
             let pub_key = wallet.get_public_key(&secp, &name, seed)?;
 
-            println!("{}", pub_key.account()?)
+            println!("{}", pub_key.account()?);
         }
         KeysCommand::List => {
             let keys = wallet.list()?;

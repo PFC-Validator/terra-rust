@@ -1,6 +1,6 @@
 [package]
 name = "terra-rust-api"
-version = "1.0.7"
+version = "1.0.8"
 authors = ["PFC-Validator <PFC-Validator@protonmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -47,8 +47,8 @@ ed25519 = "1"
 ed25519-dalek = { version = "1", features = ["serde"] }
 #tendermint = "0.21.0.0"
 base64 = "0.13.0"
-
-[dev-dependencies]
 tokio = { version = "1.10", features = ["full"] }
+[dev-dependencies]
+
 env_logger = "0.8.3"
 dotenv="0.15.0"

@@ -1,4 +1,5 @@
 use crate::client::staking_types::{Validator, ValidatorDelegation, ValidatorUnbondingDelegation};
+use crate::errors::TerraRustAPIError;
 use crate::{LCDResult, Terra};
 
 pub struct Staking<'a> {
@@ -10,15 +11,17 @@ impl Staking<'_> {
     }
     pub async fn validator(&self, key: &str) -> anyhow::Result<LCDResult<Validator>> {
         //   let url = self.terra.url.to_owned() + "/staking/validators/" + key;
-        self.terra
+        Ok(self
+            .terra
             .send_cmd::<LCDResult<Validator>>("/staking/validators/", Some(key))
-            .await
+            .await?)
     }
     /// Get list of validators
     pub async fn validators(&self) -> anyhow::Result<LCDResult<Vec<Validator>>> {
-        self.terra
+        Ok(self
+            .terra
             .send_cmd::<LCDResult<Vec<Validator>>>("/staking/validators", None)
-            .await
+            .await?)
     }
     pub async fn validator_by_moniker(&self, moniker: &str) -> anyhow::Result<Option<Validator>> {
         let lst = self
@@ -35,7 +38,7 @@ impl Staking<'_> {
     pub async fn validator_delegations(
         &self,
         key: &str,
-    ) -> anyhow::Result<LCDResult<Vec<ValidatorDelegation>>> {
+    ) -> Result<LCDResult<Vec<ValidatorDelegation>>, TerraRustAPIError> {
         self.terra
             .send_cmd::<LCDResult<Vec<ValidatorDelegation>>>(
                 &format!("/staking/validators/{}/delegations", key),
@@ -48,7 +51,7 @@ impl Staking<'_> {
     pub async fn validator_unbonding_delegations(
         &self,
         key: &str,
-    ) -> anyhow::Result<LCDResult<Vec<ValidatorUnbondingDelegation>>> {
+    ) -> Result<LCDResult<Vec<ValidatorUnbondingDelegation>>, TerraRustAPIError> {
         self.terra
             .send_cmd::<LCDResult<Vec<ValidatorUnbondingDelegation>>>(
                 &format!("/staking/validators/{}/unbonding_delegations", key),
