@@ -306,7 +306,7 @@ impl<'a> Terra<'a> {
             let status_text = response.text().await?;
             //  eprintln!("{}", &request_url);
             log::debug!("URL={} - {}", &request_url, &status_text);
-            Err(TerraRustAPIError::TerraLCDResponse(status, status_text).into())
+            Err(TerraRustAPIError::TerraLCDResponse(status, status_text))
         } else {
             let struct_response: T = response.json::<T>().await?;
             Ok(struct_response)
