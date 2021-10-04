@@ -193,8 +193,10 @@ mod tst {
             "terra1vr0e7kylhu9am44v0s3gwkccmz7k3naxysrwew",
             token_file,
         )?;
+
         let js = serde_json::to_string(&msg)?;
-        assert_eq!(out_json, js);
+        println!("{} - {}", out_json.len(), js.len());
+        assert_eq!(out_json.trim(), js);
         Ok(())
     }
 }
