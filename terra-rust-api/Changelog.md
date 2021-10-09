@@ -1,7 +1,9 @@
 # Changes
 
 ## 1.0
-### 1.0.8 - (In Development)
+
+### 1.0.8 - 9-Oct-21
+* WASM Exec contract working again - (Thx @sambarboza)
 * HTTP responses now TerraLCDResponse error types
 * TX response work.
 * new example 'set_code' .. instantiate code TBD
@@ -13,7 +15,7 @@
 ### 1.0.1 - 30-Sep-21
 * Switch to Col-5
 ## 0.3
-### 0.3.8 - Devel
+### 0.3.8 - (never released)
 * parse tendermint hex-addresses and display tendermint_address()
 * API function PublicKey::from_tendermint_address() 
 ### 0.3.7 - 17-Sep-21

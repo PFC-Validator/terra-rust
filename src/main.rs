@@ -47,6 +47,7 @@ use terra_rust_api::{GasOptions, Terra};
 use terra_rust_wallet::Wallet;
 
 /// VERSION number of package
+///
 pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 /// NAME of package
 pub const NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
