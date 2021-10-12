@@ -61,7 +61,8 @@ let resp = terra.submit_transaction_sync(
  
 ```
 # Examples
-* [do_swap](./examples/do_swap.rs) -- example on how to execute a custom contract. in this case a swap.
+are located in the main 'terra-rust' repo
+* [do_swap](../examples/do_swap.rs) -- example on how to execute a custom contract. in this case a swap.
 ```shell
 
 cargo run --example do_swap -- --wallet tequilla test terra13e4jmcjnwrauvl2fnjdwex0exuzd8zrh5xk29v  1.0 1000000 uluna --max-spread
@@ -69,7 +70,7 @@ cargo run --example do_swap -- --wallet tequilla test terra13e4jmcjnwrauvl2fnjdw
 
 ```
 **(note) coins and amount need to be the same
-* [set_code](./examples/set_code.rs) -- WIP .. how to deploy and initialize a smart contract
+* [set_code](../examples/set_code.rs) -- WIP .. how to deploy and initialize a smart contract
 
 # Docs 
 * [API Documentation](https://docs.rs/terra-rust-api)
