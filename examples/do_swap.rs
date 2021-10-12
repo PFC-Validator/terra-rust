@@ -207,6 +207,8 @@ async fn run() -> anyhow::Result<()> {
     )?;
     let messages: Vec<Message> = vec![store_message];
 
+    let json = serde_json::to_string(&messages)?;
+    log::info!("Message:\n{}", json);
     let resp = terra
         .submit_transaction_sync(
             &secp,

@@ -1688,7 +1688,7 @@ dependencies = [
 
 [[package]]
 name = "terra-rust"
-version = "1.0.5-alpha.0"
+version = "1.0.5-alpha.1"
 dependencies = [
  "anyhow",
  "bitcoin",
