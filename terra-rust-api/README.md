@@ -72,6 +72,8 @@ cargo run --example do_swap -- --wallet tequilla test terra13e4jmcjnwrauvl2fnjdw
 **(note) coins and amount need to be the same
 * [set_code](../examples/set_code.rs) -- WIP .. how to deploy and initialize a smart contract
 
+* [sign_message](../examples/sign_message.rs) -- sign a random string with your key
+
 # Docs 
 * [API Documentation](https://docs.rs/terra-rust-api)
 * see [Change log](https://github.com/PFC-Validator/terra-rust/blob/main/terra-rust-api/Changelog.md) for more detailed change summaries
