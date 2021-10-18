@@ -1,6 +1,6 @@
 use anyhow::Result;
-use bitcoin::secp256k1::Secp256k1;
 use dotenv::dotenv;
+use secp256k1::Secp256k1;
 use std::path::Path;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::{GasOptions, Message, Terra};

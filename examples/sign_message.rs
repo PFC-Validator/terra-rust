@@ -1,6 +1,6 @@
-use bitcoin::secp256k1::Secp256k1;
 use dotenv::dotenv;
 use rust_decimal::Decimal;
+use secp256k1::Secp256k1;
 use serde::Serialize;
 use structopt::StructOpt;
 use terra_rust_api::core_types::Coin;
