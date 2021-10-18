@@ -126,7 +126,7 @@ impl MsgInstantiateContract {
         //let exec_b64 = base64::encode(contents.to_string());
 
         let internal = MsgInstantiateContract {
-            admin: admin.unwrap_or("".into()),
+            admin: admin.unwrap_or_else(|| "".into()),
             code_id,
             sender: sender.into(),
             init_coins,
