@@ -4,7 +4,7 @@ use terra_rust_api::Terra;
 //use crate::errors::Result;
 //use crate::keys::get_private_key;
 use crate::{NAME, VERSION};
-use bitcoin::secp256k1::Secp256k1;
+use secp256k1::Secp256k1;
 use terra_rust_api::client::oracle::Voters;
 use terra_rust_api::messages::oracle::MsgDelegateFeedConsent;
 use terra_rust_api::messages::Message;

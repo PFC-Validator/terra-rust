@@ -3,8 +3,8 @@ use structopt::StructOpt;
 use terra_rust_api::Terra;
 //use crate::errors::Result;
 use crate::{NAME, VERSION};
-use bitcoin::secp256k1::Secp256k1;
 use rust_decimal::Decimal;
+use secp256k1::Secp256k1;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::messages::staking::{
     MsgBeginRedelegate, MsgCreateValidator, MsgDelegate, MsgEditValidator, MsgUndelegate,

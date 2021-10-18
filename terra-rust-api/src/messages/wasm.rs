@@ -114,30 +114,28 @@ impl MsgInstantiateContract {
      */
     /// create from JSON
     pub fn create_from_json(
-        _sender: &str,
-        _admin: Option<String>,
-        _code_id: u64,
-        _init_msg: &str,
-        _init_coins: Vec<Coin>,
+        sender: &str,
+        admin: Option<String>,
+        code_id: u64,
+        init_msg: &str,
+        init_coins: Vec<Coin>,
     ) -> anyhow::Result<Message> {
-        panic!("This message does not function");
-        /*
-               let contents: serde_json::Value = serde_json::from_str(init_msg)?;
-               //let exec_b64 = base64::encode(contents.to_string());
+        // panic!("This message does not function");
 
-               let internal = MsgInstantiateContract {
-                   admin: admin.unwrap_or("".into()),
-                   code_id,
-                   sender: sender.into(),
-                   init_coins,
-                   init_msg: contents,
-               };
-               Ok(Message {
-                   s_type: "wasm/MsgInstantiateContract".into(),
-                   value: Box::new(internal),
-               })
+        let contents: serde_json::Value = serde_json::from_str(init_msg)?;
+        //let exec_b64 = base64::encode(contents.to_string());
 
-        */
+        let internal = MsgInstantiateContract {
+            admin: admin.unwrap_or("".into()),
+            code_id,
+            sender: sender.into(),
+            init_coins,
+            init_msg: contents,
+        };
+        Ok(Message {
+            s_type: "wasm/MsgInstantiateContract".into(),
+            value: Box::new(internal),
+        })
     }
     /// use provided base64 exec message
     /// switches ##SENDER##, ##ADMIN##, ##CODE_ID## with respective values

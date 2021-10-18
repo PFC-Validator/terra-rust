@@ -28,8 +28,7 @@ use crate::errors::KeyringErrorAdapter;
 //#[macro_use]
 //extern crate error_chain;
 use crate::errors::TerraRustWalletError;
-use bitcoin::secp256k1::All;
-use bitcoin::secp256k1::Secp256k1;
+use secp256k1::{All, Secp256k1};
 use serde::{Deserialize, Serialize};
 use terra_rust_api::{PrivateKey, PublicKey};
 
@@ -102,7 +101,7 @@ impl<'a> Wallet<'a> {
         let full_key_name = self.full_key_name(key_name);
         let keyring = keyring::Keyring::new(self.name, &full_key_name);
         let phrase = &keyring.get_password().map_err(KeyringErrorAdapter::from)?;
-        //   log::info!("{}", phrase);
+        //log::info!("{}", phrase);
         match seed {
             None => Ok(PrivateKey::from_words(secp, phrase)?),
             Some(seed_str) => Ok(PrivateKey::from_words_seed(secp, phrase, seed_str)?),

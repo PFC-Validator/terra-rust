@@ -1692,7 +1692,6 @@ version = "1.0.5-alpha.1"
 dependencies = [
  "anyhow",
  "base64",
- "bitcoin",
  "dotenv",
  "env_logger",
  "futures",
@@ -1700,6 +1699,7 @@ dependencies = [
  "reqwest",
  "rust_decimal",
  "rust_decimal_macros",
+ "secp256k1",
  "serde",
  "serde_json",
  "structopt",
@@ -1734,6 +1734,7 @@ dependencies = [
  "rust_decimal",
  "rust_decimal_macros",
  "rustc-serialize",
+ "secp256k1",
  "serde",
  "serde_json",
  "subtle-encoding",
@@ -1746,10 +1747,10 @@ name = "terra-rust-wallet"
 version = "1.0.3"
 dependencies = [
  "anyhow",
- "bitcoin",
  "keyring",
  "log",
  "reqwest",
+ "secp256k1",
  "serde",
  "serde_json",
  "terra-rust-api",

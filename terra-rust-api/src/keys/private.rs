@@ -1,10 +1,10 @@
 use crate::core_types::StdSignature;
 use crate::keys::PublicKey;
-use bitcoin::secp256k1::Secp256k1;
-use bitcoin::secp256k1::{All, Message};
 use bitcoin::util::bip32::{ExtendedPrivKey, IntoDerivationPath};
 use bitcoin::Network;
 use crypto::sha2::Sha256;
+use secp256k1::Secp256k1;
+use secp256k1::{All, Message};
 
 use crypto::digest::Digest;
 use hkd32::mnemonic::{Phrase, Seed};

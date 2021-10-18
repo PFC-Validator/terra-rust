@@ -3,7 +3,7 @@ use structopt::StructOpt;
 use terra_rust_api::Terra;
 use terra_rust_wallet::Wallet;
 
-use bitcoin::secp256k1::Secp256k1;
+use secp256k1::Secp256k1;
 //use crate::errors::Result;
 #[derive(StructOpt)]
 pub enum VoterCommand {

@@ -1,13 +1,13 @@
 use anyhow::Result;
-use bitcoin::secp256k1::Secp256k1;
 use dotenv::dotenv;
+use secp256k1::{All, Secp256k1};
 use std::path::Path;
 use terra_rust_api::core_types::Coin;
-use terra_rust_api::{GasOptions, Message, Terra};
+use terra_rust_api::{GasOptions, Message, PrivateKey, Terra};
 
 use structopt::StructOpt;
-//use terra_rust_api::client::tx_types::TXResultSync;
-use terra_rust_api::messages::wasm::MsgStoreCode;
+use terra_rust_api::client::tx_types::TXResultSync;
+use terra_rust_api::messages::wasm::MsgInstantiateContract;
 use terra_rust_wallet::Wallet;
 
 /// VERSION number of package
@@ -105,8 +105,25 @@ struct Cli {
     gas_adjustment: f64,
     #[structopt(name = "sender", help = "the sender account")]
     sender: String,
-    #[structopt(name = "contract", help = "WASM file to set")]
-    wasm: String,
+    #[structopt(name = "code-id", help = "code id")]
+    code_id: u64,
+    #[structopt(
+        name = "admin",
+        long = "admin",
+        help = "the admin account",
+        default_value = ""
+    )]
+    admin: String,
+    #[structopt(
+        name = "coins",
+        long = "coins",
+        help = "initial coins",
+        default_value = ""
+    )]
+    coins: String,
+
+    #[structopt(name = "json", help = "the json init file.")]
+    json: String,
 }
 impl Cli {
     pub async fn gas_opts(&self) -> Result<GasOptions> {
@@ -163,21 +180,58 @@ async fn run() -> anyhow::Result<()> {
     } else {
         Some(&cli.seed)
     };
+    let admin: Option<String> = if cli.admin.is_empty() {
+        None
+    } else {
+        if cli.admin.starts_with("terra1") {
+            Some(cli.admin)
+        } else {
+            let admin_key = wallet.get_public_key(&secp, &cli.admin, seed)?;
+            let admin_account = admin_key.account()?;
+            Some(admin_account.clone())
+        }
+    };
+    let coins: Vec<Coin> = if cli.coins.is_empty() {
+        vec![]
+    } else {
+        Coin::parse_coins(&cli.coins)?
+    };
 
     let from_key = wallet.get_private_key(&secp, &cli.sender, seed)?;
 
-    let from_public_key = from_key.public_key(&secp);
+    let resp = init_code(
+        &terra,
+        &secp,
+        &from_key,
+        admin,
+        cli.code_id,
+        &Path::new(&cli.json),
+        coins,
+    )
+    .await?;
+    log::info!("{:?}", &resp);
 
-    let wasm = Path::new(&cli.wasm);
-
-    let store_message = MsgStoreCode::create_from_file(&from_public_key.account()?, wasm)?;
-    let messages: Vec<Message> = vec![store_message];
-
+    Ok(())
+}
+async fn init_code<'a>(
+    terra: &'a Terra<'a>,
+    secp: &Secp256k1<All>,
+    from_key: &PrivateKey,
+    admin: Option<String>,
+    code_id: u64,
+    init_file: &Path,
+    init_coins: Vec<Coin>,
+) -> anyhow::Result<TXResultSync> {
+    let sender = from_key.public_key(secp).account()?;
+    let init_message =
+        MsgInstantiateContract::create_from_file(&sender, admin, code_id, init_file, init_coins)?;
+    log::info!("INIT = {}", serde_json::to_string_pretty(&init_message)?);
+    let init_messages: Vec<Message> = vec![init_message];
     let resp = terra
         .submit_transaction_sync(
             &secp,
             &from_key,
-            &messages,
+            &init_messages,
             Some(format!(
                 "PFC-{}/{}",
                 NAME.unwrap_or("TERRARUST"),
@@ -187,21 +241,9 @@ async fn run() -> anyhow::Result<()> {
         .await?;
 
     log::info!("{:?}", &resp);
-
-    let hash = resp.txhash;
-    let tx = terra
-        .tx()
-        .get_and_wait(&hash, 5, tokio::time::Duration::from_secs(1))
-        .await?;
-    let codes = tx.get_attribute_from_result_logs("store_code", "code_id");
-    if let Some(code) = codes.first() {
-        let code_id: u64 = code.1.parse()?;
-
-        log::info!("Code has been stored as {}", code_id);
-    }
-
-    Ok(())
+    Ok(resp)
 }
+
 #[tokio::main]
 async fn main() {
     dotenv().ok();

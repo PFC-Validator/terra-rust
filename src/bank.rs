@@ -2,7 +2,7 @@ use anyhow::Result;
 use structopt::StructOpt;
 use terra_rust_api::Terra;
 
-use bitcoin::secp256k1::Secp256k1;
+use secp256k1::Secp256k1;
 use terra_rust_api::messages::{Message, MsgSend};
 
 use crate::{NAME, VERSION};

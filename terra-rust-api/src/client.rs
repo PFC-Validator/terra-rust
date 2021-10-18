@@ -47,8 +47,8 @@ use crate::errors::TerraRustAPIError::{GasPriceError, TxResultError};
 use crate::messages::Message;
 use crate::PrivateKey;
 use crate::{AddressBook, LCDResult};
-use bitcoin::secp256k1::{All, Secp256k1};
 use rust_decimal_macros::dec;
+use secp256k1::{All, Secp256k1};
 use std::fs::File;
 
 /// Version # of package sent out on requests to help with debugging

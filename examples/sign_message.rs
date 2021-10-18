@@ -52,11 +52,13 @@ async fn run() -> anyhow::Result<()> {
     } else {
         Some(&cli.seed)
     };
-    //  let msg = r#"{"token_uri":"https://www.merriam-webster.com/dictionary/petrify","image":null,"image_data":null,"external_url":null,"description":null,"name":null,"attributes":null,"background_color":null,"animation_url":null,"youtube_url":null}"#;
+    //let msg = r#"random/{"token_uri":"https://www.merriam-webster.com/dictionary/token4","image":null,"image_data":null,"external_url":null,"description":null,"name":null,"attributes":[{"display_type":null,"trait_type":"gender","value":"female"},{"display_type":null,"trait_type":"name","value":"James T. Kirk"}],"background_color":null,"animation_url":null,"youtube_url":null}"#;
+    let msg = cli.message;
     let from_key = wallet.get_private_key(&secp, &cli.from, seed)?;
-    let signature = from_key.sign(&secp, &cli.message)?;
+    // let signature = from_key.sign(&secp, &cli.message)?;
+    let signature = from_key.sign(&secp, &msg)?;
 
-    println!("Message={}", &cli.message);
+    println!("Message={}", &msg);
     println!("Signature={}", signature.signature);
     println!("PubKeySig={}", signature.pub_key.value);
 

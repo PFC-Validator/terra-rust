@@ -3,7 +3,7 @@ use structopt::StructOpt;
 use terra_rust_api::Terra;
 
 use crate::{NAME, VERSION};
-use bitcoin::secp256k1::Secp256k1;
+use secp256k1::Secp256k1;
 use terra_rust_api::messages::distribution::{
     MsgWithdrawDelegationReward, MsgWithdrawValidatorCommission,
 };
