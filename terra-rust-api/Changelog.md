@@ -1,6 +1,8 @@
 # Changes
 
 ## 1.0
+### 1.0.10 - 27-Oct-21
+* tx.timestamp now visible
 ### 1.0.9 - 26-Oct-21
 * tx.logs can be null
 ### 1.0.8 - 9-Oct-21

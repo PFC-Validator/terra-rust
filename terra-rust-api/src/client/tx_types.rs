@@ -1,4 +1,5 @@
-use crate::client::client_types::{terra_f64_format, terra_u64_format};
+use crate::client::client_types::{terra_datetime_format, terra_f64_format, terra_u64_format};
+use chrono::{DateTime, Utc};
 
 use crate::core_types::Coin;
 use crate::messages::Message;
@@ -59,6 +60,8 @@ pub struct TXResultBlock {
     pub code: Option<usize>,
     pub raw_log: String,
     pub logs: Option<Vec<TxResultBlockMsg>>,
+    #[serde(with = "terra_datetime_format")]
+    pub timestamp: DateTime<Utc>,
     // #[serde(with = "terra_u64_format")]
     // pub gas_wanted: u64,
     // #[serde(with = "terra_u64_format")]
