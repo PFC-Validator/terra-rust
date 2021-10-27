@@ -58,7 +58,7 @@ pub struct TXResultBlock {
     pub codespace: Option<String>,
     pub code: Option<usize>,
     pub raw_log: String,
-    pub logs: Vec<TxResultBlockMsg>,
+    pub logs: Option<Vec<TxResultBlockMsg>>,
     // #[serde(with = "terra_u64_format")]
     // pub gas_wanted: u64,
     // #[serde(with = "terra_u64_format")]
@@ -74,26 +74,28 @@ impl TXResultBlock {
         attribute_key: &str,
     ) -> Vec<(usize, String)> {
         let mut response: Vec<(usize, String)> = Default::default();
-        for log_part in &self.logs {
-            let msg_index = log_part.msg_index.unwrap_or_default();
-            let events = &log_part.events;
-            //      log::info!("logs{:?}", events);
-            let events_filtered = events
-                .iter()
-                .filter(|event| event.s_type == event_type)
-                .collect::<Vec<_>>();
-            //      log::info!("Filtered Events {:?}", events_filtered);
-            if let Some(event) = events_filtered.first() {
-                let attributes_filtered = event
-                    .attributes
+        if let Some(logs) = &self.logs {
+            for log_part in logs {
+                let msg_index = log_part.msg_index.unwrap_or_default();
+                let events = &log_part.events;
+                //      log::info!("logs{:?}", events);
+                let events_filtered = events
                     .iter()
-                    .filter(|attr| attr.key == attribute_key)
-                    .map(|f| f.value.clone())
-                    .flatten()
+                    .filter(|event| event.s_type == event_type)
                     .collect::<Vec<_>>();
+                //      log::info!("Filtered Events {:?}", events_filtered);
+                if let Some(event) = events_filtered.first() {
+                    let attributes_filtered = event
+                        .attributes
+                        .iter()
+                        .filter(|attr| attr.key == attribute_key)
+                        .map(|f| f.value.clone())
+                        .flatten()
+                        .collect::<Vec<_>>();
 
-                if let Some(attr_key) = attributes_filtered.first() {
-                    response.push((msg_index, attr_key.clone()));
+                    if let Some(attr_key) = attributes_filtered.first() {
+                        response.push((msg_index, attr_key.clone()));
+                    }
                 }
             }
         }
