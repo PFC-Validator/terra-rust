@@ -44,6 +44,22 @@ pub struct TxResultBlockEvent {
     pub s_type: String,
     pub attributes: Vec<TxResultBlockAttribute>,
 }
+impl TxResultBlockEvent {
+    /// get all key/values from the event that have the key 'key'
+    pub fn get_attribute(&self, key: &str) -> Vec<TxResultBlockAttribute> {
+        self.attributes
+            .iter()
+            .filter(|attr| attr.key == key)
+            .cloned()
+            .collect()
+    }
+    /// return the first value of the first attribute that has the key 'key'
+    pub fn get_first_value(&self, key: &str) -> Option<String> {
+        self.get_attribute(key)
+            .first()
+            .map(|attr| attr.value.clone().unwrap_or_default())
+    }
+}
 #[derive(Deserialize, Clone, Serialize, Debug)]
 pub struct TxResultBlockMsg {
     pub msg_index: Option<usize>,
@@ -77,6 +93,7 @@ impl TXResultBlock {
         attribute_key: &str,
     ) -> Vec<(usize, String)> {
         let mut response: Vec<(usize, String)> = Default::default();
+
         if let Some(logs) = &self.logs {
             for log_part in logs {
                 let msg_index = log_part.msg_index.unwrap_or_default();
@@ -99,6 +116,25 @@ impl TXResultBlock {
                     if let Some(attr_key) = attributes_filtered.first() {
                         response.push((msg_index, attr_key.clone()));
                     }
+                }
+            }
+        }
+        response
+    }
+    /// get the list of event types from a TX record
+    pub fn get_events(&self, event_type: &str) -> Vec<TxResultBlockEvent> {
+        let mut response: Vec<TxResultBlockEvent> = Default::default();
+
+        if let Some(logs) = &self.logs {
+            for log_part in logs {
+                let events = &log_part.events;
+                //      log::info!("logs{:?}", events);
+                let events_filtered = events
+                    .iter()
+                    .filter(|event| event.s_type == event_type)
+                    .collect::<Vec<_>>();
+                for event in events_filtered {
+                    response.push(event.clone());
                 }
             }
         }
