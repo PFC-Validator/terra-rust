@@ -4,6 +4,7 @@ use chrono::{DateTime, Utc};
 use crate::core_types::Coin;
 use crate::messages::Message;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 /**
 sync: Wait for the tx to pass/fail CheckTx
@@ -66,6 +67,30 @@ pub struct TxResultBlockMsg {
     // pub log: Option<String>,
     pub events: Vec<TxResultBlockEvent>,
 }
+
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Deserialize, Serialize, Debug)]
+pub struct TxBlockMsgInner {
+    pub sender: String,
+    pub contract: String,
+    pub execute_msg: Value,
+}
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Deserialize, Serialize, Debug)]
+pub struct TxBlockMsg {
+    pub value: TxBlockMsgInner,
+}
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Deserialize, Serialize, Debug)]
+pub struct TXBlockValue {
+    pub msg: Vec<TxBlockMsg>,
+}
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Deserialize, Serialize, Debug)]
+pub struct TXBlock {
+    pub value: TXBlockValue,
+}
+
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct TXResultBlock {
@@ -82,6 +107,7 @@ pub struct TXResultBlock {
     // pub gas_wanted: u64,
     // #[serde(with = "terra_u64_format")]
     // pub gas_used: u64,
+    pub tx: Option<TXBlock>,
 }
 impl TXResultBlock {
     /// find a attribute's value from TX logs.
