@@ -48,10 +48,15 @@ impl PrivateKey {
         PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, seed_phrase)
     }
     /// for private key recovery. This is also used by wallet routines to re-hydrate the structure
-    pub fn from_words(secp: &Secp256k1<All>, words: &str) -> anyhow::Result<PrivateKey> {
+    pub fn from_words(
+        secp: &Secp256k1<All>,
+        words: &str,
+        account: u32,
+        index: u32,
+    ) -> anyhow::Result<PrivateKey> {
         match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
             Ok(phrase) => {
-                PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, "")
+                PrivateKey::gen_private_key_phrase(secp, phrase, account, index, LUNA_COIN_TYPE, "")
             }
             Err(_) => Err(TerraRustAPIError::Phrasing.into()),
         }
