@@ -3,7 +3,7 @@ use crate::errors::TerraRustAPIError::TendermintValidatorSet;
 use crate::{LCDResult, Terra};
 
 pub struct Tendermint<'a> {
-    terra: &'a Terra<'a>,
+    terra: &'a Terra,
 }
 impl Tendermint<'_> {
     pub fn create<'a>(terra: &'a Terra) -> Tendermint<'a> {

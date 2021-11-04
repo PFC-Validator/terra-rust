@@ -21,7 +21,7 @@ pub enum SlashingCommand {
 }
 
 pub async fn slashing_cmd_parse<'a>(
-    terra: &Terra<'a>,
+    terra: &Terra,
     wallet: &Wallet<'a>,
     seed: Option<&str>,
     slashing_cmd: SlashingCommand,
@@ -40,7 +40,7 @@ pub async fn slashing_cmd_parse<'a>(
                 .submit_transaction_sync(
                     &secp,
                     &from_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),

@@ -127,7 +127,7 @@ pub enum StakingCommand {
 }
 
 pub async fn staking_cmd_parse<'a>(
-    terra: &Terra<'a>,
+    terra: &Terra,
     wallet: &Wallet<'a>,
     seed: Option<&str>,
     cmd: StakingCommand,
@@ -183,7 +183,7 @@ pub async fn staking_cmd_parse<'a>(
                 .submit_transaction_sync(
                     &secp,
                     &delegator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
@@ -223,7 +223,7 @@ pub async fn staking_cmd_parse<'a>(
                 .submit_transaction_sync(
                     &secp,
                     &validator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
@@ -252,7 +252,7 @@ pub async fn staking_cmd_parse<'a>(
                 .submit_transaction_sync(
                     &secp,
                     &delegator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
@@ -285,7 +285,7 @@ pub async fn staking_cmd_parse<'a>(
                 .submit_transaction_sync(
                     &secp,
                     &delegator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
@@ -313,7 +313,7 @@ pub async fn staking_cmd_parse<'a>(
                 .submit_transaction_sync(
                     &secp,
                     &delegator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),

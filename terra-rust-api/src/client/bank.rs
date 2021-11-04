@@ -2,7 +2,7 @@ use crate::core_types::Coin;
 use crate::{LCDResultVec, Terra};
 
 pub struct Bank<'a> {
-    terra: &'a Terra<'a>,
+    terra: &'a Terra,
 }
 impl Bank<'_> {
     pub fn create<'a>(terra: &'a Terra) -> Bank<'a> {

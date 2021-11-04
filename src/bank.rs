@@ -29,7 +29,7 @@ pub enum BankCommand {
 }
 
 pub async fn bank_cmd_parse<'a>(
-    terra: &Terra<'a>,
+    terra: &Terra,
     wallet: &Wallet<'a>,
     seed: Option<&str>,
     bank_cmd: BankCommand,
@@ -53,7 +53,7 @@ pub async fn bank_cmd_parse<'a>(
                 .submit_transaction_sync(
                     &secp,
                     &from_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),

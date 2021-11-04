@@ -176,7 +176,7 @@ async fn run() -> anyhow::Result<()> {
     let cli: Cli = Cli::from_args();
 
     let gas_opts: GasOptions = cli.gas_opts().await?;
-    let terra = Terra::lcd_client(&cli.lcd, &cli.chain_id, &gas_opts, None).await?;
+    let terra = Terra::lcd_client(&cli.lcd, &cli.chain_id, &gas_opts, None);
     let secp = Secp256k1::new();
     let wallet = Wallet::create(&cli.wallet);
 
@@ -213,7 +213,7 @@ async fn run() -> anyhow::Result<()> {
         .submit_transaction_sync(
             &secp,
             &from_key,
-            &messages,
+            messages,
             Some(format!(
                 "PFC-{}/{}",
                 NAME.unwrap_or("TERRARUST"),

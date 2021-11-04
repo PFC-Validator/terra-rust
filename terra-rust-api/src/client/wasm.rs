@@ -6,7 +6,7 @@ use crate::Terra;
 use serde::Deserialize;
 
 pub struct Wasm<'a> {
-    terra: &'a Terra<'a>,
+    terra: &'a Terra,
 }
 
 impl Wasm<'_> {

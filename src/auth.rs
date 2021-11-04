@@ -35,7 +35,7 @@ pub enum AuthCommand {
 }
 
 pub async fn auth_cmd_parse<'a>(
-    terra: &Terra<'a>,
+    terra: &Terra,
     wallet: &Wallet<'a>,
     seed: Option<&str>,
     auth_cmd: AuthCommand,

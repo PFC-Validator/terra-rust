@@ -29,7 +29,7 @@ pub enum RPCSubCommand {
     UnconfirmedTXS,
 }
 
-pub async fn rpc_cmd_parse(terra: &Terra<'_>, cmd: RPCCommand) -> Result<()> {
+pub async fn rpc_cmd_parse(terra: &Terra, cmd: RPCCommand) -> Result<()> {
     match cmd.cmd {
         RPCSubCommand::Status => {
             let resp = terra.rpc(&cmd.endpoint).status().await?;

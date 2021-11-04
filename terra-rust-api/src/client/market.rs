@@ -8,7 +8,7 @@ use futures::future::join_all;
 
 /// Market functions. mainly around swapping tokens
 pub struct Market<'a> {
-    terra: &'a Terra<'a>,
+    terra: &'a Terra,
 }
 impl Market<'_> {
     pub fn create<'a>(terra: &'a Terra) -> Market<'a> {

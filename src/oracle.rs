@@ -43,7 +43,7 @@ pub enum VotersCommand {
     AggregateVote,
 }
 pub async fn oracle_cmd_parse<'a>(
-    terra: &Terra<'a>,
+    terra: &Terra,
     wallet: &Wallet<'a>,
     seed: Option<&str>,
     oracle_cmd: OracleCommand,
@@ -70,7 +70,7 @@ pub async fn oracle_cmd_parse<'a>(
                 .submit_transaction_sync(
                     &secp,
                     &from_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),

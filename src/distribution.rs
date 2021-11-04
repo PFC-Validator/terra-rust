@@ -43,7 +43,7 @@ pub enum DistributionCommand {
 }
 
 pub async fn distribution_cmd_parse<'a>(
-    terra: &Terra<'a>,
+    terra: &Terra,
     wallet: &Wallet<'a>,
     seed: Option<&str>,
     cmd: DistributionCommand,
@@ -67,7 +67,7 @@ pub async fn distribution_cmd_parse<'a>(
                         .submit_transaction_sync(
                             &secp,
                             &delegator_key,
-                            &messages,
+                            messages,
                             Some(format!(
                                 "PFC-{}/{}",
                                 NAME.unwrap_or("TERRARUST"),
@@ -97,7 +97,7 @@ pub async fn distribution_cmd_parse<'a>(
                 .submit_transaction_sync(
                     &secp,
                     &delegator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
@@ -127,7 +127,7 @@ pub async fn distribution_cmd_parse<'a>(
                 .submit_transaction_sync(
                     &secp,
                     &delegator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),

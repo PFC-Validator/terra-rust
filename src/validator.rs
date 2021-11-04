@@ -55,7 +55,7 @@ pub enum ValidatorCommand {
 }
 
 pub async fn validator_cmd_parse<'a>(
-    terra: &Terra<'a>,
+    terra: &Terra,
     wallet: &Wallet<'a>,
     seed: Option<&str>,
     cmd: ValidatorCommand,

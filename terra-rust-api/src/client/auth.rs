@@ -4,7 +4,7 @@ use crate::staking_types::{Validator, ValidatorDelegation, ValidatorUnbondingDel
 use crate::{LCDResult, LCDResultVec, LCDTypeValue, Terra};
 
 pub struct Auth<'a> {
-    terra: &'a Terra<'a>,
+    terra: &'a Terra,
 }
 impl Auth<'_> {
     pub fn create<'a>(terra: &'a Terra) -> Auth<'a> {

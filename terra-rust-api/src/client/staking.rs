@@ -3,7 +3,7 @@ use crate::errors::TerraRustAPIError;
 use crate::{LCDResult, Terra};
 
 pub struct Staking<'a> {
-    terra: &'a Terra<'a>,
+    terra: &'a Terra,
 }
 impl Staking<'_> {
     pub fn create<'a>(terra: &'a Terra) -> Staking<'a> {

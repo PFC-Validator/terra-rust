@@ -56,9 +56,13 @@ const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 /// name of package
 const NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
 
+const NETWORK_PROD_ADDRESS_BOOK: &str = "https://network.terra.dev/addrbook.json";
+const NETWORK_TEST_ADDRESS_BOOK: &str = "https://network.terra.dev/testnet/addrbook.json";
+
 /// When Submitting transactions you need to either submit gas or a fee to the validator
 /// This structure is used to determine what your preferences are by default
 /// Higher fees may be given preference by the validator to include the transaction in their block
+#[derive(Clone)]
 pub struct GasOptions {
     /// If specified the TX will use the fee specified
     pub fees: Option<Coin>,
@@ -121,58 +125,49 @@ impl GasOptions {
 }
 
 /// The main structure that all API calls are generated from
-pub struct Terra<'a> {
+#[derive(Clone)]
+pub struct Terra {
     /// reqwest Client
     client: Client,
     /// The URL of the LCD
-    url: &'a str,
+    url: String,
 
     /// The Chain of the network
-    pub chain_id: &'a str,
+    pub chain_id: String,
     /// Gas Options used to help with gas/fee generation of transactions
-    pub gas_options: Option<&'a GasOptions>,
+    pub gas_options: Option<GasOptions>,
     pub debug: bool,
 }
-impl<'a> Terra<'a> {
-    const NETWORK_PROD_ADDRESS_BOOK: &'a str = "https://network.terra.dev/addrbook.json";
-    const NETWORK_TEST_ADDRESS_BOOK: &'a str = "https://network.terra.dev/testnet/addrbook.json";
-
+impl Terra {
     /// Create a LCD client interface
-    pub async fn lcd_client(
-        url: &'a str,
-        chain_id: &'a str,
-        gas_options: &'a GasOptions,
+    pub fn lcd_client<S: Into<String>>(
+        url: S,
+        chain_id: S,
+        gas_options: &GasOptions,
         debug: Option<bool>,
-    ) -> anyhow::Result<Terra<'a>> {
+    ) -> Terra {
         let client = reqwest::Client::new();
-        match debug {
-            Some(d) => Ok(Terra {
-                client,
-                url,
-                chain_id,
-                gas_options: Some(gas_options),
-                debug: d,
-            }),
-            None => Ok(Terra {
-                client,
-                url,
-                chain_id,
-                gas_options: Some(gas_options),
-                debug: false,
-            }),
+        Terra {
+            client,
+            url: url.into(),
+            chain_id: chain_id.into(),
+            gas_options: Some(gas_options.clone()),
+            debug: debug.unwrap_or(false),
         }
     }
+
     /// Create a read-only / query client interface
-    pub async fn lcd_client_no_tx(url: &'a str, chain_id: &'a str) -> anyhow::Result<Terra<'a>> {
+    pub fn lcd_client_no_tx<S: Into<String>>(url: S, chain_id: S) -> Terra {
         let client = reqwest::Client::new();
-        Ok(Terra {
+        Terra {
             client,
-            url,
-            chain_id,
+            url: url.into(),
+            chain_id: chain_id.into(),
             gas_options: None,
             debug: false,
-        })
+        }
     }
+
     /// Auth API functions
     pub fn auth(&self) -> auth::Auth {
         auth::Auth::create(self)
@@ -202,11 +197,11 @@ impl<'a> Terra<'a> {
         tx::TX::create(self)
     }
     /// RPC Api Functions
-    pub fn rpc(&self, tendermint_url: &'a str) -> rpc::RPC {
+    pub fn rpc<'a>(&'a self, tendermint_url: &'a str) -> rpc::RPC {
         rpc::RPC::create(self, tendermint_url)
     }
     /// FCD Api Functions
-    pub fn fcd(&self, fcd_url: &'a str) -> fcd::FCD {
+    pub fn fcd<'a>(&'a self, fcd_url: &'a str) -> fcd::FCD {
         fcd::FCD::create(self, fcd_url)
     }
     /// WASM module / smart contract API Functions
@@ -237,8 +232,9 @@ impl<'a> Terra<'a> {
         path: &str,
         args: Option<&str>,
     ) -> Result<T, TerraRustAPIError> {
-        self.send_cmd_url(self.url, path, args).await
+        self.send_cmd_url(&self.url, path, args).await
     }
+
     /// used to send a GET command to any URL
     pub async fn send_cmd_url<T: for<'de> Deserialize<'de>>(
         &self,
@@ -261,6 +257,7 @@ impl<'a> Terra<'a> {
 
         Terra::resp::<T>(&request_url, req).await
     }
+
     pub async fn fetch_url<T: for<'de> Deserialize<'de>>(
         client: &reqwest::Client,
         url: &str,
@@ -276,6 +273,7 @@ impl<'a> Terra<'a> {
 
         Terra::resp::<T>(&request_url, req).await
     }
+
     /// used to send a POST with a JSON body to the LCD
     pub async fn post_cmd<R: for<'de> Serialize, T: for<'de> Deserialize<'de>>(
         &self,
@@ -296,6 +294,7 @@ impl<'a> Terra<'a> {
 
         Terra::resp::<T>(&request_url, req).await
     }
+
     async fn resp<T: for<'de> Deserialize<'de>>(
         request_url: &str,
         req: RequestBuilder,
@@ -312,6 +311,7 @@ impl<'a> Terra<'a> {
             Ok(struct_response)
         }
     }
+
     /// Generate Fee structure, either by estimation method or hardcoded
     ///
 
@@ -320,70 +320,77 @@ impl<'a> Terra<'a> {
         auth_account: &AuthAccount,
         messages: &[Message],
     ) -> anyhow::Result<StdFee> {
-        if self.gas_options.is_none() {
-            return Err(TerraRustAPIError::NoGasOpts.into());
-        }
-        let gas = self.gas_options.unwrap();
-        match &gas.fees {
-            Some(f) => {
-                let fee_coin: Coin = Coin::create(&f.denom, f.amount);
-                Ok(StdFee::create(vec![fee_coin], gas.gas.unwrap_or(0)))
-            }
+        match &self.gas_options {
             None => {
-                let fee: StdFee = match &gas.estimate_gas {
-                    true => {
-                        let default_gas_coin = Coin::create("ukrw", dec!(1.0));
-                        let gas_coin = match &gas.gas_price {
-                            Some(c) => c,
-                            None => &default_gas_coin,
-                        };
-                        let res: LCDResult<TxFeeResult> = self
-                            .tx()
-                            .estimate_fee(
-                                &auth_account.address,
-                                messages,
-                                gas.gas_adjustment.unwrap_or(1.0),
-                                &[gas_coin],
-                            )
-                            .await?;
-                        //  let gas_amount = gas.gas_adjustment.unwrap_or(1.0) * res.result.gas as f64;
-                        let mut fees: Vec<Coin> = vec![];
-                        for fee in res.result.fee.amount {
-                            fees.push(Coin::create(&fee.denom, fee.amount))
-                        }
-                        StdFee::create(fees, res.result.fee.gas as u64)
-                    }
-                    false => {
-                        let mut fees: Vec<Coin> = vec![];
-                        match &gas.fees {
-                            Some(fee) => {
-                                fees.push(Coin::create(&fee.denom, fee.amount));
-                            }
-                            None => {}
-                        }
+                return Err(TerraRustAPIError::NoGasOpts.into());
+            }
 
-                        StdFee::create(fees, gas.gas.unwrap_or(0))
+            Some(gas) => {
+                match &gas.fees {
+                    Some(f) => {
+                        let fee_coin: Coin = Coin::create(&f.denom, f.amount);
+                        Ok(StdFee::create(vec![fee_coin], gas.gas.unwrap_or(0)))
                     }
-                };
-                Ok(fee)
+
+                    None => {
+                        let fee: StdFee = match &gas.estimate_gas {
+                            true => {
+                                let default_gas_coin = Coin::create("ukrw", dec!(1.0));
+                                let gas_coin = match &gas.gas_price {
+                                    Some(c) => c,
+                                    None => &default_gas_coin,
+                                };
+                                let res: LCDResult<TxFeeResult> = self
+                                    .tx()
+                                    .estimate_fee(
+                                        &auth_account.address,
+                                        messages,
+                                        gas.gas_adjustment.unwrap_or(1.0),
+                                        &[gas_coin],
+                                    )
+                                    .await?;
+                                //  let gas_amount = gas.gas_adjustment.unwrap_or(1.0) * res.result.gas as f64;
+                                let mut fees: Vec<Coin> = vec![];
+                                for fee in res.result.fee.amount {
+                                    fees.push(Coin::create(&fee.denom, fee.amount))
+                                }
+                                StdFee::create(fees, res.result.fee.gas as u64)
+                            }
+                            false => {
+                                let mut fees: Vec<Coin> = vec![];
+                                match &gas.fees {
+                                    Some(fee) => {
+                                        fees.push(Coin::create(&fee.denom, fee.amount));
+                                    }
+                                    None => {}
+                                }
+
+                                StdFee::create(fees, gas.gas.unwrap_or(0))
+                            }
+                        };
+                        Ok(fee)
+                    }
+                }
             }
         }
     }
+
     /// helper function to generate a 'StdSignMsg' & 'Signature' blocks to be used to broadcast a transaction
     #[allow(clippy::too_many_arguments)]
     fn generate_transaction_to_broadcast_fees(
-        chain_id: String,
+        chain_id: &str,
         auth_account: &AuthAccount,
         fee: StdFee,
         secp: &Secp256k1<All>,
-        from: &'a PrivateKey,
-        messages: &'a [Message],
+        from: &PrivateKey,
+        messages: Vec<Message>,
         memo: Option<String>,
-    ) -> anyhow::Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
+    ) -> anyhow::Result<(StdSignMsg, Vec<StdSignature>)> {
         let account_number = auth_account.account_number;
         let sequence = auth_account.sequence.unwrap_or(0);
+        let messages_len = messages.len();
         let std_sign_msg = StdSignMsg {
-            chain_id: chain_id.clone(), //: String::from(self.chain_id),
+            chain_id: chain_id.to_string(), //: String::from(self.chain_id),
             account_number,
             sequence,
             fee,
@@ -398,10 +405,10 @@ impl<'a> Terra<'a> {
         if js.len() > 1000 {
             log::debug!(
                 "TO SIGN - {} {} {} #messages {}",
-                &chain_id,
+                chain_id,
                 account_number,
                 sequence,
-                messages.len()
+                messages_len
             );
         } else {
             log::debug!("TO SIGN - {}", js);
@@ -416,20 +423,19 @@ impl<'a> Terra<'a> {
 
     /// helper function to generate a 'StdSignMsg' & 'Signature' blocks to be used to broadcast a transaction
     /// This version calculates fees, and obtains account# and sequence# as well
-
     pub async fn generate_transaction_to_broadcast(
         &self,
         secp: &Secp256k1<All>,
-        from: &'a PrivateKey,
-        messages: &'a [Message],
+        from: &PrivateKey,
+        messages: Vec<Message>,
         memo: Option<String>,
-    ) -> anyhow::Result<(StdSignMsg<'a>, Vec<StdSignature>)> {
+    ) -> anyhow::Result<(StdSignMsg, Vec<StdSignature>)> {
         let from_public = from.public_key(secp);
         let from_account = from_public.account()?;
         let auth = self.auth().account(&from_account).await?;
-        let fees = self.calc_fees(&auth.result.value, messages).await?;
+        let fees = self.calc_fees(&auth.result.value, &messages).await?;
         Terra::generate_transaction_to_broadcast_fees(
-            self.chain_id.into(),
+            &self.chain_id,
             &auth.result.value,
             fees,
             secp,
@@ -442,8 +448,8 @@ impl<'a> Terra<'a> {
     pub async fn submit_transaction_sync(
         &self,
         secp: &Secp256k1<All>,
-        from: &'a PrivateKey,
-        messages: &'a [Message],
+        from: &PrivateKey,
+        messages: Vec<Message>,
         memo: Option<String>,
     ) -> anyhow::Result<TXResultSync> {
         let (std_sign_msg, sigs) = self
@@ -460,8 +466,8 @@ impl<'a> Terra<'a> {
     pub async fn submit_transaction_async(
         &self,
         secp: &Secp256k1<All>,
-        from: &'a PrivateKey,
-        messages: &'a [Message],
+        from: &PrivateKey,
+        messages: Vec<Message>,
         memo: Option<String>,
     ) -> anyhow::Result<TXResultAsync> {
         let (std_sign_msg, sigs) = self
@@ -473,11 +479,11 @@ impl<'a> Terra<'a> {
 
     /// fetch the address book for the production network
     pub async fn production_address_book() -> anyhow::Result<AddressBook> {
-        Self::address_book(Self::NETWORK_PROD_ADDRESS_BOOK).await
+        Self::address_book(NETWORK_PROD_ADDRESS_BOOK).await
     }
     /// fetch the address book for the testnet network
     pub async fn testnet_address_book() -> anyhow::Result<AddressBook> {
-        Self::address_book(Self::NETWORK_TEST_ADDRESS_BOOK).await
+        Self::address_book(NETWORK_TEST_ADDRESS_BOOK).await
     }
     /// fetch a address book json structure
     pub async fn address_book(addr_url: &str) -> anyhow::Result<AddressBook> {
@@ -535,7 +541,7 @@ mod tst {
             std_fee,
             &secp,
             &pk,
-            &messages,
+            messages,
             Some("PFC-terra-rust/0.1.5".into()),
         )?;
         let json_sign_message = serde_json::to_string(&sign_message)?;

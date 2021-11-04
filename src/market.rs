@@ -59,7 +59,7 @@ pub enum MarketCommand {
 }
 
 pub async fn market_cmd_parse<'a>(
-    terra: &Terra<'a>,
+    terra: &Terra,
     wallet: &Wallet<'a>,
     seed: Option<&str>,
     market_cmd: MarketCommand,
@@ -99,7 +99,7 @@ pub async fn market_cmd_parse<'a>(
                 .submit_transaction_sync(
                     &secp,
                     &from_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
@@ -132,7 +132,7 @@ pub async fn market_cmd_parse<'a>(
                     .submit_transaction_sync(
                         &secp,
                         &from_key,
-                        &messages,
+                        messages,
                         Some(format!(
                             "PFC-{}/{}",
                             NAME.unwrap_or("TERRARUST"),

@@ -18,7 +18,7 @@ pub struct ValidatorSetsCommand {
     limit: usize,
 }
 
-pub async fn block_cmd_parse(terra: &Terra<'_>, cmd: BlockCommand) -> Result<()> {
+pub async fn block_cmd_parse(terra: &Terra, cmd: BlockCommand) -> Result<()> {
     let block = if cmd.height.to_lowercase().trim() == "latest" {
         terra.tendermint().blocks().await
     } else {
@@ -29,7 +29,7 @@ pub async fn block_cmd_parse(terra: &Terra<'_>, cmd: BlockCommand) -> Result<()>
     Ok(())
 }
 
-pub async fn validator_sets_cmd_parse(terra: &Terra<'_>, cmd: ValidatorSetsCommand) -> Result<()> {
+pub async fn validator_sets_cmd_parse(terra: &Terra, cmd: ValidatorSetsCommand) -> Result<()> {
     let vset = if cmd.height.to_lowercase().trim() == "latest" {
         terra.tendermint().validatorsets(cmd.page, cmd.limit).await
     } else {
