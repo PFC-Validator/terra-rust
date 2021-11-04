@@ -33,7 +33,13 @@ pub struct TXResultSync {
     pub raw_log: String,
     pub logs: Option<Vec<TxResultBlockEvent>>,
 }
-impl TXResultSync {}
+
+impl TXResultSync {
+    pub fn is_success(&self) -> bool {
+        self.code.is_none()
+    }
+}
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct TxResultBlockAttribute {
     pub key: String,
