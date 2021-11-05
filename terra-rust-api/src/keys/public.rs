@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 static BECH32_PUBKEY_DATA_PREFIX_SECP256K1: [u8; 5] = [0xeb, 0x5a, 0xe9, 0x87, 0x21]; // "eb5ae98721";
 static BECH32_PUBKEY_DATA_PREFIX_ED25519: [u8; 5] = [0x16, 0x24, 0xde, 0x64, 0x20]; // "eb5ae98721";
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 /// The public key we used to generate the cosmos/tendermind/terrad addresses
 pub struct PublicKey {
     /// This is optional as we can generate non-pub keys without

@@ -17,6 +17,7 @@ pub static LUNA_COIN_TYPE: u32 = 330;
 
 /// The Private key structure that is used to generate signatures and public keys
 /// WARNING: No Security Audit has been performed
+#[derive(Clone)]
 pub struct PrivateKey {
     #[allow(missing_docs)]
     pub account: u32,
