@@ -28,7 +28,7 @@ impl MsgSend {
         };
         Message {
             s_type: "bank/MsgSend".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }

@@ -14,7 +14,7 @@ impl MsgUnjail {
         let internal = MsgUnjail { address };
         Message {
             s_type: "slashing/MsgUnjail".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }

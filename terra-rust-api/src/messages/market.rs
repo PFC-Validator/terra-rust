@@ -25,7 +25,7 @@ impl MsgSwap {
         };
         Message {
             s_type: "market/MsgSwap".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }

@@ -512,7 +512,7 @@ mod tst {
     pub fn test_send() -> anyhow::Result<()> {
         let str_1 = "island relax shop such yellow opinion find know caught erode blue dolphin behind coach tattoo light focus snake common size analyst imitate employ walnut";
         let secp = Secp256k1::new();
-        let pk = PrivateKey::from_words(&secp, str_1)?;
+        let pk = PrivateKey::from_words(&secp, str_1, 0, 0)?;
         let pub_k = pk.public_key(&secp);
         let from_address = pub_k.account()?;
         assert_eq!(from_address, "terra1n3g37dsdlv7ryqftlkef8mhgqj4ny7p8v78lg7");
@@ -561,7 +561,7 @@ mod tst {
     pub fn test_wasm() -> anyhow::Result<()> {
         let key_words = "sell raven long age tooth still predict idea quit march gasp bamboo hurdle problem voyage east tiger divide machine brain hole tiger find smooth";
         let secp = Secp256k1::new();
-        let private = PrivateKey::from_words(&secp, key_words)?;
+        let private = PrivateKey::from_words(&secp, key_words, 0, 0)?;
         let public_key = private.public_key(&secp);
         let account = public_key.account()?;
         assert_eq!(account, "terra1vr0e7kylhu9am44v0s3gwkccmz7k3naxysrwew");

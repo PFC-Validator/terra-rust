@@ -15,6 +15,7 @@ pub mod wasm;
 use crate::core_types::MsgInternal;
 pub use bank::MsgSend;
 use serde::Serialize;
+use serde_json::Value;
 pub use wasm::MsgExecuteContract;
 
 #[derive(Serialize)]
@@ -24,6 +25,6 @@ pub struct Message {
     #[serde(rename = "type")]
     s_type: String,
     #[allow(missing_docs)]
-    value: Box<dyn MsgInternal>,
+    value: serde_json::Value,
 }
 // impl<'a> Msg for Message<'a> {}

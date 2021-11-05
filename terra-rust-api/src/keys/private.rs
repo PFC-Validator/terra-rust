@@ -150,7 +150,7 @@ mod tst {
         let str_1 = "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius";
         let seed_1 = "a2ae8846397b55d266af35acdbb18ba1d005f7ddbdd4ca7a804df83352eaf373f274ba0dc8ac1b2b25f19dfcb7fa8b30a240d2c6039d88963defc2f626003b2f";
         let s = Secp256k1::new();
-        let pk = PrivateKey::from_words(&s, str_1)?;
+        let pk = PrivateKey::from_words(&s, str_1, 0, 0)?;
         assert_eq!(hex::encode(pk.seed("").unwrap().as_bytes()), seed_1);
         match pk.words() {
             Some(words) => {
@@ -164,7 +164,7 @@ mod tst {
     pub fn tst_root_priv_key() -> anyhow::Result<()> {
         let str_1 = "wonder caution square unveil april art add hover spend smile proud admit modify old copper throw crew happy nature luggage reopen exhibit ordinary napkin";
         let secp = Secp256k1::new();
-        let pk = PrivateKey::from_words(&secp, str_1)?;
+        let pk = PrivateKey::from_words(&secp, str_1, 0, 0)?;
         let root_key = "xprv9s21ZrQH143K2ep3BpYRRMjSqjLHZAPAzxfVVS3NBuGKBVtCrK3C8mE8TcmTjYnLm7SJxdLigDFWGAMnctKxc3p5QKNWXdprcFSQzGzQqTW";
         assert_eq!(pk.root_private_key.to_string(), root_key);
 
@@ -177,7 +177,7 @@ mod tst {
     pub fn tst_words_to_pub() -> anyhow::Result<()> {
         let str_1 = "wonder caution square unveil april art add hover spend smile proud admit modify old copper throw crew happy nature luggage reopen exhibit ordinary napkin";
         let secp = Secp256k1::new();
-        let pk = PrivateKey::from_words(&secp, str_1)?;
+        let pk = PrivateKey::from_words(&secp, str_1, 0, 0)?;
         let pub_k = pk.public_key(&secp);
 
         let account = pub_k.account()?;
@@ -198,7 +198,7 @@ mod tst {
         // This test is using message from python SDK.. so these keys generate same sigs as they do.
         let str_1 =  "island relax shop such yellow opinion find know caught erode blue dolphin behind coach tattoo light focus snake common size analyst imitate employ walnut";
         let secp = Secp256k1::new();
-        let pk = PrivateKey::from_words(&secp, str_1)?;
+        let pk = PrivateKey::from_words(&secp, str_1, 0, 0)?;
         let _pub_k = pk.public_key(&secp);
         let to_sign = r#"{"account_number":"45","chain_id":"columbus-3-testnet","fee":{"amount":[{"amount":"698","denom":"uluna"}],"gas":"46467"},"memo":"","msgs":[{"type":"bank/MsgSend","value":{"amount":[{"amount":"100000000","denom":"uluna"}],"from_address":"terra1n3g37dsdlv7ryqftlkef8mhgqj4ny7p8v78lg7","to_address":"terra1wg2mlrxdmnnkkykgqg4znky86nyrtc45q336yv"}}],"sequence":"0"}"#;
 

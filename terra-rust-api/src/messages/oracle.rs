@@ -26,7 +26,7 @@ impl MsgAggregateExchangeRatePreVote {
         };
         Message {
             s_type: "oracle/MsgAggregateExchangeRatePrevote".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }
@@ -95,7 +95,7 @@ impl MsgAggregateExchangeRateVote {
             MsgAggregateExchangeRateVote::create_internal(salt, exchange_rates, feeder, validator);
         Message {
             s_type: "oracle/MsgAggregateExchangeRateVote".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
     /// Create a vote message from internal message
@@ -104,7 +104,7 @@ impl MsgAggregateExchangeRateVote {
         //      MsgAggregateExchangeRateVote::create_internal(salt, exchange_rates, feeder, validator);
         Message {
             s_type: "oracle/MsgAggregateExchangeRateVote".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 
@@ -133,7 +133,7 @@ impl MsgDelegateFeedConsent {
         let internal = MsgDelegateFeedConsent { delegate, operator };
         Message {
             s_type: "oracle/MsgDelegateFeedConsent".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }

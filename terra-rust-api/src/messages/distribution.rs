@@ -13,7 +13,7 @@ impl MsgWithdrawValidatorCommission {
         let internal = MsgWithdrawValidatorCommission { validator_address };
         Message {
             s_type: "distribution/MsgWithdrawValidatorCommission".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }
@@ -32,7 +32,7 @@ impl MsgWithdrawDelegationReward {
         };
         Message {
             s_type: "distribution/MsgWithdrawDelegationReward".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }

@@ -92,7 +92,7 @@ impl MsgCreateValidator {
         };
         Message {
             s_type: "staking/MsgCreateValidator".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }
@@ -122,7 +122,7 @@ impl MsgEditValidator {
         };
         Message {
             s_type: "staking/MsgEditValidator".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }
@@ -144,7 +144,7 @@ impl MsgUndelegate {
         };
         Message {
             s_type: "staking/MsgUndelegate".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }
@@ -165,7 +165,7 @@ impl MsgDelegate {
         };
         Message {
             s_type: "staking/MsgDelegate".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }
@@ -193,7 +193,7 @@ impl MsgBeginRedelegate {
         };
         Message {
             s_type: "staking/MsgBeginRedelegate".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }

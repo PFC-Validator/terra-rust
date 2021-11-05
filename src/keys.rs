@@ -74,7 +74,7 @@ pub fn key_cmd_parse(
 
             let pk = match seed {
                 Some(seed_str) => PrivateKey::from_words_seed(&secp, &words, seed_str)?,
-                None => PrivateKey::from_words(&secp, &words)?,
+                None => PrivateKey::from_words(&secp, &words, 0, 0)?,
             };
             wallet.store_key(&name, &pk)?;
         }

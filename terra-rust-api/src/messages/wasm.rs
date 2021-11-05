@@ -31,7 +31,7 @@ impl MsgExecuteContract {
         };
         Message {
             s_type: "wasm/MsgExecuteContract".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
     /// use provided base64 exec message
@@ -65,7 +65,7 @@ impl MsgStoreCode {
         };
         Message {
             s_type: "wasm/MsgStoreCode".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
     /// use provided base64 exec message
@@ -134,7 +134,7 @@ impl MsgInstantiateContract {
         };
         Ok(Message {
             s_type: "wasm/MsgInstantiateContract".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         })
     }
     /// use provided base64 exec message
