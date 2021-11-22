@@ -322,9 +322,7 @@ impl Terra {
         messages: &[Message],
     ) -> anyhow::Result<StdFee> {
         match &self.gas_options {
-            None => {
-                return Err(TerraRustAPIError::NoGasOpts.into());
-            }
+            None => Err(TerraRustAPIError::NoGasOpts.into()),
 
             Some(gas) => {
                 match &gas.fees {

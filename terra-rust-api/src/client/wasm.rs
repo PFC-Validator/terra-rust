@@ -10,7 +10,7 @@ pub struct Wasm<'a> {
 }
 
 impl Wasm<'_> {
-    pub fn create<'a>(terra: &'a Terra) -> Wasm<'a> {
+    pub fn create(terra: &'_ Terra) -> Wasm<'_> {
         Wasm { terra }
     }
     pub async fn codes(&self, code_id: u64) -> anyhow::Result<WasmCodeResult> {

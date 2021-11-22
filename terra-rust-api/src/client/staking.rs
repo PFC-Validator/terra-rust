@@ -6,7 +6,7 @@ pub struct Staking<'a> {
     terra: &'a Terra,
 }
 impl Staking<'_> {
-    pub fn create<'a>(terra: &'a Terra) -> Staking<'a> {
+    pub fn create(terra: &'_ Terra) -> Staking<'_> {
         Staking { terra }
     }
     pub async fn validator(&self, key: &str) -> anyhow::Result<LCDResult<Validator>> {

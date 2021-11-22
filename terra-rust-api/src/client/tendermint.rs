@@ -6,7 +6,7 @@ pub struct Tendermint<'a> {
     terra: &'a Terra,
 }
 impl Tendermint<'_> {
-    pub fn create<'a>(terra: &'a Terra) -> Tendermint<'a> {
+    pub fn create(terra: &'_ Terra) -> Tendermint<'_> {
         Tendermint { terra }
     }
     /// get the latest block

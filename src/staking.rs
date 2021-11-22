@@ -126,9 +126,9 @@ pub enum StakingCommand {
     },
 }
 
-pub async fn staking_cmd_parse<'a>(
+pub async fn staking_cmd_parse(
     terra: &Terra,
-    wallet: &Wallet<'a>,
+    wallet: &Wallet<'_>,
     seed: Option<&str>,
     cmd: StakingCommand,
 ) -> Result<()> {

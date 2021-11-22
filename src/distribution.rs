@@ -42,9 +42,9 @@ pub enum DistributionCommand {
     },
 }
 
-pub async fn distribution_cmd_parse<'a>(
+pub async fn distribution_cmd_parse(
     terra: &Terra,
-    wallet: &Wallet<'a>,
+    wallet: &Wallet<'_>,
     seed: Option<&str>,
     cmd: DistributionCommand,
 ) -> Result<()> {

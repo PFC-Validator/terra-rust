@@ -5,7 +5,7 @@ pub struct Bank<'a> {
     terra: &'a Terra,
 }
 impl Bank<'_> {
-    pub fn create<'a>(terra: &'a Terra) -> Bank<'a> {
+    pub fn create(terra: &'_ Terra) -> Bank<'_> {
         Bank { terra }
     }
     pub async fn balances(&self, account_address: &str) -> anyhow::Result<LCDResultVec<Coin>> {

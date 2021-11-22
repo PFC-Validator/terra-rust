@@ -28,9 +28,9 @@ pub enum BankCommand {
     },
 }
 
-pub async fn bank_cmd_parse<'a>(
+pub async fn bank_cmd_parse(
     terra: &Terra,
-    wallet: &Wallet<'a>,
+    wallet: &Wallet<'_>,
     seed: Option<&str>,
     bank_cmd: BankCommand,
 ) -> Result<()> {

@@ -11,7 +11,7 @@ pub struct Market<'a> {
     terra: &'a Terra,
 }
 impl Market<'_> {
-    pub fn create<'a>(terra: &'a Terra) -> Market<'a> {
+    pub fn create(terra: &'_ Terra) -> Market<'_> {
         Market { terra }
     }
     /// obtain how much a coin is worth in a secondary coin

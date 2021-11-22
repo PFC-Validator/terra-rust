@@ -20,9 +20,9 @@ pub enum SlashingCommand {
     },
 }
 
-pub async fn slashing_cmd_parse<'a>(
+pub async fn slashing_cmd_parse(
     terra: &Terra,
-    wallet: &Wallet<'a>,
+    wallet: &Wallet<'_>,
     seed: Option<&str>,
     slashing_cmd: SlashingCommand,
 ) -> Result<()> {

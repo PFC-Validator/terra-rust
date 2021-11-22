@@ -58,9 +58,9 @@ pub enum MarketCommand {
     },
 }
 
-pub async fn market_cmd_parse<'a>(
+pub async fn market_cmd_parse(
     terra: &Terra,
-    wallet: &Wallet<'a>,
+    wallet: &Wallet<'_>,
     seed: Option<&str>,
     market_cmd: MarketCommand,
 ) -> Result<()> {
