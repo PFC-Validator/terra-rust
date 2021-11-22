@@ -77,10 +77,15 @@ impl Market<'_> {
             .collect::<Vec<_>>();
         match err {
             Some(e) => Err(e),
-            None => Ok(to_convert
-                .iter()
-                .map(|f| MsgSwap::create(f.0.clone(), to_coin.clone(), from.clone()))
-                .collect::<Vec<_>>()),
+            None => {
+                let mut messages = Vec::new();
+                for swap_coins in to_convert {
+                    let message =
+                        MsgSwap::create(swap_coins.0.clone(), to_coin.clone(), from.clone())?;
+                    messages.push(message);
+                }
+                Ok(messages)
+            }
         }
     }
 }

@@ -92,7 +92,7 @@ pub async fn market_cmd_parse<'a>(
                 }
                 None => from_account.clone(),
             };
-            let swap = MsgSwap::create(coin, ask_denom, to_account);
+            let swap = MsgSwap::create(coin, ask_denom, to_account)?;
 
             let messages: Vec<Message> = vec![swap];
             let resp = terra

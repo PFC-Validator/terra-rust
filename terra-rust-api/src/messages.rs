@@ -12,10 +12,8 @@ pub mod staking;
 /// regular contract interactions
 pub mod wasm;
 
-use crate::core_types::MsgInternal;
 pub use bank::MsgSend;
 use serde::Serialize;
-use serde_json::Value;
 pub use wasm::MsgExecuteContract;
 
 #[derive(Serialize)]

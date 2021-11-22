@@ -17,15 +17,15 @@ pub struct MsgSwap {
 impl MsgInternal for MsgSwap {}
 impl MsgSwap {
     /// swap a coin, and send it to someone
-    pub fn create(offer_coin: Coin, ask_denom: String, trader: String) -> Message {
+    pub fn create(offer_coin: Coin, ask_denom: String, trader: String) -> anyhow::Result<Message> {
         let internal = MsgSwap {
             ask_denom,
             offer_coin,
             trader,
         };
-        Message {
+        Ok(Message {
             s_type: "market/MsgSwap".into(),
-            value: serde_json::to_value(internal).unwrap(),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
 }

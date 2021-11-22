@@ -1,6 +1,6 @@
 [package]
 name = "terra-rust"
-version = "1.0.6-alpha.1"
+version = "1.1.1"
 authors = ["PFC-Validator <PFC-Validator@protonmail.com>"]
 edition = "2018"
 readme = "README.md"
@@ -26,11 +26,11 @@ native-tls = ["terra-rust-api/native-tls"]
 rustls-tls = ["terra-rust-api/rustls-tls"]
 
 [dependencies]
-terra-rust-api = { path = "./terra-rust-api", version = "1.0", default-features = false }
-terra-rust-wallet = { path = "./terra-rust-wallet", version = "1.0" }
+terra-rust-api = { path = "./terra-rust-api", version = "1.1", default-features = false }
+terra-rust-wallet = { path = "./terra-rust-wallet", version = "1.1" }
 anyhow="1.0"
 #async-anyhow-logger = "0.1.0"
-tokio = { version = "1.10", features = ["full"] }
+tokio = { version = "1.14.0", features = ["full"] }
 structopt = "0.3"
 env_logger = "0.8.3"
 log="0.4"

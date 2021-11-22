@@ -33,7 +33,7 @@ pub async fn slashing_cmd_parse<'a>(
             let from_public_key = from_key.public_key(&secp);
 
             let from_account = from_public_key.operator_address()?;
-            let un_jail = MsgUnjail::create(from_account);
+            let un_jail = MsgUnjail::create(from_account)?;
 
             let messages: Vec<Message> = vec![un_jail];
             let resp = terra

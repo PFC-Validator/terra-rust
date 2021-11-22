@@ -57,7 +57,8 @@ const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 const NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
 
 const NETWORK_PROD_ADDRESS_BOOK: &str = "https://network.terra.dev/addrbook.json";
-const NETWORK_TEST_ADDRESS_BOOK: &str = "https://network.terra.dev/testnet/addrbook.json";
+const NETWORK_TEST_ADDRESS_BOOK: &str =
+    "https://raw.githubusercontent.com/terra-money/testnet/master/bombay-12/addrbook.json";
 
 /// When Submitting transactions you need to either submit gas or a fee to the validator
 /// This structure is used to determine what your preferences are by default
@@ -521,7 +522,7 @@ mod tst {
             from_address,
             "terra1usws7c2c6cs7nuc8vma9qzaky5pkgvm2uag6rh".into(),
             Coin::parse("100000uluna")?.unwrap(),
-        );
+        )?;
         let json = serde_json::to_string(&send)?;
         let json_eq = r#"{"type":"bank/MsgSend","value":{"amount":[{"amount":"100000","denom":"uluna"}],"from_address":"terra1n3g37dsdlv7ryqftlkef8mhgqj4ny7p8v78lg7","to_address":"terra1usws7c2c6cs7nuc8vma9qzaky5pkgvm2uag6rh"}}"#;
 

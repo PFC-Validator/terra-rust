@@ -46,7 +46,7 @@ pub async fn bank_cmd_parse<'a>(
             let from_public_key = from_key.public_key(&secp);
             let coin: Coin = Coin::create(&denom, amount);
             let from_account = from_public_key.account()?;
-            let send = MsgSend::create(from_account, to, vec![coin]);
+            let send = MsgSend::create(from_account, to, vec![coin])?;
 
             let messages: Vec<Message> = vec![send];
             let resp = terra

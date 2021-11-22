@@ -17,7 +17,7 @@ pub enum WasmCommand {
 }
 
 pub async fn wasm_cmd_parse<'a>(
-    terra: &Terra<'a>,
+    terra: &Terra,
     _wallet: &Wallet<'a>,
     _seed: Option<&str>,
     wasm_cmd: WasmCommand,
