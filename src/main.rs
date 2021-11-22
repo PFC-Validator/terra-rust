@@ -23,6 +23,7 @@ mod staking;
 mod tendermint;
 mod validator;
 mod wallet;
+mod wasm;
 
 use anyhow::Result;
 
@@ -42,6 +43,7 @@ use crate::tendermint::{
 };
 use crate::validator::{validator_cmd_parse, ValidatorCommand};
 use crate::wallet::{wallet_cmd_parse, WalletCommand};
+use crate::wasm::{wasm_cmd_parse, WasmCommand};
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::{GasOptions, Terra};
 use terra_rust_wallet::Wallet;
@@ -222,6 +224,8 @@ enum Command {
     RPC(RPCCommand),
     /// FCD commands
     FCD(FCDCommand),
+    /// WASM commands
+    WASM(WasmCommand),
 }
 
 /// Input to the /txs/XXXX query
@@ -271,6 +275,7 @@ async fn run() -> anyhow::Result<()> {
         Command::ValidatorSets(cmd) => validator_sets_cmd_parse(&t, cmd).await,
         Command::RPC(cmd) => rpc_cmd_parse(&t, cmd).await,
         Command::FCD(cmd) => fcd_cmd_parse(&t, &cli.fcd, cmd).await,
+        Command::WASM(cmd) => wasm_cmd_parse(&t, &wallet, seed, cmd).await,
     }
 }
 #[tokio::main]
