@@ -1,5 +1,11 @@
 # Changes
 
+## 1.1
+### 1.1.1 - 22-Nov-21
+* PR #6 - Thanks @Pronvis
+* PR #6 - return Result in most cases
+* PR #6 - better usage of async/await
+* PR #6 - lifetime fixes
 ## 1.0
 ### 1.0.12 - 3-Nov-21
 * add 'tx' component of TxResult

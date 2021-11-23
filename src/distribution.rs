@@ -42,9 +42,9 @@ pub enum DistributionCommand {
     },
 }
 
-pub async fn distribution_cmd_parse<'a>(
-    terra: &Terra<'a>,
-    wallet: &Wallet<'a>,
+pub async fn distribution_cmd_parse(
+    terra: &Terra,
+    wallet: &Wallet<'_>,
     seed: Option<&str>,
     cmd: DistributionCommand,
 ) -> Result<()> {
@@ -61,13 +61,13 @@ pub async fn distribution_cmd_parse<'a>(
             match validator {
                 Some(v) => {
                     log::info!("Validator {}", &v);
-                    let msg = MsgWithdrawDelegationReward::create(delegator_account, v);
+                    let msg = MsgWithdrawDelegationReward::create(delegator_account, v)?;
                     let messages: Vec<Message> = vec![msg];
                     let resp = terra
                         .submit_transaction_sync(
                             &secp,
                             &delegator_key,
-                            &messages,
+                            messages,
                             Some(format!(
                                 "PFC-{}/{}",
                                 NAME.unwrap_or("TERRARUST"),
@@ -91,13 +91,13 @@ pub async fn distribution_cmd_parse<'a>(
             let delegator_key = wallet.get_private_key(&secp, &delegator, seed)?;
 
             log::info!("Validator {}", &validator);
-            let msg = MsgWithdrawValidatorCommission::create(validator);
+            let msg = MsgWithdrawValidatorCommission::create(validator)?;
             let messages: Vec<Message> = vec![msg];
             let resp = terra
                 .submit_transaction_sync(
                     &secp,
                     &delegator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
@@ -120,14 +120,14 @@ pub async fn distribution_cmd_parse<'a>(
             let validator = delegator_key.public_key(&secp).operator_address()?;
 
             log::info!("Validator {}", &validator);
-            let msg_commission = MsgWithdrawValidatorCommission::create(validator.clone());
-            let msg_rewards = MsgWithdrawDelegationReward::create(delegator_account, validator);
+            let msg_commission = MsgWithdrawValidatorCommission::create(validator.clone())?;
+            let msg_rewards = MsgWithdrawDelegationReward::create(delegator_account, validator)?;
             let messages: Vec<Message> = vec![msg_commission, msg_rewards];
             let resp = terra
                 .submit_transaction_sync(
                     &secp,
                     &delegator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),

@@ -9,12 +9,12 @@ pub struct MsgWithdrawValidatorCommission {
 }
 impl MsgInternal for MsgWithdrawValidatorCommission {}
 impl MsgWithdrawValidatorCommission {
-    pub fn create(validator_address: String) -> Message {
+    pub fn create(validator_address: String) -> anyhow::Result<Message> {
         let internal = MsgWithdrawValidatorCommission { validator_address };
-        Message {
+        Ok(Message {
             s_type: "distribution/MsgWithdrawValidatorCommission".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
 }
 /// withdraw reward from a validator
@@ -25,14 +25,14 @@ pub struct MsgWithdrawDelegationReward {
 }
 impl MsgInternal for MsgWithdrawDelegationReward {}
 impl MsgWithdrawDelegationReward {
-    pub fn create(delegator_address: String, validator_address: String) -> Message {
+    pub fn create(delegator_address: String, validator_address: String) -> anyhow::Result<Message> {
         let internal = MsgWithdrawDelegationReward {
             delegator_address,
             validator_address,
         };
-        Message {
+        Ok(Message {
             s_type: "distribution/MsgWithdrawDelegationReward".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
 }

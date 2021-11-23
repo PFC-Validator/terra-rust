@@ -22,17 +22,17 @@ impl MsgExecuteContract {
         contract: &str,
         execute_msg: &serde_json::Value,
         coins: &[Coin],
-    ) -> Message {
+    ) -> anyhow::Result<Message> {
         let internal = MsgExecuteContract {
             sender: sender.into(),
             contract: contract.into(),
             execute_msg: execute_msg.clone(),
             coins: coins.to_vec(),
         };
-        Message {
+        Ok(Message {
             s_type: "wasm/MsgExecuteContract".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
     /// use provided base64 exec message
     pub fn create_from_json(
@@ -42,9 +42,7 @@ impl MsgExecuteContract {
         coins: &[Coin],
     ) -> anyhow::Result<Message> {
         let exec_b64: serde_json::Value = serde_json::from_str(execute_msg_json)?;
-        Ok(MsgExecuteContract::create_from_value(
-            sender, contract, &exec_b64, coins,
-        ))
+        MsgExecuteContract::create_from_value(sender, contract, &exec_b64, coins)
     }
 }
 
@@ -58,21 +56,21 @@ pub struct MsgStoreCode {
 impl MsgInternal for MsgStoreCode {}
 impl MsgStoreCode {
     /// use provided base64 exec message
-    pub fn create_from_b64(sender: &str, wasm_byte_code: &str) -> Message {
+    pub fn create_from_b64(sender: &str, wasm_byte_code: &str) -> anyhow::Result<Message> {
         let internal = MsgStoreCode {
             sender: sender.into(),
             wasm_byte_code: wasm_byte_code.into(),
         };
-        Message {
+        Ok(Message {
             s_type: "wasm/MsgStoreCode".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
     /// use provided base64 exec message
     pub fn create_from_file(sender: &str, file_name: &Path) -> anyhow::Result<Message> {
         let file_contents = std::fs::read(file_name)?;
         let exec_b64 = base64::encode(file_contents);
-        Ok(MsgStoreCode::create_from_b64(sender, &exec_b64))
+        MsgStoreCode::create_from_b64(sender, &exec_b64)
     }
 }
 
@@ -134,7 +132,7 @@ impl MsgInstantiateContract {
         };
         Ok(Message {
             s_type: "wasm/MsgInstantiateContract".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal)?,
         })
     }
     /// use provided base64 exec message
@@ -198,7 +196,7 @@ mod tst {
         )?;
 
         let js = serde_json::to_string(&msg)?;
-        println!("{} - {}", out_json.len(), js.len());
+        log::debug!("Test file conversion: {} - {}", out_json.len(), js.len());
         assert_eq!(out_json.trim(), js);
         Ok(())
     }

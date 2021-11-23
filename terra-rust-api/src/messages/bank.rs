@@ -16,19 +16,27 @@ pub struct MsgSend {
 impl MsgInternal for MsgSend {}
 impl MsgSend {
     /// Send amount coins from from_address to to_address
-    pub fn create_single(from_address: String, to_address: String, amount: Coin) -> Message {
+    pub fn create_single(
+        from_address: String,
+        to_address: String,
+        amount: Coin,
+    ) -> anyhow::Result<Message> {
         MsgSend::create(from_address, to_address, vec![amount])
     }
     /// send multiple coins from from_address to to_address
-    pub fn create(from_address: String, to_address: String, amount: Vec<Coin>) -> Message {
+    pub fn create(
+        from_address: String,
+        to_address: String,
+        amount: Vec<Coin>,
+    ) -> anyhow::Result<Message> {
         let internal = MsgSend {
             amount,
             from_address,
             to_address,
         };
-        Message {
+        Ok(Message {
             s_type: "bank/MsgSend".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
 }

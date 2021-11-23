@@ -20,9 +20,9 @@ pub enum SlashingCommand {
     },
 }
 
-pub async fn slashing_cmd_parse<'a>(
-    terra: &Terra<'a>,
-    wallet: &Wallet<'a>,
+pub async fn slashing_cmd_parse(
+    terra: &Terra,
+    wallet: &Wallet<'_>,
     seed: Option<&str>,
     slashing_cmd: SlashingCommand,
 ) -> Result<()> {
@@ -33,14 +33,14 @@ pub async fn slashing_cmd_parse<'a>(
             let from_public_key = from_key.public_key(&secp);
 
             let from_account = from_public_key.operator_address()?;
-            let un_jail = MsgUnjail::create(from_account);
+            let un_jail = MsgUnjail::create(from_account)?;
 
             let messages: Vec<Message> = vec![un_jail];
             let resp = terra
                 .submit_transaction_sync(
                     &secp,
                     &from_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),

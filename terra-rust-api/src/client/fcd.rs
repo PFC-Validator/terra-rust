@@ -3,7 +3,7 @@ use rust_decimal::Decimal;
 use std::collections::HashMap;
 
 pub struct FCD<'a> {
-    terra: &'a Terra<'a>,
+    terra: &'a Terra,
     fcd_url: &'a str,
 }
 impl FCD<'_> {

@@ -11,7 +11,7 @@ use crate::{LCDResult, Terra};
 
 #[allow(clippy::upper_case_acronyms)]
 pub struct TX<'a> {
-    terra: &'a Terra<'a>,
+    terra: &'a Terra,
 }
 impl<'a> TX<'a> {
     pub fn create(terra: &'a Terra) -> TX<'a> {
@@ -21,7 +21,7 @@ impl<'a> TX<'a> {
     /// This is not guaranteed to successfully create a transaction record, due to numerous factors
     pub async fn broadcast_async(
         &self,
-        std_sign_msg: &'a StdSignMsg<'a>,
+        std_sign_msg: &StdSignMsg,
         sigs: &[StdSignature],
     ) -> anyhow::Result<TXResultAsync> {
         let std_tx: StdTx = StdTx::from_StdSignMsg(std_sign_msg, sigs, "async");
@@ -37,7 +37,7 @@ impl<'a> TX<'a> {
     /// but you wait. It is still not guaranteed to create a blockchain transaction
     pub async fn broadcast_sync(
         &self,
-        std_sign_msg: &'a StdSignMsg<'a>,
+        std_sign_msg: &StdSignMsg,
         sigs: &[StdSignature],
     ) -> anyhow::Result<TXResultSync> {
         let std_tx: StdTx = StdTx::from_StdSignMsg(std_sign_msg, sigs, "sync");
@@ -56,7 +56,7 @@ impl<'a> TX<'a> {
     /// is executed on the blockchain. This is great for debugging, but not recommended to be used otherwise
     pub async fn broadcast_block(
         &self,
-        std_sign_msg: &'a StdSignMsg<'a>,
+        std_sign_msg: &StdSignMsg,
         sigs: &[StdSignature],
     ) -> anyhow::Result<TXResultBlock> {
         log::warn!("Broadcast_block is not recommended to be used in production situations");
@@ -122,7 +122,7 @@ impl<'a> TX<'a> {
         gas_prices: &[&Coin],
     ) -> anyhow::Result<LCDResult<TxFeeResult>> {
         let tx_est = TxEstimate::create(
-            self.terra.chain_id,
+            &self.terra.chain_id,
             sender,
             msgs,
             gas_adjustment,

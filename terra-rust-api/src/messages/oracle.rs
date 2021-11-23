@@ -18,16 +18,16 @@ pub struct MsgAggregateExchangeRatePreVote {
 impl MsgInternal for MsgAggregateExchangeRatePreVote {}
 impl MsgAggregateExchangeRatePreVote {
     /// Create a pre vote message
-    pub fn create(hash: String, feeder: String, validator: String) -> Message {
+    pub fn create(hash: String, feeder: String, validator: String) -> anyhow::Result<Message> {
         let internal = MsgAggregateExchangeRatePreVote {
             feeder,
             hash,
             validator,
         };
-        Message {
+        Ok(Message {
             s_type: "oracle/MsgAggregateExchangeRatePrevote".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
 }
 
@@ -90,27 +90,27 @@ impl MsgAggregateExchangeRateVote {
         exchange_rates: Vec<Coin>,
         feeder: String,
         validator: String,
-    ) -> Message {
+    ) -> anyhow::Result<Message> {
         let internal =
             MsgAggregateExchangeRateVote::create_internal(salt, exchange_rates, feeder, validator);
-        Message {
+        Ok(Message {
             s_type: "oracle/MsgAggregateExchangeRateVote".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
     /// Create a vote message from internal message
-    pub fn create_from_internal(internal: MsgAggregateExchangeRateVote) -> Message {
+    pub fn create_from_internal(internal: MsgAggregateExchangeRateVote) -> anyhow::Result<Message> {
         //  let internal =
         //      MsgAggregateExchangeRateVote::create_internal(salt, exchange_rates, feeder, validator);
-        Message {
+        Ok(Message {
             s_type: "oracle/MsgAggregateExchangeRateVote".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
 
     /// Pre-Vote messages are like a 'linked list'.
     /// they use the salt of the previous 'RateVote' to hash the current prices, to ensure continuity
-    pub fn gen_pre_vote(&self, previous_salt: &str) -> Message {
+    pub fn gen_pre_vote(&self, previous_salt: &str) -> anyhow::Result<Message> {
         MsgAggregateExchangeRatePreVote::create(
             self.generate_hash(previous_salt),
             self.feeder.clone(),
@@ -129,12 +129,12 @@ pub struct MsgDelegateFeedConsent {
 impl MsgInternal for MsgDelegateFeedConsent {}
 impl MsgDelegateFeedConsent {
     /// Create a pre vote message
-    pub fn create(operator: String, delegate: String) -> Message {
+    pub fn create(operator: String, delegate: String) -> anyhow::Result<Message> {
         let internal = MsgDelegateFeedConsent { delegate, operator };
-        Message {
+        Ok(Message {
             s_type: "oracle/MsgDelegateFeedConsent".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
 }
 

@@ -28,9 +28,9 @@ pub enum BankCommand {
     },
 }
 
-pub async fn bank_cmd_parse<'a>(
-    terra: &Terra<'a>,
-    wallet: &Wallet<'a>,
+pub async fn bank_cmd_parse(
+    terra: &Terra,
+    wallet: &Wallet<'_>,
     seed: Option<&str>,
     bank_cmd: BankCommand,
 ) -> Result<()> {
@@ -46,14 +46,14 @@ pub async fn bank_cmd_parse<'a>(
             let from_public_key = from_key.public_key(&secp);
             let coin: Coin = Coin::create(&denom, amount);
             let from_account = from_public_key.account()?;
-            let send = MsgSend::create(from_account, to, vec![coin]);
+            let send = MsgSend::create(from_account, to, vec![coin])?;
 
             let messages: Vec<Message> = vec![send];
             let resp = terra
                 .submit_transaction_sync(
                     &secp,
                     &from_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),

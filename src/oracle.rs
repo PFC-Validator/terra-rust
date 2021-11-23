@@ -42,9 +42,9 @@ pub enum VotersCommand {
     AggregatePreVote,
     AggregateVote,
 }
-pub async fn oracle_cmd_parse<'a>(
-    terra: &Terra<'a>,
-    wallet: &Wallet<'a>,
+pub async fn oracle_cmd_parse(
+    terra: &Terra,
+    wallet: &Wallet<'_>,
     seed: Option<&str>,
     oracle_cmd: OracleCommand,
 ) -> Result<()> {
@@ -63,14 +63,14 @@ pub async fn oracle_cmd_parse<'a>(
             let from_key = wallet.get_private_key(&secp, &validator, seed)?;
             let from_public_key = from_key.public_key(&secp);
             let from_operator = from_public_key.operator_address()?;
-            let delegate_msg = MsgDelegateFeedConsent::create(from_operator, delegate);
+            let delegate_msg = MsgDelegateFeedConsent::create(from_operator, delegate)?;
 
             let messages: Vec<Message> = vec![delegate_msg];
             let resp = terra
                 .submit_transaction_sync(
                     &secp,
                     &from_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),

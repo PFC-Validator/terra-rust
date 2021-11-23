@@ -10,11 +10,11 @@ pub struct MsgUnjail {
 }
 impl MsgInternal for MsgUnjail {}
 impl MsgUnjail {
-    pub fn create(address: String) -> Message {
+    pub fn create(address: String) -> anyhow::Result<Message> {
         let internal = MsgUnjail { address };
-        Message {
+        Ok(Message {
             s_type: "slashing/MsgUnjail".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
 }

@@ -58,9 +58,9 @@ pub enum MarketCommand {
     },
 }
 
-pub async fn market_cmd_parse<'a>(
-    terra: &Terra<'a>,
-    wallet: &Wallet<'a>,
+pub async fn market_cmd_parse(
+    terra: &Terra,
+    wallet: &Wallet<'_>,
     seed: Option<&str>,
     market_cmd: MarketCommand,
 ) -> Result<()> {
@@ -92,14 +92,14 @@ pub async fn market_cmd_parse<'a>(
                 }
                 None => from_account.clone(),
             };
-            let swap = MsgSwap::create(coin, ask_denom, to_account);
+            let swap = MsgSwap::create(coin, ask_denom, to_account)?;
 
             let messages: Vec<Message> = vec![swap];
             let resp = terra
                 .submit_transaction_sync(
                     &secp,
                     &from_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
@@ -132,7 +132,7 @@ pub async fn market_cmd_parse<'a>(
                     .submit_transaction_sync(
                         &secp,
                         &from_key,
-                        &messages,
+                        messages,
                         Some(format!(
                             "PFC-{}/{}",
                             NAME.unwrap_or("TERRARUST"),

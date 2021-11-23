@@ -40,9 +40,9 @@ pub enum ContractCommand {
     Parameters,
 }
 
-pub async fn contract_cmd_parse<'a>(
-    terra: &Terra<'a>,
-    _wallet: &Wallet<'a>,
+pub async fn contract_cmd_parse(
+    terra: &Terra,
+    _wallet: &Wallet<'_>,
     _seed: Option<&str>,
     cmd: ContractCommand,
 ) -> Result<()> {

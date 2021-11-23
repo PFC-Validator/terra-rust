@@ -8,10 +8,10 @@ use futures::future::join_all;
 
 /// Market functions. mainly around swapping tokens
 pub struct Market<'a> {
-    terra: &'a Terra<'a>,
+    terra: &'a Terra,
 }
 impl Market<'_> {
-    pub fn create<'a>(terra: &'a Terra) -> Market<'a> {
+    pub fn create(terra: &'_ Terra) -> Market<'_> {
         Market { terra }
     }
     /// obtain how much a coin is worth in a secondary coin
@@ -77,10 +77,15 @@ impl Market<'_> {
             .collect::<Vec<_>>();
         match err {
             Some(e) => Err(e),
-            None => Ok(to_convert
-                .iter()
-                .map(|f| MsgSwap::create(f.0.clone(), to_coin.clone(), from.clone()))
-                .collect::<Vec<_>>()),
+            None => {
+                let mut messages = Vec::new();
+                for swap_coins in to_convert {
+                    let message =
+                        MsgSwap::create(swap_coins.0.clone(), to_coin.clone(), from.clone())?;
+                    messages.push(message);
+                }
+                Ok(messages)
+            }
         }
     }
 }

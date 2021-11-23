@@ -8,7 +8,7 @@ pub enum FCDCommand {
     GasPrices,
 }
 
-pub async fn fcd_cmd_parse(terra: &Terra<'_>, fcd_url: &str, cmd: FCDCommand) -> Result<()> {
+pub async fn fcd_cmd_parse(terra: &Terra, fcd_url: &str, cmd: FCDCommand) -> Result<()> {
     match cmd {
         FCDCommand::GasPrices => {
             let resp = terra.fcd(fcd_url).gas_prices().await?;

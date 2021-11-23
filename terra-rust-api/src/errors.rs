@@ -55,4 +55,6 @@ pub enum TerraRustAPIError {
     TXNotFound(usize),
     #[error("unknown Terra-Rust API error")]
     Unknown,
+    #[error("Generic Error {0}")]
+    StdErr(String),
 }

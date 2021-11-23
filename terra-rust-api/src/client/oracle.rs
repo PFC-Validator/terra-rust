@@ -2,7 +2,7 @@ use crate::client::oracle_types::{OracleParameters, OraclePreVotes, OracleVotes}
 use crate::{LCDResult, Terra};
 
 pub struct Oracle<'a> {
-    terra: &'a Terra<'a>,
+    terra: &'a Terra,
 }
 impl<'a> Oracle<'a> {
     pub fn create(terra: &'a Terra) -> Oracle<'a> {
@@ -20,7 +20,7 @@ impl<'a> Oracle<'a> {
     }
 }
 pub struct Voters<'a> {
-    terra: &'a Terra<'a>,
+    terra: &'a Terra,
     pub validator: &'a str,
 }
 impl<'a> Voters<'a> {

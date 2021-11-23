@@ -1,7 +1,7 @@
 use crate::client::rpc_types::{RPCNetInfo, RPCResult, RPCStatus, RPCUnconfirmedTXS};
 use crate::Terra;
 pub struct RPC<'a> {
-    terra: &'a Terra<'a>,
+    terra: &'a Terra,
     rpc_url: &'a str,
 }
 impl RPC<'_> {

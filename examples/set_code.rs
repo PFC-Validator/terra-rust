@@ -154,7 +154,7 @@ async fn run() -> anyhow::Result<()> {
     let cli: Cli = Cli::from_args();
 
     let gas_opts: GasOptions = cli.gas_opts().await?;
-    let terra = Terra::lcd_client(&cli.lcd, &cli.chain_id, &gas_opts, None).await?;
+    let terra = Terra::lcd_client(&cli.lcd, &cli.chain_id, &gas_opts, None);
     let secp = Secp256k1::new();
     let wallet = Wallet::create(&cli.wallet);
 
@@ -177,7 +177,7 @@ async fn run() -> anyhow::Result<()> {
         .submit_transaction_sync(
             &secp,
             &from_key,
-            &messages,
+            messages,
             Some(format!(
                 "PFC-{}/{}",
                 NAME.unwrap_or("TERRARUST"),
@@ -191,7 +191,7 @@ async fn run() -> anyhow::Result<()> {
     let hash = resp.txhash;
     let tx = terra
         .tx()
-        .get_and_wait(&hash, 5, tokio::time::Duration::from_secs(1))
+        .get_and_wait(&hash, 5usize, tokio::time::Duration::from_secs(1))
         .await?;
     let codes = tx.get_attribute_from_result_logs("store_code", "code_id");
     if let Some(code) = codes.first() {

@@ -103,7 +103,7 @@ impl<'a> Wallet<'a> {
         let phrase = &keyring.get_password().map_err(KeyringErrorAdapter::from)?;
         //log::info!("{}", phrase);
         match seed {
-            None => Ok(PrivateKey::from_words(secp, phrase)?),
+            None => Ok(PrivateKey::from_words(secp, phrase, 0, 0)?),
             Some(seed_str) => Ok(PrivateKey::from_words_seed(secp, phrase, seed_str)?),
         }
     }
@@ -279,8 +279,8 @@ mod tst {
         let str_2 = "wonder caution square unveil april art add hover spend smile proud admit modify old copper throw crew happy nature luggage reopen exhibit ordinary napkin";
 
         let s = Secp256k1::new();
-        let pk = PrivateKey::from_words(&s, str_1)?;
-        let pk2 = PrivateKey::from_words(&s, str_2)?;
+        let pk = PrivateKey::from_words(&s, str_1, 0, 0)?;
+        let pk2 = PrivateKey::from_words(&s, str_2, 0, 0)?;
 
         let wallet = Wallet::new("PFC-Test Wallet")?;
         wallet.store_key("PFC-Test-Key", &pk)?;

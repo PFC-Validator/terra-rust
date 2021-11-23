@@ -92,7 +92,7 @@ impl MsgCreateValidator {
         };
         Message {
             s_type: "staking/MsgCreateValidator".into(),
-            value: Box::new(internal),
+            value: serde_json::to_value(internal).unwrap(),
         }
     }
 }
@@ -113,17 +113,17 @@ impl MsgEditValidator {
         address: String,
         commission_rate: Option<Decimal>,
         min_self_delegation: Option<Decimal>,
-    ) -> Message {
+    ) -> anyhow::Result<Message> {
         let internal = MsgEditValidator {
             address,
             commission_rate,
             description,
             min_self_delegation,
         };
-        Message {
+        Ok(Message {
             s_type: "staking/MsgEditValidator".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
 }
 
@@ -136,16 +136,20 @@ pub struct MsgUndelegate {
 }
 impl MsgInternal for MsgUndelegate {}
 impl MsgUndelegate {
-    pub fn create(delegator_address: String, validator_address: String, amount: Coin) -> Message {
+    pub fn create(
+        delegator_address: String,
+        validator_address: String,
+        amount: Coin,
+    ) -> anyhow::Result<Message> {
         let internal = MsgUndelegate {
             amount,
             delegator_address,
             validator_address,
         };
-        Message {
+        Ok(Message {
             s_type: "staking/MsgUndelegate".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
 }
 /// edit undelegate message
@@ -157,16 +161,20 @@ pub struct MsgDelegate {
 }
 impl MsgInternal for MsgDelegate {}
 impl MsgDelegate {
-    pub fn create(delegator_address: String, validator_address: String, amount: Coin) -> Message {
+    pub fn create(
+        delegator_address: String,
+        validator_address: String,
+        amount: Coin,
+    ) -> anyhow::Result<Message> {
         let internal = MsgDelegate {
             amount,
             delegator_address,
             validator_address,
         };
-        Message {
+        Ok(Message {
             s_type: "staking/MsgDelegate".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
 }
 /// edit undelegate message
@@ -184,16 +192,16 @@ impl MsgBeginRedelegate {
         validator_dst_address: String,
         validator_src_address: String,
         amount: Coin,
-    ) -> Message {
+    ) -> anyhow::Result<Message> {
         let internal = MsgBeginRedelegate {
             amount,
             delegator_address,
             validator_src_address,
             validator_dst_address,
         };
-        Message {
+        Ok(Message {
             s_type: "staking/MsgBeginRedelegate".into(),
-            value: Box::new(internal),
-        }
+            value: serde_json::to_value(internal)?,
+        })
     }
 }

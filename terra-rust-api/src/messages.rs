@@ -12,7 +12,6 @@ pub mod staking;
 /// regular contract interactions
 pub mod wasm;
 
-use crate::core_types::MsgInternal;
 pub use bank::MsgSend;
 use serde::Serialize;
 pub use wasm::MsgExecuteContract;
@@ -24,6 +23,6 @@ pub struct Message {
     #[serde(rename = "type")]
     s_type: String,
     #[allow(missing_docs)]
-    value: Box<dyn MsgInternal>,
+    value: serde_json::Value,
 }
 // impl<'a> Msg for Message<'a> {}

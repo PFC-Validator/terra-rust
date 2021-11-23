@@ -245,8 +245,7 @@ async fn run() -> anyhow::Result<()> {
         &cli.chain_id,
         &gas_opts,
         Some(cli.debug.into_inner()),
-    )
-    .await?;
+    );
     let seed: Option<&str> = if cli.seed.is_empty() {
         None
     } else {

@@ -126,9 +126,9 @@ pub enum StakingCommand {
     },
 }
 
-pub async fn staking_cmd_parse<'a>(
-    terra: &Terra<'a>,
-    wallet: &Wallet<'a>,
+pub async fn staking_cmd_parse(
+    terra: &Terra,
+    wallet: &Wallet<'_>,
     seed: Option<&str>,
     cmd: StakingCommand,
 ) -> Result<()> {
@@ -183,7 +183,7 @@ pub async fn staking_cmd_parse<'a>(
                 .submit_transaction_sync(
                     &secp,
                     &delegator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
@@ -217,13 +217,14 @@ pub async fn staking_cmd_parse<'a>(
             log::info!("Validator {}", &validator);
             let validator_key = wallet.get_private_key(&secp, &validator, seed)?;
             let validator_operator = validator_key.public_key(&secp).operator_address()?;
-            let msg = MsgEditValidator::create(desc, validator_operator, rate, min_self_delegation);
+            let msg =
+                MsgEditValidator::create(desc, validator_operator, rate, min_self_delegation)?;
             let messages: Vec<Message> = vec![msg];
             let resp = terra
                 .submit_transaction_sync(
                     &secp,
                     &validator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
@@ -246,13 +247,13 @@ pub async fn staking_cmd_parse<'a>(
             let delegator_key = wallet.get_private_key(&secp, &delegator, seed)?;
             let delegator_account = delegator_key.public_key(&secp).account()?;
             let msg =
-                MsgDelegate::create(delegator_account, validator, Coin::create("uluna", amount));
+                MsgDelegate::create(delegator_account, validator, Coin::create("uluna", amount))?;
             let messages: Vec<Message> = vec![msg];
             let resp = terra
                 .submit_transaction_sync(
                     &secp,
                     &delegator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
@@ -279,13 +280,13 @@ pub async fn staking_cmd_parse<'a>(
                 destination,
                 source,
                 Coin::create("uluna", amount),
-            );
+            )?;
             let messages: Vec<Message> = vec![msg];
             let resp = terra
                 .submit_transaction_sync(
                     &secp,
                     &delegator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
@@ -307,13 +308,13 @@ pub async fn staking_cmd_parse<'a>(
             let delegator_key = wallet.get_private_key(&secp, &delegator, seed)?;
             let delegator_account = delegator_key.public_key(&secp).account()?;
             let msg =
-                MsgUndelegate::create(delegator_account, validator, Coin::create("uluna", amount));
+                MsgUndelegate::create(delegator_account, validator, Coin::create("uluna", amount))?;
             let messages: Vec<Message> = vec![msg];
             let resp = terra
                 .submit_transaction_sync(
                     &secp,
                     &delegator_key,
-                    &messages,
+                    messages,
                     Some(format!(
                         "PFC-{}/{}",
                         NAME.unwrap_or("TERRARUST"),
