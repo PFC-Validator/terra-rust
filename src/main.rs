@@ -21,6 +21,7 @@ mod rpc;
 mod slashing;
 mod staking;
 mod tendermint;
+mod tx;
 mod validator;
 mod wallet;
 mod wasm;
@@ -41,6 +42,7 @@ use crate::staking::{staking_cmd_parse, StakingCommand};
 use crate::tendermint::{
     block_cmd_parse, validator_sets_cmd_parse, BlockCommand, ValidatorSetsCommand,
 };
+use crate::tx::{tx_cmd_parse, TxCommand};
 use crate::validator::{validator_cmd_parse, ValidatorCommand};
 use crate::wallet::{wallet_cmd_parse, WalletCommand};
 use crate::wasm::{wasm_cmd_parse, WasmCommand};
@@ -228,14 +230,6 @@ enum Command {
     WASM(WasmCommand),
 }
 
-/// Input to the /txs/XXXX query
-#[derive(StructOpt)]
-pub struct TxCommand {
-    #[structopt(name = "hash", help = "hash to inquire about")]
-    /// The hash to inquire about
-    hash: String,
-}
-
 async fn run() -> anyhow::Result<()> {
     let cli: Cli = Cli::from_args();
 
@@ -261,11 +255,7 @@ async fn run() -> anyhow::Result<()> {
         Command::Contract(cmd) => contract_cmd_parse(&t, &wallet, seed, cmd).await,
         Command::Market(cmd) => market_cmd_parse(&t, &wallet, seed, cmd).await,
 
-        Command::Tx(cmd) => {
-            let resp = t.tx().get(&cmd.hash).await?;
-            println!("{}", serde_json::to_string_pretty(&resp)?);
-            Ok(())
-        }
+        Command::Tx(cmd) => tx_cmd_parse(&t, cmd).await,
         Command::Auth(auth_cmd) => auth_cmd_parse(&t, &wallet, seed, auth_cmd).await,
         Command::Wallet(wallet_cmd) => wallet_cmd_parse(&t, &wallet, seed, wallet_cmd),
         Command::Slashing(cmd) => slashing_cmd_parse(&t, &wallet, seed, cmd).await,

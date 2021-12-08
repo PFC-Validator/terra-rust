@@ -1,5 +1,7 @@
 # Changes
-
+## 1.1
+### 1.1.1
+* terra-rust-api incompatible changes
 ## 1.0
 ### 1.0.2 - 1-Oct-2021
 * convenience function - wallet.get_account( ... ) gets the account associated with the stored key 

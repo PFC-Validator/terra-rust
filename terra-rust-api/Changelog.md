@@ -1,6 +1,8 @@
 # Changes
 
 ## 1.1
+### 1.1.2 - devel
+* tx.get_txs_in_block() function
 ### 1.1.1 - 22-Nov-21
 * PR #6 - Thanks @Pronvis
 * PR #6 - return Result in most cases

@@ -221,11 +221,53 @@ pub struct TxFee {
     #[serde(with = "terra_u64_format")]
     pub gas: u64,
 }
-/*
+
 #[derive(Deserialize, Serialize, Debug)]
-pub struct TxFeeResult {
+pub struct V1TXBody {
+    pub messages: Vec<serde_json::Value>,
+    pub memo: String,
+    #[serde(with = "terra_u64_format")]
+    pub timeout_height: u64,
+    pub extension_options: Vec<serde_json::Value>,
+    pub non_critical_extension_options: Vec<serde_json::Value>,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct V1TX {
+    pub body: V1TXBody,
+    pub auth_info: serde_json::Value,
+    pub signatures: Vec<serde_json::Value>,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct V1TXResponse {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
-    pub result: TxFeeBlock,
+    pub txhash: String,
+    pub codespace: String,
+    pub code: usize,
+    pub data: String,
+    pub raw_log: String,
+    pub logs: Vec<serde_json::Value>,
+    pub info: String,
+    #[serde(with = "terra_u64_format")]
+    pub gas_wanted: u64,
+    #[serde(with = "terra_u64_format")]
+    pub gas_used: u64,
+    pub tx: serde_json::Value,
+    #[serde(with = "terra_datetime_format")]
+    pub timestamp: DateTime<Utc>,
+    pub events: Vec<serde_json::Value>,
 }
-*/
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct V1Pagination {
+    pub next_key: Option<String>,
+    #[serde(with = "terra_u64_format")]
+    pub total: u64,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct V1TXSResult {
+    pub txs: Vec<V1TX>,
+    pub tx_responses: Vec<V1TXResponse>,
+    pub pagination: V1Pagination,
+}

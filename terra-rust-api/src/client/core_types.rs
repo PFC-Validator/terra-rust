@@ -52,7 +52,7 @@ impl Coin {
     pub fn parse_coins(str: &str) -> anyhow::Result<Vec<Coin>> {
         let vec_res_opt_coins = str
             .split(',')
-            .map(|coin_str| Coin::parse(coin_str))
+            .map(Coin::parse)
             .collect::<Vec<anyhow::Result<Option<Coin>>>>();
         let mut coins: Vec<Coin> = Vec::with_capacity(vec_res_opt_coins.len());
         for vroc in vec_res_opt_coins {

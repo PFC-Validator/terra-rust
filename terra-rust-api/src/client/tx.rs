@@ -1,7 +1,7 @@
 use reqwest::StatusCode;
 //use crate::client::core_types::Msg;
 use crate::client::tx_types::{
-    TXResultAsync, TXResultBlock, TXResultSync, TxEstimate, TxFeeResult,
+    TXResultAsync, TXResultBlock, TXResultSync, TxEstimate, TxFeeResult, V1TXSResult,
 };
 use crate::core_types::{Coin, StdSignMsg, StdSignature, StdTx};
 use crate::errors::TerraRustAPIError;
@@ -141,6 +141,27 @@ impl<'a> TX<'a> {
         let resp = self
             .terra
             .post_cmd::<TxEstimate, LCDResult<TxFeeResult>>("/txs/estimate_fee", &tx_est)
+            .await?;
+        Ok(resp)
+    }
+    /// Get a list of transactions in a given block
+    pub async fn get_txs_in_block(
+        &self,
+        height: u64,
+        offset: Option<u64>,
+        limit: Option<u64>,
+    ) -> Result<V1TXSResult, TerraRustAPIError> {
+        let resp = self
+            .terra
+            .send_cmd::<V1TXSResult>(
+                &format!(
+                    "/cosmos/tx/v1beta1/txs?events=tx.height={}&order_by=ORDER_BY_ASC&pagination.limit={}&pagination.offset={}",
+                    height,
+                    limit.unwrap_or(100),
+                    offset.unwrap_or_default()
+                ),
+                None,
+            )
             .await?;
         Ok(resp)
     }
