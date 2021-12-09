@@ -255,7 +255,7 @@ pub struct V1TXResponse {
     pub tx: serde_json::Value,
     #[serde(with = "terra_datetime_format")]
     pub timestamp: DateTime<Utc>,
-    pub events: Vec<serde_json::Value>,
+    pub events: Option<Vec<serde_json::Value>>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
