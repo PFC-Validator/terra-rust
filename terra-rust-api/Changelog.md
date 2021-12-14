@@ -1,7 +1,8 @@
 # Changes
 
 ## 1.1
-### 1.1.2 - devel
+### 1.1.2 - 14-Dec-21
+* parse IBC coins
 * tx.get_txs_in_block() function
 ### 1.1.1 - 22-Nov-21
 * PR #6 - Thanks @Pronvis

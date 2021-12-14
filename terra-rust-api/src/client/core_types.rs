@@ -35,6 +35,7 @@ impl Coin {
     pub fn parse(str: &str) -> anyhow::Result<Option<Coin>> {
         lazy_static! {
             static ref RE: Regex = Regex::new(r"^(\d+[.]?\d*)([a-zA-Z]+)$").unwrap();
+            static ref RE_IBC: Regex = Regex::new(r"^(\d+[.]?\d*)(ibc/[a-fA-F0-9]+)$").unwrap();
         }
         //    let RE: Regex = Regex::new(r"^(\d+)(\s+)$").unwrap();
 
@@ -43,7 +44,13 @@ impl Coin {
                 &cap[2],
                 cap.get(1).unwrap().as_str().parse::<Decimal>()?,
             ))),
-            None => Ok(None),
+            None => match RE_IBC.captures(str) {
+                Some(cap) => Ok(Some(Coin::create(
+                    &cap[2],
+                    cap.get(1).unwrap().as_str().parse::<Decimal>()?,
+                ))),
+                None => Ok(None),
+            },
         }
     }
     /// this will take a comma delimited string of coins and return a sorted (by denom) vector of coins
@@ -298,6 +305,25 @@ mod tst {
 
             assert_eq!(c_v1, c_v2);
         }
+
+        Ok(())
+    }
+    #[test]
+    fn test_ibc_coins() -> anyhow::Result<()> {
+        let c = Coin::parse("566.750000000000000000ibc/EB2CED20AB0466F18BE49285E56B31306D4C60438A022EA995BA65D5E3CF7E09")?;
+        match c {
+            Some(c) => {
+                assert_eq!(
+                    c.denom,
+                    "ibc/EB2CED20AB0466F18BE49285E56B31306D4C60438A022EA995BA65D5E3CF7E09"
+                );
+                assert_eq!(c.amount, dec!(566.75));
+            }
+            None => assert!(false),
+        }
+        let ibc_coin_string="566.750000000000000000ibc/EB2CED20AB0466F18BE49285E56B31306D4C60438A022EA995BA65D5E3CF7E09,26762036.250000000000000000ukrw,2545.950000000000000000uluna,528551.000000000000000000uusd";
+        let vec = Coin::parse_coins(ibc_coin_string)?;
+        assert_eq!(vec.len(), 4);
 
         Ok(())
     }
