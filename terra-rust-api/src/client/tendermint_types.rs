@@ -84,7 +84,7 @@ pub struct BlockResult {
     pub block_id: BlockId,
     pub block: Block,
 }
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct EventAttribute {
     #[serde(with = "base64_encoded_format")]
     pub key: String,
