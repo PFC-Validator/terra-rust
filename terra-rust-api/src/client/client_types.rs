@@ -349,3 +349,110 @@ pub mod terra_opt_u64_format {
         }
     }
 }
+/// serialize/deserialize a base64 encoded value
+pub mod base64_encoded_format {
+    use serde::{self, Deserialize, Deserializer, Serializer};
+
+    //  convert a regular string into it's base64 representation
+    //
+    //    fn serialize<S>(&T, S) -> Result<S::Ok, S::Error>
+    //    where
+    //        S: Serializer
+    //
+    // although it may also be generic over the input types T.
+    #[allow(missing_docs)]
+    pub fn serialize<S>(val: &str, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        //  let s = format!("{}", val);
+        let encoded = base64::encode(val);
+        serializer.serialize_str(&encoded)
+    }
+
+    // The signature of a deserialize_with function must follow the pattern:
+    //
+    //    fn deserialize<'de, D>(D) -> Result<T, D::Error>
+    //    where
+    //        D: Deserializer<'de>
+    //
+    // although it may also be generic over the output types T.
+    #[allow(missing_docs)]
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<String, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: String = String::deserialize(deserializer)?;
+
+        match base64::decode(&s) {
+            Err(_e) => {
+                eprintln!("base64_encoded_format Fail {} {:#?}", s, _e);
+                Err(serde::de::Error::custom(_e))
+            }
+            Ok(val) => Ok(String::from_utf8_lossy(&val).into()),
+        }
+    }
+}
+
+/// serialize/deserialize a base64 encoded value, with Option
+pub mod base64_opt_encoded_format {
+    use serde::{self, Deserialize, Deserializer, Serializer};
+
+    // convert a regular Option<String> into it's base64 representation
+    //
+    //    fn serialize<S>(&T, S) -> Result<S::Ok, S::Error>
+    //    where
+    //        S: Serializer
+    //
+    // although it may also be generic over the input types T.
+    #[allow(missing_docs)]
+    pub fn serialize<S>(v: &Option<String>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        if let Some(val) = v {
+            let encoded = base64::encode(val);
+            serializer.serialize_str(&encoded)
+        } else {
+            serializer.serialize_none()
+        }
+    }
+
+    // The signature of a deserialize_with function must follow the pattern:
+    //
+    //    fn deserialize<'de, D>(D) -> Result<T, D::Error>
+    //    where
+    //        D: Deserializer<'de>
+    //
+    // although it may also be generic over the output types T.
+    #[allow(missing_docs)]
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value: Result<Option<String>, D::Error> = Option::deserialize(deserializer);
+        match value {
+            Ok(Some(s)) => {
+                if s.is_empty() {
+                    Ok(None)
+                } else {
+                    match base64::decode(&s) {
+                        Err(e) => {
+                            log::error!("Base64-opt Fail {} {:#?}", s, e);
+                            Err(serde::de::Error::custom(e))
+                        }
+                        Ok(val) => Ok(Some(String::from_utf8_lossy(&val).into())),
+                    }
+                }
+            }
+            Ok(None) => {
+                //  log::error!("Deserializer {}", e);
+                Ok(None)
+            }
+            Err(_e) => {
+                eprintln!("base64_opt_encoded_format Fail {:#?}", _e);
+                Err(serde::de::Error::custom(_e))
+            }
+        }
+    }
+}

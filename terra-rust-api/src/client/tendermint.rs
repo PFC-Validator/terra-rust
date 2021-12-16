@@ -25,6 +25,7 @@ impl Tendermint<'_> {
             .await?;
         Ok(response)
     }
+
     /// get the latest validatorset
     /// @warn the maximum limit (at time of development is 100)
     pub async fn validatorsets(

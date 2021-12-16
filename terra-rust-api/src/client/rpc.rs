@@ -1,4 +1,5 @@
 use crate::client::rpc_types::{RPCNetInfo, RPCResult, RPCStatus, RPCUnconfirmedTXS};
+use crate::tendermint_types::{BlockResult, BlockResultsResult};
 use crate::Terra;
 pub struct RPC<'a> {
     terra: &'a Terra,
@@ -29,6 +30,42 @@ impl RPC<'_> {
         Ok(self
             .terra
             .send_cmd_url::<RPCResult<RPCUnconfirmedTXS>>(self.rpc_url, "/unconfirmed_txs", None)
+            .await?
+            .result)
+    }
+    pub async fn block(&self) -> anyhow::Result<BlockResult> {
+        Ok(self
+            .terra
+            .send_cmd_url::<RPCResult<BlockResult>>(self.rpc_url, "/block", None)
+            .await?
+            .result)
+    }
+    pub async fn block_at_height(&self, height: u64) -> anyhow::Result<BlockResult> {
+        Ok(self
+            .terra
+            .send_cmd_url::<RPCResult<BlockResult>>(
+                self.rpc_url,
+                &format!("/block?height={}", height),
+                None,
+            )
+            .await?
+            .result)
+    }
+    pub async fn block_results(&self) -> anyhow::Result<BlockResultsResult> {
+        Ok(self
+            .terra
+            .send_cmd_url::<RPCResult<BlockResultsResult>>(self.rpc_url, "/block_results", None)
+            .await?
+            .result)
+    }
+    pub async fn block_results_at_height(&self, height: u64) -> anyhow::Result<BlockResultsResult> {
+        Ok(self
+            .terra
+            .send_cmd_url::<RPCResult<BlockResultsResult>>(
+                self.rpc_url,
+                &format!("/block_results?height={}", height),
+                None,
+            )
             .await?
             .result)
     }

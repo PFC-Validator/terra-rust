@@ -1,4 +1,7 @@
-use crate::client::client_types::{terra_datetime_format, terra_i64_format, terra_u64_format};
+use crate::client::client_types::{
+    base64_encoded_format, base64_opt_encoded_format, terra_datetime_format, terra_i64_format,
+    terra_u64_format,
+};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -79,6 +82,65 @@ pub struct Block {
 pub struct BlockResult {
     pub block_id: BlockId,
     pub block: Block,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EventAttribute {
+    #[serde(with = "base64_encoded_format")]
+    pub key: String,
+    #[serde(with = "base64_opt_encoded_format")]
+    pub value: Option<String>,
+    pub index: bool,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EventType {
+    #[serde(rename = "type")]
+    pub s_type: String,
+    pub attributes: Vec<EventAttribute>,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct RPCTXResult {
+    pub code: usize,
+    pub data: Option<String>,
+    pub log: String,
+    pub info: String,
+    pub gas_wanted: String,
+    pub gas_used: String,
+    pub events: Vec<EventType>,
+    pub codespace: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct RPCPubKeyOuter {
+    #[serde(rename = "Sum")]
+    pub sum: RPCPubKey,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct RPCPubKeyValue {
+    pub ed25519: String,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct RPCPubKey {
+    #[serde(rename = "type")]
+    pub s_type: String,
+    pub value: RPCPubKeyValue,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct RPCValidatorUpdate {
+    pub pub_key: RPCPubKeyOuter,
+    #[serde(with = "terra_u64_format")]
+    pub power: u64,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct BlockResultsResult {
+    #[serde(with = "terra_u64_format")]
+    pub height: u64,
+    pub txs_results: Vec<RPCTXResult>,
+    pub begin_block_events: Option<Vec<EventType>>,
+    pub end_block_events: Option<Vec<EventType>>,
+    pub validator_updates: Option<Vec<RPCValidatorUpdate>>,
+    pub consensus_param_updates: Option<serde_json::Value>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
