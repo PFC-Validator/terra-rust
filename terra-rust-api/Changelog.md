@@ -1,6 +1,8 @@
 # Changes
 
 ## 1.1
+### 1.1.4 - 16-Dec-21
+* added helper function to EventAttributes
 ### 1.1.3 - 16-Dec-21
 * RPC Block/Block_Result api
 * New deserializer for base64 encoded strings, base64_encoded_format & base64_opt_encoded_format

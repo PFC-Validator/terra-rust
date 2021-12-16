@@ -4,6 +4,7 @@ use crate::client::client_types::{
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct BlockIdParts {
@@ -97,6 +98,15 @@ pub struct EventType {
     pub s_type: String,
     pub attributes: Vec<EventAttribute>,
 }
+impl EventType {
+    pub fn attribute_map(&self) -> HashMap<String, Option<String>> {
+        self.attributes
+            .iter()
+            .map(|attr| (attr.key.clone(), attr.value.clone()))
+            .collect::<HashMap<String, Option<String>>>()
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug)]
 pub struct RPCTXResult {
     pub code: usize,
