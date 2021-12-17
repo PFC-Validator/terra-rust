@@ -159,8 +159,7 @@ pub struct ValidatorSetResult {
     pub block_height: u64,
     pub validators: Vec<Validator>,
 }
-#[derive(Deserialize, Clone, Serialize, Debug)]
-
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TendermintPublicKey {
     #[serde(rename = "type")]
     pub s_type: String,

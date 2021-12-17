@@ -7,10 +7,10 @@ use crate::client::client_types::{
 use crate::tendermint_types::TendermintPublicKey;
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// Information provided by the validator for their validation node.
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ValidatorDescription {
     /// Displayed in public
     pub moniker: String,
@@ -24,7 +24,7 @@ pub struct ValidatorDescription {
     pub details: Option<String>,
 }
 /// Commission Rates
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ValidatorCommissionRates {
     /// The current commission rate
     #[serde(with = "terra_f64_format")]
@@ -37,14 +37,14 @@ pub struct ValidatorCommissionRates {
     pub max_change_rate: f64,
 }
 #[allow(missing_docs)]
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ValidatorCommission {
     pub commission_rates: ValidatorCommissionRates,
     #[serde(with = "terra_datetime_format")]
     pub update_time: DateTime<Utc>,
 }
 /// Top level Validator response
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Validator {
     /// The reference address for the validator
     pub operator_address: String,

@@ -1,9 +1,10 @@
 # Changes
 
 ## 1.1
-### 1.1.6 - 16-Dec-21
+### 1.1.7 - 17-Dec-21
 * extra fields in SyncInfo area in RPC
 * added helper function to EventAttributes
+* added serialization to some structures 
 ### 1.1.3 - 16-Dec-21
 * RPC Block/Block_Result api
 * New deserializer for base64 encoded strings, base64_encoded_format & base64_opt_encoded_format
