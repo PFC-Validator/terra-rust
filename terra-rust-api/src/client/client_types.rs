@@ -64,6 +64,85 @@ pub mod terra_datetime_format {
     }
 }
 
+/// Convert a JSON date time into a rust one
+pub mod terra_opt_datetime_format {
+    use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+    use serde::{self, Deserialize, Deserializer, Serializer};
+
+    const FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f";
+    const FORMAT_TZ_SUPPLIED: &str = "%Y-%m-%dT%H:%M:%S.%f%:z";
+    const FORMAT_SHORT_Z: &str = "%Y-%m-%dT%H:%M:%SZ";
+
+    // The signature of a serialize_with function must follow the pattern:
+    //
+    //    fn serialize<S>(&T, S) -> Result<S::Ok, S::Error>
+    //    where
+    //        S: Serializer
+    //
+    // although it may also be generic over the input types T.
+
+    #[allow(missing_docs)]
+    pub fn serialize<S>(date: &Option<DateTime<Utc>>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        if let Some(val) = date {
+            let s = format!("{}", val.format(FORMAT));
+            serializer.serialize_str(&s)
+        } else {
+            serializer.serialize_none()
+        }
+    }
+
+    // The signature of a deserialize_with function must follow the pattern:
+    //
+    //    fn deserialize<'de, D>(D) -> Result<T, D::Error>
+    //    where
+    //        D: Deserializer<'de>
+    //
+    // although it may also be generic over the output types T.
+    #[allow(missing_docs)]
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<DateTime<Utc>>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value: Result<Option<String>, D::Error> = Option::deserialize(deserializer);
+        match value {
+            Ok(s_opt) => {
+                if let Some(s) = s_opt {
+                    let len = s.len();
+                    let slice_len = if s.contains('.') {
+                        len.saturating_sub(4)
+                    } else {
+                        len
+                    };
+                    let sliced = &s[0..slice_len];
+                    match NaiveDateTime::parse_from_str(sliced, FORMAT) {
+                        Err(_e) => match NaiveDateTime::parse_from_str(&s, FORMAT_TZ_SUPPLIED) {
+                            Err(_e2) => match NaiveDateTime::parse_from_str(sliced, FORMAT_SHORT_Z)
+                            {
+                                Err(_e3) => {
+                                    eprintln!("DateTime Fail {} {:#?}", s, _e);
+                                    Err(serde::de::Error::custom(_e))
+                                }
+                                Ok(dt) => Ok(Some(Utc.from_utc_datetime(&dt))),
+                            },
+                            Ok(dt) => Ok(Some(Utc.from_utc_datetime(&dt))),
+                        },
+                        Ok(dt) => Ok(Some(Utc.from_utc_datetime(&dt))),
+                    }
+                } else {
+                    Ok(None)
+                }
+            }
+            Err(e) => {
+                eprintln!("DateTimeOpt/Deserialization Fail - {:?}", e);
+                Err(e)
+            }
+        }
+    }
+}
+
 /// Convert a u64 number (which is sent as a string) into a u64 rust structure
 pub mod terra_u64_format {
     use serde::{self, Deserialize, Deserializer, Serializer};

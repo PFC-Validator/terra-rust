@@ -1,7 +1,7 @@
 # Changes
 
 ## 1.1
-### 1.1.7 - 17-Dec-21
+### 1.1.8 - 17-Dec-21
 * extra fields in SyncInfo area in RPC
 * added helper function to EventAttributes
 * added serialization to some structures 
