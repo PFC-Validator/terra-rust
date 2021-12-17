@@ -1,7 +1,8 @@
 # Changes
 
 ## 1.1
-### 1.1.5 - 16-Dec-21
+### 1.1.6 - 16-Dec-21
+* extra fields in SyncInfo area in RPC
 * added helper function to EventAttributes
 ### 1.1.3 - 16-Dec-21
 * RPC Block/Block_Result api

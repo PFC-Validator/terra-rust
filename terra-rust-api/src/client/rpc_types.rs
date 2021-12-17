@@ -30,6 +30,10 @@ pub struct RPCNodeInfo {
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct RPCSyncInfo {
     pub catching_up: bool,
+    #[serde(with = "terra_u64_format")]
+    pub latest_block_height: u64,
+    #[serde(with = "terra_u64_format")]
+    pub earliest_block_height: u64,
 }
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct RPCValidatorInfo {
