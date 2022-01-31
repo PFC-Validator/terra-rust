@@ -20,11 +20,7 @@ impl Market<'_> {
             .terra
             .send_cmd::<LCDResult<Coin>>(
                 "/market/swap",
-                Some(&format!(
-                    "?offer_coin={}&ask_denom={}",
-                    offer.to_string(),
-                    ask_denom
-                )),
+                Some(&format!("?offer_coin={}&ask_denom={}", offer, ask_denom)),
             )
             .await?;
         Ok(response)
@@ -69,7 +65,7 @@ impl Market<'_> {
                     }
                 }
                 Err(e) => {
-                    eprintln!("Error  {}", e.to_string());
+                    eprintln!("Error  {}", e);
                     err = Some(e);
                     None
                 }
