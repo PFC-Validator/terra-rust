@@ -11,7 +11,7 @@ use terra_rust_wallet::Wallet;
 
 #[derive(StructOpt)]
 pub enum CodeCommand {
-    Set {
+    Store {
         #[structopt(name = "sender", help = "the sender account")]
         sender: String,
         #[structopt(name = "contract", help = "WASM file to set")]
@@ -29,7 +29,7 @@ pub async fn code_cmd_parse(
 ) -> Result<()> {
     let secp = Secp256k1::new();
     match code_cmd {
-        CodeCommand::Set {
+        CodeCommand::Store {
             sender,
             wasm,
             retries,
