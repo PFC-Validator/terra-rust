@@ -1,5 +1,8 @@
 # Changes
 
+## 1.2
+### 1.2.1 - 31-Jan-22
+* TX block doesn't require contract/execute_msg parts when it is returned (backwards incompatible)
 ## 1.1
 ### 1.1.8 - 17-Dec-21
 * extra fields in SyncInfo area in RPC

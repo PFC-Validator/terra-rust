@@ -12,6 +12,7 @@ mod bank;
 mod contract;
 
 mod auth;
+mod code;
 mod distribution;
 mod fcd;
 mod keys;
@@ -30,6 +31,7 @@ use anyhow::Result;
 
 use crate::auth::{auth_cmd_parse, AuthCommand};
 use crate::bank::{bank_cmd_parse, BankCommand};
+use crate::code::{code_cmd_parse, CodeCommand};
 use crate::contract::{contract_cmd_parse, ContractCommand};
 use crate::distribution::{distribution_cmd_parse, DistributionCommand};
 use crate::fcd::{fcd_cmd_parse, FCDCommand};
@@ -228,6 +230,8 @@ enum Command {
     FCD(FCDCommand),
     /// WASM commands
     WASM(WasmCommand),
+    // set code
+    CODE(CodeCommand),
 }
 
 async fn run() -> anyhow::Result<()> {
@@ -265,6 +269,7 @@ async fn run() -> anyhow::Result<()> {
         Command::RPC(cmd) => rpc_cmd_parse(&t, cmd).await,
         Command::FCD(cmd) => fcd_cmd_parse(&t, &cli.fcd, cmd).await,
         Command::WASM(cmd) => wasm_cmd_parse(&t, &wallet, seed, cmd).await,
+        Command::CODE(cmd) => code_cmd_parse(&t, &wallet, seed, cmd).await,
     }
 }
 #[tokio::main]

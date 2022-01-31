@@ -86,6 +86,7 @@ impl<'a> TX<'a> {
         let mut times = 0;
         while times < max_times {
             let tx = self.get(hash).await;
+
             match tx {
                 Ok(tx_response) => return Ok(tx_response),
                 Err(e) => {
@@ -94,8 +95,9 @@ impl<'a> TX<'a> {
                         TerraRustAPIError::TerraLCDResponse(statuscode, out) => {
                             if statuscode == &StatusCode::NOT_FOUND {
                                 log::info!(
-                                    "Transaction not applied .. retry #{} sleeping 1s",
-                                    times
+                                    "Transaction not applied .. retry #{} sleeping {} seconds",
+                                    times,
+                                    sleep_amount.as_secs()
                                 );
                                 tokio::time::sleep(sleep_amount).await;
                             } else {
@@ -104,7 +106,7 @@ impl<'a> TX<'a> {
                             }
                         }
                         _ => {
-                            log::error!("Invalid Response TX: {}", e);
+                            log::error!("Invalid Response TX: {:?}", e);
                             break;
                         }
                     }

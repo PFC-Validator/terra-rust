@@ -78,8 +78,8 @@ pub struct TxResultBlockMsg {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct TxBlockMsgInner {
     pub sender: String,
-    pub contract: String,
-    pub execute_msg: Value,
+    pub contract: Option<String>,
+    pub execute_msg: Option<Value>,
 }
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Deserialize, Serialize, Debug)]
