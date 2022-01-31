@@ -15,7 +15,7 @@ use terra_rust_wallet::Wallet;
 pub enum DistributionCommand {
     #[structopt(name = "withdraw-reward")]
     /// Withdraw delegation reward
-    WithdrawReward {
+    Reward {
         /// delegator. The nickname in the wallet used to sign the transaction, and transfer the initial amount
         delegator: String,
         #[structopt(
@@ -27,7 +27,7 @@ pub enum DistributionCommand {
     },
     #[structopt(name = "withdraw-commission")]
     /// Withdraw commission
-    WithdrawCommission {
+    Commission {
         /// delegator. The nickname in the wallet used to sign the transaction, and transfer the initial amount
         delegator: String,
         #[structopt(name = "validator", help = "the validator's terravaloper address.")]
@@ -50,7 +50,7 @@ pub async fn distribution_cmd_parse(
 ) -> Result<()> {
     let secp = Secp256k1::new();
     match cmd {
-        DistributionCommand::WithdrawReward {
+        DistributionCommand::Reward {
             delegator,
             validator,
         } => {
@@ -83,7 +83,7 @@ pub async fn distribution_cmd_parse(
             }
             Ok(())
         }
-        DistributionCommand::WithdrawCommission {
+        DistributionCommand::Commission {
             delegator,
             validator,
         } => {
