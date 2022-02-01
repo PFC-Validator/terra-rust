@@ -10,6 +10,10 @@ There are currently 3 interesting things
 * [Terra-Rust-API](https://crates.io/crates/terra-rust-api) an API you can integrate into your own code
 * [Terra-Rust-Wallet](https://crates.io/crates/terra-rust-wallet) a secure OS agnostic wallet, using [keyring](https://crates.io/crates/keyring)
 
+## Terra-Rust to help smart contract development
+
+see [Smart Contract Dev Notes](./Smart-Contract-dev.md)
+
 ## Randomness
 The API is currently using random numbers via     
 `
@@ -44,6 +48,7 @@ some things are used often and repeatedly, so we decided to use environment vari
 
 **TERRARUST_GAS_ADJUSTMENT** the gas adjustment multiplier to use
 
+**TERRARUST_CONTRACT** (for smart contract development) your contract to migrate
 you can also set these in a file called '.env' if you prefer
 # Documentation
 * [API docs](https://docs.rs/terra-rust-api) are available here

@@ -1,0 +1,52 @@
+# Terra Rust - How to use in smart contract development
+
+## Setup your repo
+1. In your contract directory create a '.env' file similar to the [.env.default](.env.default)
+2. install 'run-script' ```cargo install run-script```
+
+3. create a .cargo file with the following
+```toml
+[alias]
+wasm = "build --release --target wasm32-unknown-unknown"
+unit-test = "test --lib"
+schema = "run --example schema"
+optimize = "run-script optimize"
+optimize-w32 = "run-script optimize-w32"
+store = "run-script store"
+instantiate = "run-script instantiate"
+migrate = "run-script migrate"
+```
+4. in your `Cargo.toml` file add
+```toml
+[package.metadata.scripts]
+optimize = """docker run --rm -v "$(pwd)":/code \
+          --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+            --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+              cosmwasm/rust-optimizer:0.12.3"""
+optimize-w32 = """docker run --rm -v c:\\<your source directory>:/code  \
+            --mount type=volume,source=fund_me_anchor_cache,target=/code/target \
+            --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+            cosmwasm/rust-optimizer:0.12.3"""
+store = """terra-rust code store test-owner ..\\..\\artifacts\\xxx.wasm"""
+instantiate = """terra-rust code instantiate test-owner ..\\..\\artifacts\\xxx.wasm .\\pool_init.json --admin same"""
+migrate = """terra-rust code migrate test-owner ..\\..\\artifacts\\xxx.wasm """
+
+```
+In the above example, you will need to hard code your path in optimize-w32, 
+also I have used the 'test-owner' account as the 'owner/admin' of the contract. ('same' just means use the same account as the owner)
+
+The pool_init.json is the 'init' json file ... 
+The code will replace `##SENDER##` `##CODE_ID##` `###NEW_CODE_ID###` and `##ADMIN##` fields with their respective values
+
+The migrate command takes a json file as well, but defaults to '{}'
+
+The first time you instantiate your code, you will be given a contract. put that in your [.env](.env.default) as **TERRARUST_CONTRACT** file so migrates are easier.
+**TERRARUST_GAS_DENOM**=uusd might be useful as well.
+
+
+## Setup your environment
+
+### create a test wallet to store all your test keys in.
+   1. `terra-rust create testing`
+   2. `terra-rust --wallet testing keys new xxx` (if you are in the .env directory the wallet can be filled in from the .env file)
+   3. probably go to faucet and put some $ into them?
