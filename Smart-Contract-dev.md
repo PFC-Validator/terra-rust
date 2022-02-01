@@ -50,3 +50,10 @@ The first time you instantiate your code, you will be given a contract. put that
    1. `terra-rust create testing`
    2. `terra-rust --wallet testing keys new xxx` (if you are in the .env directory the wallet can be filled in from the .env file)
    3. probably go to faucet and put some $ into them?
+
+# How can you help?
+If you think this was useful, feel free to delegate to the [PFC](https://station.terra.money/validator/terravaloper12g4nkvsjjnl0t7fvq3hdcw7y8dc9fq69nyeu9q) validator. It will help defray the costs.
+
+Feel free to submit patches/comments/Pull Requests.
+
+We have also set up a [Discord](https://discord.gg/zKVWs4HhJD) channel to discuss this, and other PFC things
