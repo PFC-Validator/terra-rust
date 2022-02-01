@@ -101,7 +101,7 @@ pub async fn code_cmd_parse(
             let from_key = wallet.get_private_key(&secp, &sender, seed)?;
             let hash = do_store(terra, &secp, &from_key, wasm).await?;
             let code_id = get_attribute_tx(
-                &terra,
+                terra,
                 &hash,
                 retries,
                 tokio::time::Duration::from_secs(3),
@@ -144,7 +144,7 @@ pub async fn code_cmd_parse(
             } else {
                 let hash = do_store(terra, &secp, &from_key, wasm).await?;
                 let code_id = get_attribute_tx(
-                    &terra,
+                    terra,
                     &hash,
                     retries,
                     tokio::time::Duration::from_secs(3),
@@ -158,7 +158,7 @@ pub async fn code_cmd_parse(
             let hash =
                 do_instantiate(terra, &secp, &from_key, code_id, json, coin_vec, admin_key).await?;
             let contract = get_attribute_tx(
-                &terra,
+                terra,
                 &hash,
                 retries,
                 tokio::time::Duration::from_secs(3),
@@ -182,7 +182,7 @@ pub async fn code_cmd_parse(
             } else {
                 let hash = do_store(terra, &secp, &from_key, wasm).await?;
                 let code_id = get_attribute_tx(
-                    &terra,
+                    terra,
                     &hash,
                     retries,
                     tokio::time::Duration::from_secs(3),
