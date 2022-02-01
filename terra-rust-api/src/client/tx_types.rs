@@ -77,7 +77,7 @@ pub struct TxResultBlockMsg {
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct TxBlockMsgInner {
-    pub sender: String,
+    pub sender: Option<String>,
     pub contract: Option<String>,
     pub execute_msg: Option<Value>,
 }

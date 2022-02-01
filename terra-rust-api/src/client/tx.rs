@@ -94,7 +94,7 @@ impl<'a> TX<'a> {
                     match &e {
                         TerraRustAPIError::TerraLCDResponse(statuscode, out) => {
                             if statuscode == &StatusCode::NOT_FOUND {
-                                log::info!(
+                                log::debug!(
                                     "Transaction not applied .. retry #{} sleeping {} seconds",
                                     times,
                                     sleep_amount.as_secs()

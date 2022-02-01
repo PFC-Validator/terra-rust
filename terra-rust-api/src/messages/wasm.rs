@@ -156,6 +156,56 @@ impl MsgInstantiateContract {
     }
 }
 
+#[derive(Serialize, Debug)]
+/// Message: Exec Contract
+pub struct MsgMigrateContract {
+    pub admin: String,
+    pub contract: String,
+    #[serde(with = "terra_u64_format")]
+    pub new_code_id: u64,
+    pub migrate_msg: serde_json::Value,
+}
+
+impl MsgInternal for MsgMigrateContract {}
+impl MsgMigrateContract {
+    /// create from JSON
+    pub fn create_from_json(
+        admin: &str,
+        contract: &str,
+        new_code_id: u64,
+        migrate_msg: &str,
+    ) -> anyhow::Result<Message> {
+        let contents: serde_json::Value = serde_json::from_str(migrate_msg)?;
+
+        let internal = MsgMigrateContract {
+            admin: String::from(admin),
+            contract: String::from(contract),
+            new_code_id,
+            migrate_msg: contents,
+        };
+        Ok(Message {
+            s_type: "wasm/MsgMigrateContract".into(),
+            value: serde_json::to_value(internal)?,
+        })
+    }
+    /// use provided base64 exec message
+    /// switches ##SENDER##, ##ADMIN##, ##CODE_ID## with respective values
+    pub fn create_from_file(
+        admin: &str,
+        contract: &str,
+        new_code_id: u64,
+        migrate_file: &Path,
+    ) -> anyhow::Result<Message> {
+        let contents = std::fs::read_to_string(migrate_file)?;
+        let new_contents = contents
+            .replace("##ADMIN##", admin)
+            .replace("##CONTRACT##", contract)
+            .replace("##NEW_CODE_ID##", &format!("{}", new_code_id));
+
+        Self::create_from_json(admin, contract, new_code_id, &new_contents)
+    }
+}
+
 #[cfg(test)]
 mod tst {
     use super::*;
