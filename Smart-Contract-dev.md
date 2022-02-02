@@ -24,18 +24,18 @@ migrate = "run-script migrate"
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \
           --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
-            --mount type=volume,source=project_name_cache,target=/usr/local/cargo/registry \
+            --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
               cosmwasm/rust-optimizer:0.12.3"""
 optimize-w32 = """docker run --rm -v c:\\<your source directory>:/code  \
             --mount type=volume,source=project_name_cache,target=/code/target \
-            --mount type=volume,source=project_name_cache,target=/usr/local/cargo/registry \
+            --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
             cosmwasm/rust-optimizer:0.12.3"""
 store = """terra-rust code store test-owner ..\\..\\artifacts\\xxx.wasm"""
 instantiate = """terra-rust code instantiate test-owner ..\\..\\artifacts\\xxx.wasm .\\pool_init.json --admin same"""
 migrate = """terra-rust code migrate test-owner ..\\..\\artifacts\\xxx.wasm """
 
 ```
-In the above example, you will need to hard code your path in optimize-w32, 
+In the above example, you will need to hard code your path in optimize-w32, and ideally make the project_name_cache unique for your contract
 also I have used the 'test-owner' account as the 'owner/admin' of the contract. ('same' just means use the same account as the owner)
 
 The pool_init.json is the 'init' json file ... 
