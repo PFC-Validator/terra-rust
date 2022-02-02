@@ -1821,7 +1821,7 @@ dependencies = [
 
 [[package]]
 name = "terra-rust"
-version = "1.1.5-alpha.0"
+version = "1.1.5"
 dependencies = [
  "anyhow",
  "base64",
