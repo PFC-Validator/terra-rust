@@ -162,7 +162,7 @@ pub async fn code_cmd_parse(
                 &hash,
                 retries,
                 tokio::time::Duration::from_secs(3),
-                "wasm",
+                "instantiate_contract",
                 "contract_address",
             )
             .await?;
