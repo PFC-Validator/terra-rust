@@ -1,4 +1,7 @@
 # Terra Rust - How to use in smart contract development
+get the package ;-)
+
+`cargo install terra-rust`
 
 ## Setup your repo
 1. In your contract directory create a '.env' file similar to the [.env.default](.env.default)
