@@ -24,11 +24,11 @@ migrate = "run-script migrate"
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \
           --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
-            --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+            --mount type=volume,source=project_name_cache,target=/usr/local/cargo/registry \
               cosmwasm/rust-optimizer:0.12.3"""
 optimize-w32 = """docker run --rm -v c:\\<your source directory>:/code  \
-            --mount type=volume,source=fund_me_anchor_cache,target=/code/target \
-            --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+            --mount type=volume,source=project_name_cache,target=/code/target \
+            --mount type=volume,source=project_name_cache,target=/usr/local/cargo/registry \
             cosmwasm/rust-optimizer:0.12.3"""
 store = """terra-rust code store test-owner ..\\..\\artifacts\\xxx.wasm"""
 instantiate = """terra-rust code instantiate test-owner ..\\..\\artifacts\\xxx.wasm .\\pool_init.json --admin same"""
