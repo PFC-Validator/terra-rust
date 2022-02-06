@@ -146,7 +146,7 @@ pub struct RPCValidatorUpdate {
 pub struct BlockResultsResult {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
-    pub txs_results: Vec<RPCTXResult>,
+    pub txs_results: Option<Vec<RPCTXResult>>,
     pub begin_block_events: Option<Vec<EventType>>,
     pub end_block_events: Option<Vec<EventType>>,
     pub validator_updates: Option<Vec<RPCValidatorUpdate>>,

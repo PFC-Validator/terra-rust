@@ -8,6 +8,7 @@ pub struct BlockCommand {
     #[structopt(name = "height", default_value = "latest", help = "height (optional)")]
     height: String,
 }
+
 #[derive(StructOpt)]
 pub struct ValidatorSetsCommand {
     #[structopt(name = "height", default_value = "latest", help = "height (optional)")]

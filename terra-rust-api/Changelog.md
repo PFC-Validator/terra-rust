@@ -1,6 +1,8 @@
 # Changes
 
 ## 1.2
+### 1.2.2 - 6-Feb-22
+* Block Result txs_result can be null
 ### 1.2.1 - 31-Jan-22
 * TX block doesn't require contract/execute_msg parts when it is returned (backwards incompatible)
 * MsgMigrateContract message added
