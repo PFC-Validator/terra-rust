@@ -54,6 +54,25 @@ The first time you instantiate your code, you will be given a contract. put that
    2. `terra-rust --wallet testing keys new xxx` (if you are in the .env directory the wallet can be filled in from the .env file)
    3. probably go to [faucet](https://faucet.terra.money/) and put some $ into them?
 
+# tools
+[terra_sc](./examples/terra_sc.rs) is a command line tool to make contract query/exec really simple. 
+
+
+## terra_sc
+set **TERRARUST_CONTRACT** in your environment, usually via placing a line in your .env file.
+
+to query (notice the escaped double quotes)
+```
+
+C:> terra_sc --contract terra13fs83g5atgjwuh7c5ydzh6n7gecel6xyhhy2t5 '{\"token_info\":{}}'
+
+```
+
+to exec a smart contract method add the 'sender' 
+```
+C:> terra_sc --sender test-owner --contract terra13fs83g5atgjwuh7c5ydzh6n7gecel6xyhhy2t5 '{\"set_minter\":\"terra1fmqjnum0ftyuc72mapg3wqpf9m7jwdtnkp7960\"}'
+ 
+```
 # How can you help?
 If you think this was useful, feel free to delegate to the [PFC](https://station.terra.money/validator/terravaloper12g4nkvsjjnl0t7fvq3hdcw7y8dc9fq69nyeu9q) validator. It will help defray the costs.
 
