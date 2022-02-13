@@ -10,6 +10,8 @@ keywords = ["terra", "blockchain"]
 categories = ["command-line-utilities"]
 license = "Apache-2.0"
 description="CLI for Terra blockchain network, that is multi-platform"
+default-run="terra-rust"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
 members = [
@@ -23,6 +25,20 @@ exclude = [
 default = ["native-tls"]
 native-tls = ["terra-rust-api/native-tls"]
 rustls-tls = ["terra-rust-api/rustls-tls"]
+
+
+[[bin]]
+name="terra-rust"
+path= "src/terra_rust.rs"
+
+[[bin]]
+name="terra-exec"
+path= "src/bin/terra_exec.rs"
+
+[[bin]]
+name="terra-query"
+path= "src/bin/terra_query.rs"
+
 
 [dependencies]
 terra-rust-api = { path = "./terra-rust-api", version = "1.2", default-features = false }

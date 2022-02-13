@@ -55,22 +55,23 @@ The first time you instantiate your code, you will be given a contract. put that
    3. probably go to [faucet](https://faucet.terra.money/) and put some $ into them?
 
 # tools
-[terra_sc](./examples/terra_sc.rs) is a command line tool to make contract query/exec really simple. 
+* [terra-exec](src/bin/terra_exec.rs) is a command line tool to make contract exec really simple. 
+* [terra-query](src/bin/terra_query.rs) is a command line tool to make contract query really simple. 
 
 
-## terra_sc
+## terra_exec
 set **TERRARUST_CONTRACT** in your environment, usually via placing a line in your .env file.
 
 to query (notice the escaped double quotes)
 ```
 
-C:> terra_sc --contract terra13fs83g5atgjwuh7c5ydzh6n7gecel6xyhhy2t5 '{\"token_info\":{}}'
+C:> terra-query --contract terra13fs83g5atgjwuh7c5ydzh6n7gecel6xyhhy2t5 '{\"token_info\":{}}'
 
 ```
 
 to exec a smart contract method add the 'sender' 
 ```
-C:> terra_sc --sender test-owner --contract terra13fs83g5atgjwuh7c5ydzh6n7gecel6xyhhy2t5 '{\"set_minter\":\"terra1fmqjnum0ftyuc72mapg3wqpf9m7jwdtnkp7960\"}'
+C:> terra-exec --sender test-owner --contract terra13fs83g5atgjwuh7c5ydzh6n7gecel6xyhhy2t5 '{\"set_minter\":\"terra1fmqjnum0ftyuc72mapg3wqpf9m7jwdtnkp7960\"}'
  
 ```
 # How can you help?
