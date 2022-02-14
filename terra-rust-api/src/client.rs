@@ -63,7 +63,7 @@ const NETWORK_TEST_ADDRESS_BOOK: &str =
 /// When Submitting transactions you need to either submit gas or a fee to the validator
 /// This structure is used to determine what your preferences are by default
 /// Higher fees may be given preference by the validator to include the transaction in their block
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GasOptions {
     /// If specified the TX will use the fee specified
     pub fees: Option<Coin>,

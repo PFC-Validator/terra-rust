@@ -2,7 +2,7 @@ use dotenv::dotenv;
 use terra_rust_api::Terra;
 
 use clap::Arg;
-use terra_rust::cli::gen_cli_read_only;
+use terra_rust_cli::cli::gen_cli_read_only;
 
 /// VERSION number of package
 pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");

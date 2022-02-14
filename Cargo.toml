@@ -17,6 +17,7 @@ default-run="terra-rust"
 members = [
     "terra-rust-api",
     "terra-rust-wallet",
+    "terra-rust-cli"
 ]
 exclude = [
 ]
@@ -43,6 +44,7 @@ path= "src/bin/terra_query.rs"
 [dependencies]
 terra-rust-api = { path = "./terra-rust-api", version = "1.2", default-features = false }
 terra-rust-wallet = { path = "./terra-rust-wallet", version = "1.1" }
+terra-rust-cli = { path = "./terra-rust-cli", version = "1.0" }
 anyhow="1.0"
 tokio = { version = "1.14.0", features = ["full"] }
 clap = { version = "3.0.14", features = ["derive","env"] }

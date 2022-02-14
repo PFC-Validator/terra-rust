@@ -1819,13 +1819,14 @@ dependencies = [
  "serde",
  "serde_json",
  "terra-rust-api",
+ "terra-rust-cli",
  "terra-rust-wallet",
  "tokio",
 ]
 
 [[package]]
 name = "terra-rust-api"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "anyhow",
  "base64",
@@ -1855,6 +1856,20 @@ dependencies = [
  "subtle-encoding",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "terra-rust-cli"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "keyring",
+ "log",
+ "reqwest",
+ "secp256k1",
+ "terra-rust-api",
+ "terra-rust-wallet",
 ]
 
 [[package]]

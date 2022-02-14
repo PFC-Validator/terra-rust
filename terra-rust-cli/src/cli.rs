@@ -1,7 +1,8 @@
 use anyhow::Result;
-use clap::{Arg, Parser};
+use clap::{Arg, ArgMatches, Parser};
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::GasOptions;
+use terra_rust_wallet::Wallet;
 
 /// your terra swiss army knife
 #[derive(Parser)]
@@ -95,7 +96,6 @@ pub struct Cli<T: clap::FromArgMatches + clap::Subcommand> {
     pub gas_adjustment: f64,
     #[clap(short, long, parse(from_flag))]
     pub debug: std::sync::atomic::AtomicBool,
-
     #[clap(subcommand)]
     pub cmd: T,
 }
@@ -152,6 +152,15 @@ pub fn gen_cli_read_only<'a>(app_name: &'a str, bin_name: &'a str) -> clap::App<
                 .help("https://lcd.terra.dev is main-net, https://bombay-lcd.terra.dev"),
         )
         .arg(
+            Arg::new("fcd")
+                .long("fcd")
+                .value_name("fcd")
+                .takes_value(true)
+                .env("TERRARUST_FCD")
+                .default_value("https://fcd.terra.dev")
+                .help("https://fcd.terra.dev is main-net, https://bombay-fcd.terra.dev"),
+        )
+        .arg(
             Arg::new("chain")
                 .long("chain")
                 .takes_value(true)
@@ -160,4 +169,67 @@ pub fn gen_cli_read_only<'a>(app_name: &'a str, bin_name: &'a str) -> clap::App<
                 .default_value("columbus-5")
                 .help("bombay-12 is testnet, columbus-5 is main-net"),
         )
+}
+#[allow(dead_code)]
+pub fn gen_cli<'a>(app_name: &'a str, bin_name: &'a str) -> clap::App<'a> {
+    gen_cli_read_only(app_name,bin_name).args(&[
+        Arg::new("wallet").long("wallet").takes_value(true).value_name("wallet").env("TERRARUST_WALLET").default_value("default").help( "the default wallet to look for keys in"),
+        Arg::new("seed").long("seed").takes_value(true).value_name("seed").env("TERRARUST_SEED_PHRASE").default_value("").help(  "the seed phrase to use with this private key"),
+        Arg::new("fees").long("fees").takes_value(true).value_name("fees").default_value("").help(   "the fees to use. This will override gas parameters if specified."),
+        Arg::new("gas").long("gas").takes_value(true).value_name("gas").default_value("auto").help(   "the gas amount to use 'auto' to estimate"),
+        Arg::new("gas-prices").long("gas-prices").takes_value(true).value_name("gas-prices").default_value("auto").help(    "the gas price to use to calculate fee. Format is NNNtoken eg. 1000uluna. note we only support a single price for now. if auto. it will use FCD"),
+        Arg::new("gas-denom").long("gas-denom").takes_value(true).value_name("gas-denom").default_value("ukrw").help(    "the denomination/currency to use to pay fee. Format is uXXXX."),
+        Arg::new("gas-adjustment").long("gas-adjustment").takes_value(true).value_name("gas-adjustment").default_value("1.4").help(    "the adjustment to multiply the estimate to calculate the fee"),
+    ])
+}
+#[allow(dead_code)]
+pub async fn gas_opts(arg_matches: &ArgMatches) -> Result<GasOptions> {
+    let gas_price = arg_matches
+        .value_of("gas-prices")
+        .expect("gas-prices should be in the CLI");
+    let gas_adjustment = arg_matches
+        .value_of("gas-adjustment")
+        .unwrap()
+        .parse::<f64>()?;
+    if gas_price == "auto" {
+        let fcd = arg_matches.value_of("fcd").unwrap();
+        let gas_price_denom = arg_matches.value_of("gas-denom").unwrap();
+
+        let client = reqwest::Client::new();
+        let gas_opts =
+            GasOptions::create_with_fcd(&client, fcd, gas_price_denom, gas_adjustment).await?;
+        if let Some(gas_price) = &gas_opts.gas_price {
+            log::info!("Using Gas price of {}", gas_price);
+        }
+
+        Ok(gas_opts)
+    } else {
+        let gas_str = arg_matches.value_of("gas").unwrap();
+        let fees = Coin::parse(arg_matches.value_of("fees").unwrap())?;
+
+        let (estimate_gas, gas) = if gas_str == "auto" {
+            (true, None)
+        } else {
+            let g = &gas_str.parse::<u64>()?;
+            (false, Some(*g))
+        };
+
+        let gas_price = Coin::parse(gas_price)?;
+        let gas_adjustment = Some(gas_adjustment);
+
+        Ok(GasOptions {
+            fees,
+            estimate_gas,
+            gas,
+            gas_price,
+            gas_adjustment,
+        })
+    }
+}
+#[allow(dead_code)]
+pub fn wallet_from_args(arg_matches: &ArgMatches) -> Result<Wallet> {
+    let wallet = arg_matches
+        .value_of("wallet")
+        .expect("wallet should be in the CLI");
+    Ok(Wallet::create(wallet))
 }
