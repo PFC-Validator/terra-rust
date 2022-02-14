@@ -70,7 +70,6 @@ cargo run --example do_swap -- --wallet tequilla test terra13e4jmcjnwrauvl2fnjdw
 
 ```
 **(note) coins and amount need to be the same
-* [set_code](../examples/set_code.rs) -- WIP .. how to deploy and initialize a smart contract
 
 * [sign_message](../examples/sign_message.rs) -- sign a random string with your key
 

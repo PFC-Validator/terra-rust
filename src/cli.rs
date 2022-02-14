@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::Parser;
+use clap::{Arg, Parser};
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::GasOptions;
 
@@ -137,4 +137,27 @@ impl<T: clap::FromArgMatches + clap::Subcommand> Cli<T> {
             })
         }
     }
+}
+#[allow(dead_code)]
+pub fn gen_cli_read_only<'a>(app_name: &'a str, bin_name: &'a str) -> clap::App<'a> {
+    clap::App::new(app_name)
+        .bin_name(bin_name)
+        .arg(
+            Arg::new("lcd")
+                .long("lcd")
+                .value_name("lcd")
+                .takes_value(true)
+                .env("TERRARUST_LCD")
+                .default_value("https://lcd.terra.dev")
+                .help("https://lcd.terra.dev is main-net, https://bombay-lcd.terra.dev"),
+        )
+        .arg(
+            Arg::new("chain")
+                .long("chain")
+                .takes_value(true)
+                .value_name("chain")
+                .env("TERRARUST_CHAIN")
+                .default_value("columbus-5")
+                .help("bombay-12 is testnet, columbus-5 is main-net"),
+        )
 }

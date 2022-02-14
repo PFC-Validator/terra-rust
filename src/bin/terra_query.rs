@@ -1,55 +1,37 @@
 use dotenv::dotenv;
 use terra_rust_api::Terra;
 
-use clap::Parser;
+use clap::Arg;
+use terra_rust::cli::gen_cli_read_only;
+
 /// VERSION number of package
 pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 /// NAME of package
 pub const NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
-/// query smart contracts with ease
-#[derive(Parser)]
-#[clap(name = "terra query")]
-#[clap( long_about = None)]
-struct Cli {
-    #[clap(
-        name = "lcd",
-        env = "TERRARUST_LCD",
-        default_value = "https://lcd.terra.dev",
-        short,
-        long = "lcd-client-url",
-        help = "https://lcd.terra.dev is main-net, https://bombay-lcd.terra.dev"
-    )]
-    // Terra cli Client daemon
-    lcd: String,
-    #[clap(
-        name = "chain",
-        env = "TERRARUST_CHAIN",
-        default_value = "columbus-5",
-        short,
-        long = "chain",
-        help = "bombay-12 is testnet, columbus-5 is main-net"
-    )]
-    chain_id: String,
-    #[clap(
-        name = "contract",
-        help = "the contract",
-        long = "contract",
-        env = "TERRARUST_CONTRACT"
-    )]
-    contract: String,
 
-    #[clap(name = "json")]
-    json: String,
-}
 async fn run() -> anyhow::Result<()> {
-    let cli: Cli = Cli::parse();
+    let cli = gen_cli_read_only("terra query", "terra-query")
+        .arg(
+            Arg::new("contract")
+                .long("contract")
+                .value_name("contract")
+                .takes_value(true)
+                .env("TERRARUST_CONTRACT")
+                .help("the contract address"),
+        )
+        .arg(Arg::new("json").takes_value(true).value_name("json"))
+        .get_matches();
 
-    let terra = Terra::lcd_client_no_tx(&cli.lcd, &cli.chain_id);
-    let json: serde_json::Value = serde_json::from_str(&cli.json)?;
+    let lcd = cli.value_of("lcd").unwrap();
+    let chain_id = cli.value_of("chain").unwrap();
+    let contract = cli.value_of("contract").unwrap();
+    let json_str = cli.value_of("json").unwrap();
+    let terra = Terra::lcd_client_no_tx(lcd, chain_id);
+    let json: serde_json::Value = serde_json::from_str(json_str)?;
 
     let qry = terra
         .wasm()
-        .query::<serde_json::Value>(&cli.contract, &json.to_string())
+        .query::<serde_json::Value>(contract, &json.to_string())
         .await?;
     println!("{}", qry);
 

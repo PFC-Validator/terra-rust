@@ -1,8 +1,8 @@
+use clap::Parser;
 use dotenv::dotenv;
 use rust_decimal::Decimal;
 use secp256k1::Secp256k1;
 use serde::Serialize;
-use structopt::StructOpt;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::terra_u64_format;
 use terra_rust_api::{Message, MsgExecuteContract};
@@ -13,10 +13,10 @@ pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 /// NAME of package
 pub const NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
 
-#[derive(StructOpt)]
+#[derive(Parser)]
 struct Cli {
     // Wallet name
-    #[structopt(
+    #[clap(
         name = "wallet",
         env = "TERRARUST_WALLET",
         default_value = "default",
@@ -25,7 +25,7 @@ struct Cli {
         help = "the default wallet to look for keys in"
     )]
     wallet: String,
-    #[structopt(
+    #[clap(
         name = "seed",
         env = "TERRARUST_SEED_PHRASE",
         default_value = "",
@@ -35,14 +35,14 @@ struct Cli {
     )]
     seed: String,
 
-    #[structopt(name = "from", help = "the account to sign from")]
+    #[clap(name = "from", help = "the account to sign from")]
     from: String,
-    #[structopt(name = "message", help = "The address of the contract")]
+    #[clap(name = "message", help = "The address of the contract")]
     message: String,
 }
 
 async fn run() -> anyhow::Result<()> {
-    let cli: Cli = Cli::from_args();
+    let cli: Cli = Cli::parse();
 
     let secp = Secp256k1::new();
     let wallet = Wallet::create(&cli.wallet);

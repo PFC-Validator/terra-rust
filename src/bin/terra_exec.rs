@@ -167,7 +167,7 @@ pub struct ExecCmd {
         help = "the sender account",
         env = "TERRARUST_SENDER"
     )]
-    pub sender: Option<String>,
+    pub sender: String,
     #[clap(name = "coins", long = "coins")]
     pub coins: Option<String>,
     #[clap(name = "json")]
@@ -191,9 +191,7 @@ async fn run() -> Result<()> {
             } else {
                 Some(&cli.seed)
             };
-            let sender = cmd.sender.expect(
-                "this requires the sender option, either as an environment variable or on the command line",
-            );
+            let sender = cmd.sender;
 
             let from_key = wallet.get_private_key(&secp, &sender, seed)?;
             let from_public_key = from_key.public_key(&secp);
