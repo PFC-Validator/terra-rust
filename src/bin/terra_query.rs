@@ -1,16 +1,17 @@
 use dotenv::dotenv;
 use terra_rust_api::Terra;
 
-use structopt::StructOpt;
-
+use clap::Parser;
 /// VERSION number of package
 pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 /// NAME of package
 pub const NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
-
-#[derive(StructOpt)]
+/// query smart contracts with ease
+#[derive(Parser)]
+#[clap(name = "terra query")]
+#[clap( long_about = None)]
 struct Cli {
-    #[structopt(
+    #[clap(
         name = "lcd",
         env = "TERRARUST_LCD",
         default_value = "https://lcd.terra.dev",
@@ -20,7 +21,7 @@ struct Cli {
     )]
     // Terra cli Client daemon
     lcd: String,
-    #[structopt(
+    #[clap(
         name = "chain",
         env = "TERRARUST_CHAIN",
         default_value = "columbus-5",
@@ -29,7 +30,7 @@ struct Cli {
         help = "bombay-12 is testnet, columbus-5 is main-net"
     )]
     chain_id: String,
-    #[structopt(
+    #[clap(
         name = "contract",
         help = "the contract",
         long = "contract",
@@ -37,11 +38,11 @@ struct Cli {
     )]
     contract: String,
 
-    #[structopt(name = "json")]
+    #[clap(name = "json")]
     json: String,
 }
 async fn run() -> anyhow::Result<()> {
-    let cli: Cli = Cli::from_args();
+    let cli: Cli = Cli::parse();
 
     let terra = Terra::lcd_client_no_tx(&cli.lcd, &cli.chain_id);
     let json: serde_json::Value = serde_json::from_str(&cli.json)?;

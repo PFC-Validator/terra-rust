@@ -3,21 +3,25 @@ use secp256k1::{All, Secp256k1};
 use std::path::Path;
 use terra_rust_api::{Message, PrivateKey, Terra};
 
-use structopt::StructOpt;
-use terra_rust_api::core_types::Coin;
-//use terra_rust_api::client::tx_types::TXResultSync;
 use crate::{NAME, VERSION};
+use clap::{Parser, Subcommand};
+use terra_rust_api::core_types::Coin;
 use terra_rust_api::messages::wasm::{MsgInstantiateContract, MsgMigrateContract, MsgStoreCode};
 use terra_rust_wallet::Wallet;
-
-#[derive(StructOpt)]
-pub enum CodeCommand {
+#[derive(Parser)]
+/// set code
+pub struct CodeCommand {
+    #[clap(subcommand)]
+    command: CodeEnum,
+}
+#[derive(Subcommand)]
+pub enum CodeEnum {
     Store {
-        #[structopt(name = "sender", help = "the sender account")]
+        #[clap(name = "sender", help = "the sender account")]
         sender: String,
-        #[structopt(name = "wasm", help = "WASM file to set")]
+        #[clap(name = "wasm", help = "WASM file to set")]
         wasm: String,
-        #[structopt(
+        #[clap(
             name = "retries",
             long = "retries",
             help = "number of retries",
@@ -26,30 +30,30 @@ pub enum CodeCommand {
         retries: usize,
     },
     Instantiate {
-        #[structopt(name = "sender", help = "the sender account")]
+        #[clap(name = "sender", help = "the sender account")]
         sender: String,
-        #[structopt(
+        #[clap(
             name = "wasm_file_or_code_id",
             help = "WASM file to set or code_id of existing one"
         )]
         wasm: String,
-        #[structopt(name = "json_file", help = "JSON file to instantiate")]
+        #[clap(name = "json_file", help = "JSON file to instantiate")]
         json_file: String,
-        #[structopt(
+        #[clap(
             name = "coins",
             long = "coins",
             help = "initial coins",
             default_value = ""
         )]
         coins: String,
-        #[structopt(
+        #[clap(
             name = "admin",
             help = "the admin account (defaults to same as sender. For no admin specify none)",
             long = "admin",
             default_value = "same"
         )]
         admin: String,
-        #[structopt(
+        #[clap(
             name = "retries",
             long = "retries",
             help = "number of retries",
@@ -58,24 +62,24 @@ pub enum CodeCommand {
         retries: usize,
     },
     Migrate {
-        #[structopt(name = "sender", help = "the sender account")]
+        #[clap(name = "sender", help = "the sender account")]
         sender: String,
-        #[structopt(
+        #[clap(
             name = "contract",
             help = "the contract",
             long = "contract",
             env = "TERRARUST_CONTRACT"
         )]
         contract: String,
-        #[structopt(
+        #[clap(
             name = "wasm_file_or_code_id",
             help = "WASM file to set or code_id of existing one"
         )]
         wasm: String,
-        #[structopt(name = "json_file", long = "json", help = "JSON file to migrate")]
+        #[clap(name = "json_file", long = "json", help = "JSON file to migrate")]
         json_file: Option<String>,
 
-        #[structopt(
+        #[clap(
             name = "retries",
             long = "retries",
             help = "number of retries",
@@ -84,64 +88,16 @@ pub enum CodeCommand {
         retries: usize,
     },
 }
-
-pub async fn code_cmd_parse(
-    terra: &Terra,
-    wallet: &Wallet<'_>,
-    seed: Option<&str>,
-    code_cmd: CodeCommand,
-) -> Result<()> {
-    let secp = Secp256k1::new();
-    match code_cmd {
-        CodeCommand::Store {
-            sender,
-            wasm,
-            retries,
-        } => {
-            let from_key = wallet.get_private_key(&secp, &sender, seed)?;
-            let hash = do_store(terra, &secp, &from_key, wasm).await?;
-            let code_id = get_attribute_tx(
-                terra,
-                &hash,
+impl CodeCommand {
+    pub async fn parse(self, terra: &Terra, wallet: &Wallet<'_>, seed: Option<&str>) -> Result<()> {
+        let secp = Secp256k1::new();
+        match self.command {
+            CodeEnum::Store {
+                sender,
+                wasm,
                 retries,
-                tokio::time::Duration::from_secs(3),
-                "store_code",
-                "code_id",
-            )
-            .await?;
-
-            println!("Code Id: {}", code_id);
-        }
-        CodeCommand::Instantiate {
-            sender,
-            wasm,
-            json_file,
-            coins,
-            admin,
-            retries,
-        } => {
-            let from_key = wallet.get_private_key(&secp, &sender, seed)?;
-            let json = Path::new(&json_file);
-
-            let admin_key = if admin.starts_with("terra1") {
-                Some(admin)
-            } else if admin == "same" {
-                Some(from_key.public_key(&secp).account()?)
-            } else if admin == "none" {
-                todo!("Admin of none is currently not supported")
-            } else {
-                let admin_key = wallet.get_public_key(&secp, &admin, seed)?;
-                let admin_account = admin_key.account()?;
-                Some(admin_account)
-            };
-            let coin_vec: Vec<Coin> = if coins.is_empty() {
-                vec![]
-            } else {
-                Coin::parse_coins(&coins)?
-            };
-            let code_id = if let Ok(code_id) = wasm.parse::<u64>() {
-                code_id
-            } else {
+            } => {
+                let from_key = wallet.get_private_key(&secp, &sender, seed)?;
                 let hash = do_store(terra, &secp, &from_key, wasm).await?;
                 let code_id = get_attribute_tx(
                     terra,
@@ -153,74 +109,120 @@ pub async fn code_cmd_parse(
                 )
                 .await?;
 
-                code_id.parse::<u64>()?
-            };
-            let hash =
-                do_instantiate(terra, &secp, &from_key, code_id, json, coin_vec, admin_key).await?;
-            let contract = get_attribute_tx(
-                terra,
-                &hash,
+                println!("Code Id: {}", code_id);
+            }
+            CodeEnum::Instantiate {
+                sender,
+                wasm,
+                json_file,
+                coins,
+                admin,
                 retries,
-                tokio::time::Duration::from_secs(3),
-                "instantiate_contract",
-                "contract_address",
-            )
-            .await?;
-            println!("Contract: {}", contract);
-        }
-        CodeCommand::Migrate {
-            sender,
-            contract,
-            wasm,
-            json_file,
-            retries,
-        } => {
-            let from_key = wallet.get_private_key(&secp, &sender, seed)?;
+            } => {
+                let from_key = wallet.get_private_key(&secp, &sender, seed)?;
+                let json = Path::new(&json_file);
 
-            let new_code_id = if let Ok(code_id) = wasm.parse::<u64>() {
-                code_id
-            } else {
-                let hash = do_store(terra, &secp, &from_key, wasm).await?;
-                let code_id = get_attribute_tx(
+                let admin_key = if admin.starts_with("terra1") {
+                    Some(admin)
+                } else if admin == "same" {
+                    Some(from_key.public_key(&secp).account()?)
+                } else if admin == "none" {
+                    todo!("Admin of none is currently not supported")
+                } else {
+                    let admin_key = wallet.get_public_key(&secp, &admin, seed)?;
+                    let admin_account = admin_key.account()?;
+                    Some(admin_account)
+                };
+                let coin_vec: Vec<Coin> = if coins.is_empty() {
+                    vec![]
+                } else {
+                    Coin::parse_coins(&coins)?
+                };
+                let code_id = if let Ok(code_id) = wasm.parse::<u64>() {
+                    code_id
+                } else {
+                    let hash = do_store(terra, &secp, &from_key, wasm).await?;
+                    let code_id = get_attribute_tx(
+                        terra,
+                        &hash,
+                        retries,
+                        tokio::time::Duration::from_secs(3),
+                        "store_code",
+                        "code_id",
+                    )
+                    .await?;
+
+                    code_id.parse::<u64>()?
+                };
+                let hash =
+                    do_instantiate(terra, &secp, &from_key, code_id, json, coin_vec, admin_key)
+                        .await?;
+                let contract = get_attribute_tx(
                     terra,
                     &hash,
                     retries,
                     tokio::time::Duration::from_secs(3),
-                    "store_code",
-                    "code_id",
+                    "instantiate_contract",
+                    "contract_address",
                 )
                 .await?;
-                code_id.parse::<u64>()?
-            };
-            let hash =
-                do_migrate(terra, &secp, &from_key, &contract, new_code_id, json_file).await?;
+                println!("Contract: {}", contract);
+            }
+            CodeEnum::Migrate {
+                sender,
+                contract,
+                wasm,
+                json_file,
+                retries,
+            } => {
+                let from_key = wallet.get_private_key(&secp, &sender, seed)?;
 
-            let tx = terra
-                .tx()
-                .get_and_wait(&hash, retries, tokio::time::Duration::from_secs(3))
-                .await?;
+                let new_code_id = if let Ok(code_id) = wasm.parse::<u64>() {
+                    code_id
+                } else {
+                    let hash = do_store(terra, &secp, &from_key, wasm).await?;
+                    let code_id = get_attribute_tx(
+                        terra,
+                        &hash,
+                        retries,
+                        tokio::time::Duration::from_secs(3),
+                        "store_code",
+                        "code_id",
+                    )
+                    .await?;
+                    code_id.parse::<u64>()?
+                };
+                let hash =
+                    do_migrate(terra, &secp, &from_key, &contract, new_code_id, json_file).await?;
 
-            let codes = tx.get_attribute_from_result_logs("migrate_contract", "contract_address");
-            let contract = if let Some(code) = codes.first() {
-                code.1.clone()
-            } else {
-                panic!(
-                    "{}/{} not present in TX log",
-                    "migrate_contract", "contract_address"
-                );
-            };
+                let tx = terra
+                    .tx()
+                    .get_and_wait(&hash, retries, tokio::time::Duration::from_secs(3))
+                    .await?;
 
-            let codes = tx.get_attribute_from_result_logs("migrate_contract", "code_id");
-            let code_id = if let Some(code) = codes.first() {
-                code.1.clone()
-            } else {
-                panic!("{}/{} not present in TX log", "migrate_contract", "code_id");
-            };
+                let codes =
+                    tx.get_attribute_from_result_logs("migrate_contract", "contract_address");
+                let contract = if let Some(code) = codes.first() {
+                    code.1.clone()
+                } else {
+                    panic!(
+                        "{}/{} not present in TX log",
+                        "migrate_contract", "contract_address"
+                    );
+                };
 
-            println!("Contract: {} Migrated to {}", contract, code_id);
+                let codes = tx.get_attribute_from_result_logs("migrate_contract", "code_id");
+                let code_id = if let Some(code) = codes.first() {
+                    code.1.clone()
+                } else {
+                    panic!("{}/{} not present in TX log", "migrate_contract", "code_id");
+                };
+
+                println!("Contract: {} Migrated to {}", contract, code_id);
+            }
         }
+        Ok(())
     }
-    Ok(())
 }
 async fn do_store(
     terra: &Terra,

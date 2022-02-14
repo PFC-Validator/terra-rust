@@ -1,51 +1,54 @@
 use anyhow::Result;
-//use crate::errors::Result;
-use structopt::StructOpt;
-use terra_rust_api::Terra;
+use clap::{Parser, Subcommand};
 use terra_rust_wallet::Wallet;
-#[derive(StructOpt)]
-pub enum WalletCommand {
-    #[structopt(name = "create", help = "create a wallet")]
+#[derive(Parser)]
+/// wallet ops
+pub struct WalletCommand {
+    #[clap(subcommand)]
+    command: WalletEnum,
+}
+#[derive(Subcommand)]
+enum WalletEnum {
+    /// create a wallet
+    #[clap(name = "create")]
     Create {
-        #[allow(dead_code)]
-        #[structopt(name = "name", help = "name of the wallet")]
+        /// name of the wallet
+        #[clap(name = "name")]
         name: String,
     },
-    #[structopt(name = "list", help = "List available wallets")]
+    /// list available wallets
+    #[clap(name = "list")]
     List,
-    #[structopt(name = "delete", help = "delete a wallet")]
+    /// delete a wallet
+    #[clap(name = "delete")]
     Delete {
-        #[structopt(name = "name", help = "name of the wallet")]
-        #[allow(dead_code)]
+        /// name of wallet
+        #[clap(name = "name")]
         name: String,
     },
 }
-
-pub fn wallet_cmd_parse(
-    _terra: &Terra,
-    wallet: &Wallet,
-    _seed: Option<&str>,
-    cmd: WalletCommand,
-) -> Result<()> {
-    match cmd {
-        WalletCommand::Create { name } => {
-            Wallet::new(&name)?;
-            println!("Wallet {} created", name);
-            Ok(())
-        }
-        WalletCommand::List => {
-            let wallets = Wallet::get_wallets()?;
-            println!("{:#?}", wallets);
-            Ok(())
-        }
-        WalletCommand::Delete { name } => {
-            if name.eq(&wallet.name) {
-                wallet.delete()?;
+impl WalletCommand {
+    pub fn parse(self, wallet: &Wallet) -> Result<()> {
+        match self.command {
+            WalletEnum::Create { name } => {
+                Wallet::new(&name)?;
+                println!("Wallet {} created", name);
                 Ok(())
-            } else {
-                eprintln!("you will need to specify the wallet as a --wallet parameter as well as the wallet name");
-                eprintln!("Wallet name is currently set to {}", &wallet.name);
+            }
+            WalletEnum::List => {
+                let wallets = Wallet::get_wallets()?;
+                println!("{:#?}", wallets);
                 Ok(())
+            }
+            WalletEnum::Delete { name } => {
+                if name.eq(&wallet.name) {
+                    wallet.delete()?;
+                    Ok(())
+                } else {
+                    eprintln!("you will need to specify the wallet as a --wallet parameter as well as the wallet name");
+                    eprintln!("Wallet name is currently set to {}", &wallet.name);
+                    Ok(())
+                }
             }
         }
     }

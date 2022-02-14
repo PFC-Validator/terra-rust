@@ -45,7 +45,7 @@ terra-rust-api = { path = "./terra-rust-api", version = "1.2", default-features 
 terra-rust-wallet = { path = "./terra-rust-wallet", version = "1.1" }
 anyhow="1.0"
 tokio = { version = "1.14.0", features = ["full"] }
-structopt = "0.3"
+clap = { version = "3.0.14", features = ["derive","env"] }
 env_logger = "0.8.3"
 log="0.4"
 serde = { version = "1.0", features = ["derive"] }

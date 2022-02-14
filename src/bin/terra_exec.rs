@@ -1,20 +1,22 @@
 use anyhow::Result;
+use clap::{Parser, Subcommand};
 use dotenv::dotenv;
 use secp256k1::Secp256k1;
+use terra_rust::Cli;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::{GasOptions, Message, MsgExecuteContract, Terra};
-
-use structopt::StructOpt;
 use terra_rust_wallet::Wallet;
-
 /// VERSION number of package
 pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 /// NAME of package
 pub const NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
-
-#[derive(StructOpt)]
+/*
+/// exec smart contracts with ease
+#[derive(Parser)]
+#[clap(name = "terra exec")]
+#[clap( long_about = None)]
 struct Cli {
-    #[structopt(
+    #[clap(
         name = "lcd",
         env = "TERRARUST_LCD",
         default_value = "https://lcd.terra.dev",
@@ -24,7 +26,7 @@ struct Cli {
     )]
     // Terra cli Client daemon
     lcd: String,
-    #[structopt(
+    #[clap(
         name = "fcd",
         env = "TERRARUST_FCD",
         default_value = "https://fcd.terra.dev",
@@ -33,7 +35,7 @@ struct Cli {
     )]
     // Terra cli Client daemon
     fcd: String,
-    #[structopt(
+    #[clap(
         name = "chain",
         env = "TERRARUST_CHAIN",
         default_value = "columbus-5",
@@ -43,7 +45,7 @@ struct Cli {
     )]
     chain_id: String,
     // Wallet name
-    #[structopt(
+    #[clap(
         name = "wallet",
         env = "TERRARUST_WALLET",
         default_value = "default",
@@ -52,7 +54,7 @@ struct Cli {
         help = "the default wallet to look for keys in"
     )]
     wallet: String,
-    #[structopt(
+    #[clap(
         name = "seed",
         env = "TERRARUST_SEED_PHRASE",
         default_value = "",
@@ -61,7 +63,7 @@ struct Cli {
         help = "the seed phrase to use with this private key"
     )]
     seed: String,
-    #[structopt(
+    #[clap(
         name = "fees",
         default_value = "",
         short,
@@ -69,14 +71,14 @@ struct Cli {
         help = "the fees to use. This will override gas parameters if specified."
     )]
     fees: String,
-    #[structopt(
+    #[clap(
         name = "gas",
         default_value = "auto",
         long = "gas",
         help = "the gas amount to use 'auto' to estimate"
     )]
     gas: String,
-    #[structopt(
+    #[clap(
         name = "gas-prices",
         env = "TERRARUST_GAS_PRICES",
         default_value = "auto",
@@ -84,7 +86,7 @@ struct Cli {
         help = "the gas price to use to calculate fee. Format is NNNtoken eg. 1000uluna. note we only support a single price for now. if auto. it will use FCD"
     )]
     gas_price: String,
-    #[structopt(
+    #[clap(
         name = "gas-denom",
         env = "TERRARUST_GAS_DENOM",
         default_value = "ukrw",
@@ -92,7 +94,7 @@ struct Cli {
         help = "the denomination/currency to use to pay fee. Format is uXXXX."
     )]
     gas_price_denom: String,
-    #[structopt(
+    #[clap(
         name = "gas-adjustment",
         default_value = "1.4",
         env = "TERRARUST_GAS_ADJUSTMENT",
@@ -100,24 +102,7 @@ struct Cli {
         help = "the adjustment to multiply the estimate to calculate the fee"
     )]
     gas_adjustment: f64,
-    #[structopt(
-        name = "contract",
-        help = "the contract",
-        long = "contract",
-        env = "TERRARUST_CONTRACT"
-    )]
-    contract: String,
-    #[structopt(
-        name = "sender",
-        long = "sender",
-        help = "the sender account",
-        env = "TERRARUST_SENDER"
-    )]
-    sender: Option<String>,
-    #[structopt(name = "coins", long = "coins")]
-    coins: Option<String>,
-    #[structopt(name = "json")]
-    json: String,
+
 }
 impl Cli {
     pub async fn gas_opts(&self) -> Result<GasOptions> {
@@ -161,67 +146,99 @@ impl Cli {
     }
 }
 
-async fn run() -> anyhow::Result<()> {
-    let cli: Cli = Cli::from_args();
+ */
+
+#[derive(Subcommand)]
+pub enum Command {
+    Exec(ExecCmd),
+}
+#[derive(Parser, Debug)]
+pub struct ExecCmd {
+    #[clap(
+        name = "contract",
+        help = "the contract",
+        long = "contract",
+        env = "TERRARUST_CONTRACT"
+    )]
+    pub contract: String,
+    #[clap(
+        name = "sender",
+        long = "sender",
+        help = "the sender account",
+        env = "TERRARUST_SENDER"
+    )]
+    pub sender: Option<String>,
+    #[clap(name = "coins", long = "coins")]
+    pub coins: Option<String>,
+    #[clap(name = "json")]
+    pub json: String,
+}
+
+async fn run() -> Result<()> {
+    let cli = Cli::<Command>::parse();
 
     let gas_opts: GasOptions = cli.gas_opts().await?;
     let terra = Terra::lcd_client(&cli.lcd, &cli.chain_id, &gas_opts, None);
-    let json: serde_json::Value = serde_json::from_str(&cli.json)?;
+    match cli.cmd {
+        Command::Exec(cmd) => {
+            let json: serde_json::Value = serde_json::from_str(&cmd.json)?;
 
-    let secp = Secp256k1::new();
-    let wallet = Wallet::create(&cli.wallet);
+            let secp = Secp256k1::new();
+            let wallet = Wallet::create(&cli.wallet);
 
-    let seed: Option<&str> = if cli.seed.is_empty() {
-        None
-    } else {
-        Some(&cli.seed)
+            let seed: Option<&str> = if cli.seed.is_empty() {
+                None
+            } else {
+                Some(&cli.seed)
+            };
+            let sender = cmd.sender.expect(
+                "this requires the sender option, either as an environment variable or on the command line",
+            );
+
+            let from_key = wallet.get_private_key(&secp, &sender, seed)?;
+            let from_public_key = from_key.public_key(&secp);
+
+            let coins = if let Some(coins) = cmd.coins {
+                Coin::parse_coins(&coins)?
+            } else {
+                vec![]
+            };
+
+            let exec_message = MsgExecuteContract::create_from_value(
+                &from_public_key.account()?,
+                &cmd.contract,
+                &json,
+                &coins,
+            )?;
+            let messages: Vec<Message> = vec![exec_message];
+
+            let resp = terra
+                .submit_transaction_sync(
+                    &secp,
+                    &from_key,
+                    messages,
+                    Some(format!(
+                        "PFC-{}/{}",
+                        NAME.unwrap_or("TERRARUST"),
+                        VERSION.unwrap_or("DEV")
+                    )),
+                )
+                .await?;
+
+            log::debug!("{:?}", &resp.txhash);
+            if cli.chain_id.contains("bombay") {
+                println!(
+                    "https://finder.extraterrestrial.money/testnet/tx/{}",
+                    resp.txhash
+                );
+            } else {
+                println!(
+                    "https://finder.extraterrestrial.money/mainnet/tx/{}",
+                    resp.txhash
+                );
+            }
+        }
     };
-    let sender = cli.sender.expect(
-        "this requires the sender option, either as an environment variable or on the command line",
-    );
-
-    let from_key = wallet.get_private_key(&secp, &sender, seed)?;
-    let from_public_key = from_key.public_key(&secp);
-
-    let coins = if let Some(coins) = cli.coins {
-        Coin::parse_coins(&coins)?
-    } else {
-        vec![]
-    };
-
-    let exec_message = MsgExecuteContract::create_from_value(
-        &from_public_key.account()?,
-        &cli.contract,
-        &json,
-        &coins,
-    )?;
-    let messages: Vec<Message> = vec![exec_message];
-
-    let resp = terra
-        .submit_transaction_sync(
-            &secp,
-            &from_key,
-            messages,
-            Some(format!(
-                "PFC-{}/{}",
-                NAME.unwrap_or("TERRARUST"),
-                VERSION.unwrap_or("DEV")
-            )),
-        )
-        .await?;
-
-    log::debug!("{:?}", &resp.txhash);
-    if cli.chain_id.contains("bombay") {
-        println!(
-            "https://finder.extraterrestrial.money/testnet/tx/{}",
-            resp.txhash
-        );
-    } else {
-        println!(
-            "https://finder.extraterrestrial.money/mainnet/tx/{}",
-            resp.txhash
-        );
-    }
 
     Ok(())
 }
