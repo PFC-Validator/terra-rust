@@ -1,8 +1,7 @@
 use dotenv::dotenv;
-use terra_rust_api::Terra;
 
 use clap::Arg;
-use terra_rust_cli::cli::gen_cli_read_only;
+use terra_rust_cli::cli_helpers;
 
 /// VERSION number of package
 pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
@@ -10,7 +9,7 @@ pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 pub const NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
 
 async fn run() -> anyhow::Result<()> {
-    let cli = gen_cli_read_only("terra query", "terra-query")
+    let cli = cli_helpers::gen_cli_read_only("terra query", "terra-query")
         .arg(
             Arg::new("contract")
                 .long("contract")
@@ -21,12 +20,9 @@ async fn run() -> anyhow::Result<()> {
         )
         .arg(Arg::new("json").takes_value(true).value_name("json"))
         .get_matches();
-
-    let lcd = cli.value_of("lcd").unwrap();
-    let chain_id = cli.value_of("chain").unwrap();
-    let contract = cli.value_of("contract").unwrap();
-    let json_str = cli.value_of("json").unwrap();
-    let terra = Terra::lcd_client_no_tx(lcd, chain_id);
+    let terra = cli_helpers::lcd_no_tx_from_args(&cli)?;
+    let contract = cli_helpers::get_arg_value(&cli, "contract")?;
+    let json_str = cli_helpers::get_arg_value(&cli, "json")?;
     let json: serde_json::Value = serde_json::from_str(json_str)?;
 
     let qry = terra

@@ -3,8 +3,8 @@ use clap::Arg;
 use dotenv::dotenv;
 use secp256k1::Secp256k1;
 use terra_rust_api::core_types::Coin;
-use terra_rust_api::{GasOptions, Message, MsgExecuteContract, Terra};
-use terra_rust_cli::{gas_opts, gen_cli, wallet_from_args};
+use terra_rust_api::{Message, MsgExecuteContract};
+use terra_rust_cli::cli_helpers;
 
 /// VERSION number of package
 pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
@@ -12,7 +12,7 @@ pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 pub const NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
 
 async fn run() -> Result<()> {
-    let cli = gen_cli("terra exec", "terra-exec")
+    let cli = cli_helpers::gen_cli("terra exec", "terra-exec")
         .args(&[
             Arg::new("contract")
                 .long("contract")
@@ -42,22 +42,18 @@ async fn run() -> Result<()> {
         ])
         .get_matches();
 
-    let gas_opts: GasOptions = gas_opts(&cli).await?;
-    println!("GAS OPTS {:?}", gas_opts);
-    let lcd = cli.value_of("lcd").expect("lcd be in the CLI");
-    let chain_id = cli.value_of("chain").expect("chain be in the CLI");
+    let wallet = cli_helpers::wallet_from_args(&cli)?;
+    let terra = cli_helpers::lcd_from_args(&cli).await?;
+
     let json_str = cli.value_of("json").expect("json be in the CLI");
     let seed = cli.value_of("seed");
     let sender = cli.value_of("sender").expect("Need someone to exec from");
     let coins_str = cli.value_of("coins");
     let contract = cli.value_of("contract").expect("Need a contract");
 
-    let terra = Terra::lcd_client(lcd, chain_id, &gas_opts, None);
-
     let json: serde_json::Value = serde_json::from_str(json_str)?;
 
     let secp = Secp256k1::new();
-    let wallet = wallet_from_args(&cli)?;
 
     let from_key = wallet.get_private_key(&secp, sender, seed)?;
     let from_public_key = from_key.public_key(&secp);
@@ -90,7 +86,7 @@ async fn run() -> Result<()> {
         .await?;
 
     log::debug!("{:?}", &resp.txhash);
-    if chain_id.contains("bombay") {
+    if terra.chain_id.contains("bombay") {
         println!(
             "https://finder.extraterrestrial.money/testnet/tx/{}",
             resp.txhash

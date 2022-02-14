@@ -1860,7 +1860,7 @@ dependencies = [
 
 [[package]]
 name = "terra-rust-cli"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -1870,6 +1870,7 @@ dependencies = [
  "secp256k1",
  "terra-rust-api",
  "terra-rust-wallet",
+ "thiserror",
 ]
 
 [[package]]

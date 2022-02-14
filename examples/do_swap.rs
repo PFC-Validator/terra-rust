@@ -4,10 +4,10 @@ use dotenv::dotenv;
 use rust_decimal::Decimal;
 use secp256k1::Secp256k1;
 use serde::Serialize;
-use terra_rust::Cli;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::terra_u64_format;
 use terra_rust_api::{GasOptions, Message, MsgExecuteContract, Terra};
+use terra_rust_cli::cli_helpers::Cli;
 use terra_rust_wallet::Wallet;
 
 /// VERSION number of package

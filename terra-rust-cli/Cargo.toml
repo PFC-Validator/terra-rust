@@ -1,6 +1,6 @@
 [package]
 name = "terra-rust-cli"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["PFC-Validator <PFC-Validator@protonmail.com>"]
 edition = "2021"
 license = "Apache-2.0"
@@ -14,6 +14,7 @@ documentation = "https://docs.rs/terra-rust-cli"
 
 [dependencies]
 anyhow="1.0"
+thiserror = "1.0"
 terra-rust-api = { path = "../terra-rust-api", version = "1.2.2" }
 terra-rust-wallet = { path = "../terra-rust-wallet", version = "1.1.1" }
 secp256k1 = { version = "0.20.3", default-features = false }

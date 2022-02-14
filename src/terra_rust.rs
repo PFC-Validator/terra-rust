@@ -45,7 +45,7 @@ use crate::validator::ValidatorCommand;
 use crate::wallet::WalletCommand;
 use crate::wasm::WasmCommand;
 use terra_rust_api::{GasOptions, Terra};
-use terra_rust_cli::Cli;
+use terra_rust_cli::cli_helpers;
 use terra_rust_wallet::Wallet;
 
 /// VERSION number of package
@@ -78,7 +78,7 @@ enum Command {
 }
 
 async fn run() -> anyhow::Result<()> {
-    let cli = Cli::<Command>::parse();
+    let cli = cli_helpers::Cli::<Command>::parse();
 
     let gas_opts: GasOptions = cli.gas_opts().await?;
     let t = Terra::lcd_client(

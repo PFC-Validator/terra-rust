@@ -1,7 +1,8 @@
+use crate::errors::TerraRustCLIError;
 use anyhow::Result;
 use clap::{Arg, ArgMatches, Parser};
 use terra_rust_api::core_types::Coin;
-use terra_rust_api::GasOptions;
+use terra_rust_api::{GasOptions, Terra};
 use terra_rust_wallet::Wallet;
 
 /// your terra swiss army knife
@@ -227,9 +228,31 @@ pub async fn gas_opts(arg_matches: &ArgMatches) -> Result<GasOptions> {
     }
 }
 #[allow(dead_code)]
-pub fn wallet_from_args(arg_matches: &ArgMatches) -> Result<Wallet> {
-    let wallet = arg_matches
-        .value_of("wallet")
-        .expect("wallet should be in the CLI");
+pub fn wallet_from_args(cli: &ArgMatches) -> Result<Wallet> {
+    let wallet = get_arg_value(cli, "wallet")?;
     Ok(Wallet::create(wallet))
+}
+
+#[allow(dead_code)]
+pub async fn lcd_from_args(cli: &ArgMatches) -> Result<Terra> {
+    let gas_opts = gas_opts(cli).await?;
+    let lcd = get_arg_value(cli, "lcd")?;
+    let chain_id = get_arg_value(cli, "chain")?;
+
+    Ok(Terra::lcd_client(lcd, chain_id, &gas_opts, None))
+}
+#[allow(dead_code)]
+pub fn lcd_no_tx_from_args(cli: &ArgMatches) -> Result<Terra> {
+    let lcd = get_arg_value(cli, "lcd")?;
+    let chain_id = get_arg_value(cli, "chain")?;
+
+    Ok(Terra::lcd_client_no_tx(lcd, chain_id))
+}
+
+pub fn get_arg_value<'a>(cli: &'a ArgMatches, id: &str) -> Result<&'a str> {
+    if let Some(val) = cli.value_of(id) {
+        Ok(val)
+    } else {
+        Err(TerraRustCLIError::MissingArgument(id.to_string()).into())
+    }
 }
