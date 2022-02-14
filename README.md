@@ -4,11 +4,13 @@ This is a WIP.
 
 No security audit has been performed.
 
-There are currently 3 interesting things
+There are currently 5 interesting things
  
 * [Terra-Rust](https://github.com/PFC-Validator/terra-rust/blob/main/src/main.rs) A cross-platform CLI tool
 * [Terra-Rust-API](https://crates.io/crates/terra-rust-api) an API you can integrate into your own code
 * [Terra-Rust-Wallet](https://crates.io/crates/terra-rust-wallet) a secure OS agnostic wallet, using [keyring](https://crates.io/crates/keyring)
+* [Terra-Rust-Cli](https://crates.io/crates/terra-rust-cli) a collection of helper functions to help get arguments in a common way
+* [Terra-exec](./src/bin/terra_exec.rs) & [Terra-query](./src/bin/terra_query.rs) which make it much simpler to do smart contract development
 
 ## Terra-Rust to help smart contract development
 
