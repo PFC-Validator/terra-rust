@@ -1,5 +1,6 @@
 use crate::client::staking_types::{Validator, ValidatorDelegation, ValidatorUnbondingDelegation};
 use crate::errors::TerraRustAPIError;
+use crate::staking_types::ValidatorDelegationsV1Response;
 use crate::{LCDResult, Terra};
 
 pub struct Staking<'a> {
@@ -42,6 +43,22 @@ impl Staking<'_> {
         self.terra
             .send_cmd::<LCDResult<Vec<ValidatorDelegation>>>(
                 &format!("/staking/validators/{}/delegations", key),
+                None,
+            )
+            .await
+    }
+    /// all delegations for a given validator (limit) (new format)
+    pub async fn validator_delegations_limit(
+        &self,
+        key: &str,
+        limit: u64,
+    ) -> Result<ValidatorDelegationsV1Response, TerraRustAPIError> {
+        self.terra
+            .send_cmd::<ValidatorDelegationsV1Response>(
+                &format!(
+                    "/cosmos/staking/v1beta1/validators/{}/delegations?pagination.limit={}",
+                    key, limit
+                ),
                 None,
             )
             .await

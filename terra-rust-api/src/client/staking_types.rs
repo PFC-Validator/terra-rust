@@ -78,7 +78,7 @@ pub struct Validator {
 }
 
 /// Validator Delegation amount
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ValidatorDelegationBalance {
     /// token name
     pub denom: String,
@@ -87,7 +87,7 @@ pub struct ValidatorDelegationBalance {
     pub amount: Decimal,
 }
 /// Validator Delegation amount
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ValidatorDelegationComponent {
     /// account delegating the funds
     pub delegator_address: String,
@@ -98,7 +98,7 @@ pub struct ValidatorDelegationComponent {
     pub shares: Decimal,
 }
 /// Validator Delegation amount
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ValidatorDelegation {
     pub delegation: ValidatorDelegationComponent,
 
@@ -107,7 +107,7 @@ pub struct ValidatorDelegation {
 }
 
 /// Validator Delegation amount
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ValidatorUnbondingDelegationEntry {
     /// block # when unbonding happened
     #[serde(with = "terra_u64_format")]
@@ -131,4 +131,10 @@ pub struct ValidatorUnbondingDelegation {
     pub validator_address: String,
     /// delegation entries
     pub entries: Vec<ValidatorUnbondingDelegationEntry>,
+}
+
+/// Validator Delegation amount
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ValidatorDelegationsV1Response {
+    pub delegation_responses: Vec<ValidatorDelegation>,
 }

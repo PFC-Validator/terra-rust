@@ -2,6 +2,8 @@
 
 ## 1.2
 ### 1.2.4 - Devel
+* Serialize some structures
+* new fn to get delegators for a validator with a limit 
 ### 1.2.3 - 14-Feb-22
 * PR#8 : use default for sequence deserialize thanks @patternmachine!
 ### 1.2.2 - 6-Feb-22
