@@ -7,6 +7,8 @@ use thiserror::Error;
 pub enum TerraRustAPIError {
     #[error("Reqwest HTTP(s) Error")]
     ReqwestError(#[from] ::reqwest::Error),
+    #[error("Decimal Conversion Error")]
+    RustDecimal(#[from] ::rust_decimal::Error),
     #[error("Terra `{0}` CLI Error")]
     Terra(String),
     #[error("Terra `{0}` LCD - {1}")]
@@ -39,10 +41,7 @@ pub enum TerraRustAPIError {
     #[error("Can't call Transactions without some gas rules")]
     NoGasOpts,
     #[error("Can't parse `{parse}` into a coin")]
-    CoinParseErrV {
-        parse: String,
-        source: anyhow::Error,
-    },
+    CoinParseErrV { parse: String },
     #[error("Can't parse `{0}` into a coin")]
     CoinParseErr(String),
     #[error("TX submit returned `{0}` - {1} '{2}'")]

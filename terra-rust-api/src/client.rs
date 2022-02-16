@@ -107,7 +107,7 @@ impl GasOptions {
         fcd_url: &str,
         gas_denom: &str,
         gas_adjustment: f64,
-    ) -> anyhow::Result<GasOptions> {
+    ) -> Result<GasOptions, TerraRustAPIError> {
         let prices = fcd::FCD::fetch_gas_prices(client, fcd_url).await?;
         if let Some(price) = prices.get(gas_denom) {
             let gas_coin = Coin::create(gas_denom, *price);
@@ -120,7 +120,7 @@ impl GasOptions {
                 gas_adjustment: Some(gas_adjustment),
             })
         } else {
-            Err(GasPriceError(gas_denom.into()).into())
+            Err(GasPriceError(gas_denom.into()))
         }
     }
 }

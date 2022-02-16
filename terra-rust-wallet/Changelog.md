@@ -1,5 +1,7 @@
 # Changes
 ## 1.1
+### 1.1.2
+* error returns
 ### 1.1.1
 * terra-rust-api incompatible changes
 ## 1.0

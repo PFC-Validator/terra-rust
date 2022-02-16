@@ -184,7 +184,7 @@ pub fn gen_cli<'a>(app_name: &'a str, bin_name: &'a str) -> clap::App<'a> {
     ])
 }
 #[allow(dead_code)]
-pub async fn gas_opts(arg_matches: &ArgMatches) -> Result<GasOptions> {
+pub async fn gas_opts(arg_matches: &ArgMatches) -> Result<GasOptions, TerraRustCLIError> {
     let gas_price = arg_matches
         .value_of("gas-prices")
         .expect("gas-prices should be in the CLI");
@@ -228,13 +228,13 @@ pub async fn gas_opts(arg_matches: &ArgMatches) -> Result<GasOptions> {
     }
 }
 #[allow(dead_code)]
-pub fn wallet_from_args(cli: &ArgMatches) -> Result<Wallet> {
+pub fn wallet_from_args(cli: &ArgMatches) -> Result<Wallet, TerraRustCLIError> {
     let wallet = get_arg_value(cli, "wallet")?;
     Ok(Wallet::create(wallet))
 }
 
 #[allow(dead_code)]
-pub async fn lcd_from_args(cli: &ArgMatches) -> Result<Terra> {
+pub async fn lcd_from_args(cli: &ArgMatches) -> Result<Terra, TerraRustCLIError> {
     let gas_opts = gas_opts(cli).await?;
     let lcd = get_arg_value(cli, "lcd")?;
     let chain_id = get_arg_value(cli, "chain")?;
@@ -242,17 +242,17 @@ pub async fn lcd_from_args(cli: &ArgMatches) -> Result<Terra> {
     Ok(Terra::lcd_client(lcd, chain_id, &gas_opts, None))
 }
 #[allow(dead_code)]
-pub fn lcd_no_tx_from_args(cli: &ArgMatches) -> Result<Terra> {
+pub fn lcd_no_tx_from_args(cli: &ArgMatches) -> Result<Terra, TerraRustCLIError> {
     let lcd = get_arg_value(cli, "lcd")?;
     let chain_id = get_arg_value(cli, "chain")?;
 
     Ok(Terra::lcd_client_no_tx(lcd, chain_id))
 }
 
-pub fn get_arg_value<'a>(cli: &'a ArgMatches, id: &str) -> Result<&'a str> {
+pub fn get_arg_value<'a>(cli: &'a ArgMatches, id: &str) -> Result<&'a str, TerraRustCLIError> {
     if let Some(val) = cli.value_of(id) {
         Ok(val)
     } else {
-        Err(TerraRustCLIError::MissingArgument(id.to_string()).into())
+        Err(TerraRustCLIError::MissingArgument(id.to_string()))
     }
 }
