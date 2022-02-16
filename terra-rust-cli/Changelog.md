@@ -1,6 +1,7 @@
 # Changes
 ## 1.0
-### 1.0.2
+### 1.0.3 - Devel
+### 1.0.2 - 16-Feb-2022
 * error returns
 ### 1.0.1
 * add more helpers

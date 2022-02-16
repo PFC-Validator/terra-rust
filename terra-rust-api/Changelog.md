@@ -1,7 +1,8 @@
 # Changes
 
 ## 1.2
-### 1.2.4 - Devel
+### 1.2.5 - Devel
+### 1.2.4 - 16-Feb-22
 * Serialize some structures
 * new fn to get delegators for a validator with a limit
 * Error messages converted to use TerraRustAPIError
