@@ -53,7 +53,7 @@ pub struct Wallet<'a> {
 impl<'a> Wallet<'a> {
     /// create a new wallet to store keys into. This just creates the structure
     /// use #new to create a new wallet
-    pub fn new(wallet_name: &'a str) -> anyhow::Result<Wallet<'a>> {
+    pub fn new(wallet_name: &'a str) -> Result<Wallet<'a>, TerraRustWalletError> {
         log::debug!("Creating new wallet {}", wallet_name);
         let wallet = Wallet::create(wallet_name);
         let wallet_list_name = &wallet.full_list_name();
@@ -97,7 +97,7 @@ impl<'a> Wallet<'a> {
         secp: &'a Secp256k1<C>,
         key_name: &'a str,
         seed: Option<&'a str>,
-    ) -> anyhow::Result<PrivateKey> {
+    ) -> Result<PrivateKey, TerraRustWalletError> {
         let full_key_name = self.full_key_name(key_name);
         let keyring = keyring::Keyring::new(self.name, &full_key_name);
         let phrase = &keyring.get_password().map_err(KeyringErrorAdapter::from)?;
@@ -113,7 +113,7 @@ impl<'a> Wallet<'a> {
         secp: &Secp256k1<C>,
         key_name: &str,
         seed: Option<&str>,
-    ) -> anyhow::Result<PublicKey> {
+    ) -> Result<PublicKey, TerraRustWalletError> {
         let private_key: PrivateKey = self.get_private_key(secp, key_name, seed)?;
 
         let pub_key = private_key.public_key(secp);
@@ -126,13 +126,13 @@ impl<'a> Wallet<'a> {
         secp: &Secp256k1<C>,
         key_name: &str,
         seed: Option<&str>,
-    ) -> anyhow::Result<String> {
+    ) -> Result<String, TerraRustWalletError> {
         let pub_key = self.get_public_key(secp, key_name, seed)?;
         let account = pub_key.account()?;
         Ok(account)
     }
     /// stores the private key into the keyring
-    pub fn store_key(&self, key_name: &str, pk: &PrivateKey) -> anyhow::Result<bool> {
+    pub fn store_key(&self, key_name: &str, pk: &PrivateKey) -> Result<bool, TerraRustWalletError> {
         let full_key_name = self.full_key_name(key_name);
 
         let keyring = keyring::Keyring::new(self.name, &full_key_name);
@@ -155,7 +155,7 @@ impl<'a> Wallet<'a> {
         Ok(true)
     }
     /// deletes the private key from the keyring
-    pub fn delete_key(&self, key_name: &str) -> anyhow::Result<bool> {
+    pub fn delete_key(&self, key_name: &str) -> Result<bool, TerraRustWalletError> {
         let full_key_name = self.full_key_name(key_name);
         let keyring = keyring::Keyring::new(self.name, &full_key_name);
         keyring
@@ -173,12 +173,12 @@ impl<'a> Wallet<'a> {
         Ok(true)
     }
     /// lists the keys in the wallet
-    pub fn list(&self) -> anyhow::Result<Vec<String>> {
+    pub fn list(&self) -> Result<Vec<String>, TerraRustWalletError> {
         self.get_keys()
     }
 
     /// deletes the wallet and ALL the keys in the wallet
-    pub fn delete(&self) -> anyhow::Result<()> {
+    pub fn delete(&self) -> Result<(), TerraRustWalletError> {
         let keys = self.get_keys()?;
         for key in keys {
             log::debug!("Deleting Key {} in wallet {}", key, &self.name);
@@ -215,7 +215,7 @@ impl<'a> Wallet<'a> {
     }
 
     /// get list of keys in a wallet
-    fn get_keys(&self) -> anyhow::Result<Vec<String>> {
+    fn get_keys(&self) -> Result<Vec<String>, TerraRustWalletError> {
         let wallet_list_name = self.full_list_name();
         let keyring = keyring::Keyring::new(self.name, &wallet_list_name);
         let pass = keyring
@@ -230,7 +230,7 @@ impl<'a> Wallet<'a> {
     }
 
     /// get list of wallets
-    pub fn get_wallets() -> anyhow::Result<Vec<String>> {
+    pub fn get_wallets() -> Result<Vec<String>, TerraRustWalletError> {
         let wallet_list_name = Wallet::wallet_list_name();
         let keyring = keyring::Keyring::new(&wallet_list_name, "wallets");
 
@@ -240,7 +240,7 @@ impl<'a> Wallet<'a> {
     }
 
     /// update keys in a wallet
-    fn set_keys(&self, int: &WalletInternal) -> anyhow::Result<()> {
+    fn set_keys(&self, int: &WalletInternal) -> Result<(), TerraRustWalletError> {
         let wallet_list_name = self.full_list_name();
         let keyring = keyring::Keyring::new(self.name, &wallet_list_name);
 
@@ -250,7 +250,7 @@ impl<'a> Wallet<'a> {
         Ok(())
     }
     /// update list of wallets
-    fn set_wallets(int: &WalletListInternal) -> anyhow::Result<()> {
+    fn set_wallets(int: &WalletListInternal) -> Result<(), TerraRustWalletError> {
         let wallet_list_name = Wallet::wallet_list_name();
         let keyring = keyring::Keyring::new(&wallet_list_name, "wallets");
 

@@ -11,8 +11,17 @@ pub enum TerraRustAPIError {
     RustDecimal(#[from] ::rust_decimal::Error),
     #[error("JSON Conversion Error")]
     SerdeJson(#[from] ::serde_json::Error),
-    #[error("I/O  Error")]
+    #[error(transparent)]
     IOErr(#[from] ::std::io::Error),
+    #[error(transparent)]
+    ED25519(#[from] ::ed25519_dalek::ed25519::Error),
+    #[error(transparent)]
+    BitCoinBip32(#[from] ::bitcoin::util::bip32::Error),
+    #[error(transparent)]
+    HexError(#[from] ::hex::FromHexError),
+    #[error(transparent)]
+    Secp256k1(#[from] ::secp256k1::Error),
+
     #[error("Terra `{0}` CLI Error")]
     Terra(String),
     #[error("Terra `{0}` LCD - {1}")]

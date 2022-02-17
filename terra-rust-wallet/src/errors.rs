@@ -1,5 +1,6 @@
 #![allow(missing_docs)]
 #![allow(missing_docs)]
+use terra_rust_api::errors::TerraRustAPIError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -8,7 +9,10 @@ pub enum TerraRustWalletError {
     KeyringError(#[from] KeyringErrorAdapter),
     #[error(transparent)]
     SerdeJsonError(#[from] ::serde_json::Error),
-
+    #[error(transparent)]
+    KeyringErrorAdapter(#[from] ::keyring::KeyringError),
+    #[error(transparent)]
+    TerraRustAPIError(#[from] TerraRustAPIError),
     #[error("Terra Wallet `{key}` Key not found Error")]
     KeyNotFound {
         key: String,

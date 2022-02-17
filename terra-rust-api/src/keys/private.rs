@@ -37,7 +37,7 @@ impl PrivateKey {
     /// Generate a new private key
     pub fn new<C: secp256k1::Signing + secp256k1::Context>(
         secp: &Secp256k1<C>,
-    ) -> anyhow::Result<PrivateKey> {
+    ) -> Result<PrivateKey, TerraRustAPIError> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
 
@@ -47,7 +47,7 @@ impl PrivateKey {
     pub fn new_seed<C: secp256k1::Signing + secp256k1::Context>(
         secp: &Secp256k1<C>,
         seed_phrase: &str,
-    ) -> anyhow::Result<PrivateKey> {
+    ) -> Result<PrivateKey, TerraRustAPIError> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
 
@@ -59,7 +59,7 @@ impl PrivateKey {
         words: &str,
         account: u32,
         index: u32,
-    ) -> anyhow::Result<PrivateKey> {
+    ) -> Result<PrivateKey, TerraRustAPIError> {
         match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
             Ok(phrase) => {
                 PrivateKey::gen_private_key_phrase(secp, phrase, account, index, LUNA_COIN_TYPE, "")
@@ -73,7 +73,7 @@ impl PrivateKey {
         secp: &Secp256k1<C>,
         words: &str,
         seed_pass: &str,
-    ) -> anyhow::Result<PrivateKey> {
+    ) -> Result<PrivateKey, TerraRustAPIError> {
         match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
             Ok(phrase) => {
                 PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, seed_pass)
@@ -98,7 +98,7 @@ impl PrivateKey {
         index: u32,
         coin_type: u32,
         seed_phrase: &str,
-    ) -> anyhow::Result<PrivateKey> {
+    ) -> Result<PrivateKey, TerraRustAPIError> {
         let seed = phrase.to_seed(seed_phrase);
         let root_private_key =
             ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes()).unwrap();
@@ -125,7 +125,7 @@ impl PrivateKey {
         &self,
         secp: &Secp256k1<C>,
         blob: &str,
-    ) -> anyhow::Result<StdSignature> {
+    ) -> Result<StdSignature, TerraRustAPIError> {
         let pub_k = &self.private_key.private_key.public_key(secp);
         let priv_k = self.private_key.private_key.key;
         let mut sha = Sha256::new();
