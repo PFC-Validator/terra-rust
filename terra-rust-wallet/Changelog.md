@@ -1,6 +1,7 @@
 # Changes
 ## 1.1
-### 1.1.3 - dev
+### 1.1.3 - 17-Feb-21
+* Secp256k parameter passing 
 ### 1.1.2
 * error returns
 ### 1.1.1

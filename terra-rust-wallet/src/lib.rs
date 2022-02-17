@@ -28,7 +28,7 @@ use crate::errors::KeyringErrorAdapter;
 //#[macro_use]
 //extern crate error_chain;
 use crate::errors::TerraRustWalletError;
-use secp256k1::{All, Secp256k1};
+use secp256k1::Secp256k1;
 use serde::{Deserialize, Serialize};
 use terra_rust_api::{PrivateKey, PublicKey};
 
@@ -92,9 +92,9 @@ impl<'a> Wallet<'a> {
         Wallet { name: wallet }
     }
     /// retrieves the private key from the keyring
-    pub fn get_private_key(
+    pub fn get_private_key<C: secp256k1::Signing + secp256k1::Context>(
         &self,
-        secp: &'a Secp256k1<All>,
+        secp: &'a Secp256k1<C>,
         key_name: &'a str,
         seed: Option<&'a str>,
     ) -> anyhow::Result<PrivateKey> {
@@ -108,9 +108,9 @@ impl<'a> Wallet<'a> {
         }
     }
     /// retrieves the public key associated with the stored private key
-    pub fn get_public_key(
+    pub fn get_public_key<C: secp256k1::Signing + secp256k1::Context>(
         &self,
-        secp: &Secp256k1<All>,
+        secp: &Secp256k1<C>,
         key_name: &str,
         seed: Option<&str>,
     ) -> anyhow::Result<PublicKey> {
@@ -121,9 +121,9 @@ impl<'a> Wallet<'a> {
     }
 
     /// get account from key name
-    pub fn get_account(
+    pub fn get_account<C: secp256k1::Signing + secp256k1::Context>(
         &self,
-        secp: &Secp256k1<All>,
+        secp: &Secp256k1<C>,
         key_name: &str,
         seed: Option<&str>,
     ) -> anyhow::Result<String> {

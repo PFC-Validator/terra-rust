@@ -3,8 +3,8 @@ use crate::keys::PublicKey;
 use bitcoin::util::bip32::{ExtendedPrivKey, IntoDerivationPath};
 use bitcoin::Network;
 use crypto::sha2::Sha256;
+use secp256k1::Message;
 use secp256k1::Secp256k1;
-use secp256k1::{All, Message};
 
 use crypto::digest::Digest;
 use hkd32::mnemonic::{Phrase, Seed};
@@ -35,22 +35,27 @@ pub struct PrivateKey {
 }
 impl PrivateKey {
     /// Generate a new private key
-    pub fn new(secp: &Secp256k1<All>) -> anyhow::Result<PrivateKey> {
+    pub fn new<C: secp256k1::Signing + secp256k1::Context>(
+        secp: &Secp256k1<C>,
+    ) -> anyhow::Result<PrivateKey> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
 
         PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, "")
     }
     /// generate a new private key with a seed phrase
-    pub fn new_seed(secp: &Secp256k1<All>, seed_phrase: &str) -> anyhow::Result<PrivateKey> {
+    pub fn new_seed<C: secp256k1::Signing + secp256k1::Context>(
+        secp: &Secp256k1<C>,
+        seed_phrase: &str,
+    ) -> anyhow::Result<PrivateKey> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
 
         PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, seed_phrase)
     }
     /// for private key recovery. This is also used by wallet routines to re-hydrate the structure
-    pub fn from_words(
-        secp: &Secp256k1<All>,
+    pub fn from_words<C: secp256k1::Signing + secp256k1::Context>(
+        secp: &Secp256k1<C>,
         words: &str,
         account: u32,
         index: u32,
@@ -64,8 +69,8 @@ impl PrivateKey {
     }
 
     /// for private key recovery with seed phrase
-    pub fn from_words_seed(
-        secp: &Secp256k1<All>,
+    pub fn from_words_seed<C: secp256k1::Signing + secp256k1::Context>(
+        secp: &Secp256k1<C>,
         words: &str,
         seed_pass: &str,
     ) -> anyhow::Result<PrivateKey> {
@@ -78,13 +83,16 @@ impl PrivateKey {
     }
 
     /// generate the public key for this private key
-    pub fn public_key(&self, secp: &Secp256k1<All>) -> PublicKey {
+    pub fn public_key<C: secp256k1::Signing + secp256k1::Context>(
+        &self,
+        secp: &Secp256k1<C>,
+    ) -> PublicKey {
         let x = &self.private_key.private_key.public_key(secp);
         PublicKey::from_bitcoin_public_key(x)
     }
 
-    fn gen_private_key_phrase(
-        secp: &Secp256k1<All>,
+    fn gen_private_key_phrase<C: secp256k1::Signing + secp256k1::Context>(
+        secp: &Secp256k1<C>,
         phrase: Phrase,
         account: u32,
         index: u32,
@@ -113,7 +121,11 @@ impl PrivateKey {
         self.mnemonic.as_ref().map(|phrase| phrase.phrase())
     }
     /// signs a blob of data and returns a [StdSignature]
-    pub fn sign(&self, secp: &Secp256k1<All>, blob: &str) -> anyhow::Result<StdSignature> {
+    pub fn sign<C: secp256k1::Signing + secp256k1::Context>(
+        &self,
+        secp: &Secp256k1<C>,
+        blob: &str,
+    ) -> anyhow::Result<StdSignature> {
         let pub_k = &self.private_key.private_key.public_key(secp);
         let priv_k = self.private_key.private_key.key;
         let mut sha = Sha256::new();

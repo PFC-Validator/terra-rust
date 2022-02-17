@@ -1,6 +1,6 @@
 use crate::errors::TerraRustAPIError;
 
-use bitcoin::bech32::{decode, encode, u5, FromBase32, ToBase32};
+use bitcoin::bech32::{decode, encode, u5, FromBase32, ToBase32, Variant};
 use crypto::digest::Digest;
 use crypto::ripemd160::Ripemd160;
 use crypto::sha2::Sha256;
@@ -17,7 +17,10 @@ pub struct PublicKey {
     /// The raw bytes used to generate non-pub keys
     pub raw_address: Option<Vec<u8>>,
 }
-
+/*
+upgrade eventually to support
+Variant::Bech32M ?
+ */
 impl PublicKey {
     /// Generate a Cosmos/Tendermint/Terrad Public Key
     pub fn from_bitcoin_public_key(bpub: &bitcoin::util::key::PublicKey) -> PublicKey {
@@ -156,10 +159,11 @@ impl PublicKey {
         })
     }
     fn check_prefix_and_length(prefix: &str, data: &str, length: usize) -> anyhow::Result<Vec<u5>> {
-        let (hrp, decoded_str) = decode(data).map_err(|source| TerraRustAPIError::Conversion {
-            key: data.into(),
-            source,
-        })?;
+        let (hrp, decoded_str, _) =
+            decode(data).map_err(|source| TerraRustAPIError::Conversion {
+                key: data.into(),
+                source,
+            })?;
         if hrp == prefix && data.len() == length {
             Ok(decoded_str)
         } else {
@@ -281,7 +285,7 @@ impl PublicKey {
     pub fn account(&self) -> anyhow::Result<String> {
         match &self.raw_address {
             Some(raw) => {
-                let data = encode("terra", raw.to_base32());
+                let data = encode("terra", raw.to_base32(), Variant::Bech32);
                 match data {
                     Ok(acc) => Ok(acc),
                     Err(_) => Err(TerraRustAPIError::Bech32DecodeErr.into()),
@@ -294,7 +298,7 @@ impl PublicKey {
     pub fn operator_address(&self) -> anyhow::Result<String> {
         match &self.raw_address {
             Some(raw) => {
-                let data = encode("terravaloper", raw.to_base32());
+                let data = encode("terravaloper", raw.to_base32(), Variant::Bech32);
                 match data {
                     Ok(acc) => Ok(acc),
                     Err(_) => Err(TerraRustAPIError::Bech32DecodeErr.into()),
@@ -307,7 +311,7 @@ impl PublicKey {
     pub fn application_public_key(&self) -> anyhow::Result<String> {
         match &self.raw_pub_key {
             Some(raw) => {
-                let data = encode("terrapub", raw.to_base32());
+                let data = encode("terrapub", raw.to_base32(), Variant::Bech32);
                 match data {
                     Ok(acc) => Ok(acc),
                     Err(_) => Err(TerraRustAPIError::Bech32DecodeErr.into()),
@@ -323,7 +327,7 @@ impl PublicKey {
     pub fn operator_address_public_key(&self) -> anyhow::Result<String> {
         match &self.raw_pub_key {
             Some(raw) => {
-                let data = encode("terravaloperpub", raw.to_base32());
+                let data = encode("terravaloperpub", raw.to_base32(), Variant::Bech32);
                 match data {
                     Ok(acc) => Ok(acc),
                     Err(_) => Err(TerraRustAPIError::Bech32DecodeErr.into()),
@@ -336,7 +340,7 @@ impl PublicKey {
     pub fn tendermint(&self) -> anyhow::Result<String> {
         match &self.raw_address {
             Some(raw) => {
-                let data = encode("terravalcons", raw.to_base32());
+                let data = encode("terravalcons", raw.to_base32(), Variant::Bech32);
                 match data {
                     Ok(acc) => Ok(acc),
                     Err(_) => Err(TerraRustAPIError::Bech32DecodeErr.into()),
@@ -351,7 +355,7 @@ impl PublicKey {
             Some(raw) => {
                 // eprintln!("{} - tendermint_pubkey", hex::encode(raw));
                 let b32 = raw.to_base32();
-                let data = encode("terravalconspub", b32);
+                let data = encode("terravalconspub", b32, Variant::Bech32);
                 match data {
                     Ok(acc) => Ok(acc),
                     Err(_) => Err(TerraRustAPIError::Bech32DecodeErr.into()),
@@ -487,7 +491,7 @@ mod tst {
         //  let ed2: tendermint::PublicKey =
         //      tendermint::PublicKey::from_raw_ed25519(&hex::decode(public_key)?).unwrap();
 
-        match encode("cosmosvalconspub", foo_v8.to_base32()) {
+        match encode("cosmosvalconspub", foo_v8.to_base32(),Variant::Bech32) {
             Ok(cosmospub) => assert_eq!("cosmosvalconspub1zcjduepqfgjuveq2raetnjt4xwpffm63kmguxv2chdhvhf5lhslmtgeunh8qmf7exk", cosmospub),
             Err(_) => assert!(false, "bad encoding"),
         };
@@ -496,7 +500,7 @@ mod tst {
         //       ed2.to_bech32("cosmosvalconspub")
         //   );
 
-        match encode("terravalconspub", foo_v8.to_base32()) {
+        match encode("terravalconspub", foo_v8.to_base32(), Variant::Bech32) {
             Ok(tendermint) => {
                 let ed_key = PublicKey::from_tendermint_key(&tendermint)?;
                 //let ed_key_pubkey = ed_key.tendermint_pubkey()?;

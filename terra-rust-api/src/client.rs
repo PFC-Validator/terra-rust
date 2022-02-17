@@ -47,8 +47,10 @@ use crate::errors::TerraRustAPIError::{GasPriceError, TxResultError};
 use crate::messages::Message;
 use crate::PrivateKey;
 use crate::{AddressBook, LCDResult};
+
 use rust_decimal_macros::dec;
-use secp256k1::{All, Secp256k1};
+use secp256k1::Secp256k1;
+use secp256k1::Signing;
 use std::fs::File;
 
 /// Version # of package sent out on requests to help with debugging
@@ -376,11 +378,11 @@ impl Terra {
 
     /// helper function to generate a 'StdSignMsg' & 'Signature' blocks to be used to broadcast a transaction
     #[allow(clippy::too_many_arguments)]
-    fn generate_transaction_to_broadcast_fees(
+    fn generate_transaction_to_broadcast_fees<C: Signing + secp256k1::Context>(
         chain_id: &str,
         auth_account: &AuthAccount,
         fee: StdFee,
-        secp: &Secp256k1<All>,
+        secp: &Secp256k1<C>,
         from: &PrivateKey,
         messages: Vec<Message>,
         memo: Option<String>,
@@ -422,9 +424,9 @@ impl Terra {
 
     /// helper function to generate a 'StdSignMsg' & 'Signature' blocks to be used to broadcast a transaction
     /// This version calculates fees, and obtains account# and sequence# as well
-    pub async fn generate_transaction_to_broadcast(
+    pub async fn generate_transaction_to_broadcast<C: secp256k1::Signing + secp256k1::Context>(
         &self,
-        secp: &Secp256k1<All>,
+        secp: &Secp256k1<C>,
         from: &PrivateKey,
         messages: Vec<Message>,
         memo: Option<String>,
@@ -444,9 +446,9 @@ impl Terra {
         )
     }
     /// helper: sign & submit the transaction sync
-    pub async fn submit_transaction_sync(
+    pub async fn submit_transaction_sync<C: Signing + secp256k1::Context>(
         &self,
-        secp: &Secp256k1<All>,
+        secp: &Secp256k1<C>,
         from: &PrivateKey,
         messages: Vec<Message>,
         memo: Option<String>,
@@ -462,9 +464,9 @@ impl Terra {
         }
     }
     /// helper: sign & submit the transaction async
-    pub async fn submit_transaction_async(
+    pub async fn submit_transaction_async<C: Signing + secp256k1::Context>(
         &self,
-        secp: &Secp256k1<All>,
+        secp: &Secp256k1<C>,
         from: &PrivateKey,
         messages: Vec<Message>,
         memo: Option<String>,
