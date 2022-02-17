@@ -1,6 +1,7 @@
 //use crate::client::client_types::terra_u64_format;
 use crate::core_types::{Coin, MsgInternal};
 
+use crate::errors::TerraRustAPIError;
 use crate::messages::Message;
 use serde::Serialize;
 
@@ -20,7 +21,7 @@ impl MsgSend {
         from_address: String,
         to_address: String,
         amount: Coin,
-    ) -> anyhow::Result<Message> {
+    ) -> Result<Message, TerraRustAPIError> {
         MsgSend::create(from_address, to_address, vec![amount])
     }
     /// send multiple coins from from_address to to_address
@@ -28,7 +29,7 @@ impl MsgSend {
         from_address: String,
         to_address: String,
         amount: Vec<Coin>,
-    ) -> anyhow::Result<Message> {
+    ) -> Result<Message, TerraRustAPIError> {
         let internal = MsgSend {
             amount,
             from_address,

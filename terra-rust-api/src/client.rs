@@ -81,7 +81,7 @@ pub struct GasOptions {
 }
 impl GasOptions {
     /// for hard-coding of fees
-    pub fn create_with_fees(fees: &str, gas: u64) -> anyhow::Result<GasOptions> {
+    pub fn create_with_fees(fees: &str, gas: u64) -> Result<GasOptions, TerraRustAPIError> {
         Ok(GasOptions {
             fees: Coin::parse(fees)?,
             estimate_gas: false,
@@ -95,7 +95,7 @@ impl GasOptions {
     pub fn create_with_gas_estimate(
         gas_price: &str,
         gas_adjustment: f64,
-    ) -> anyhow::Result<GasOptions> {
+    ) -> Result<GasOptions, TerraRustAPIError> {
         Ok(GasOptions {
             fees: None,
             estimate_gas: true,
@@ -322,9 +322,9 @@ impl Terra {
         &self,
         auth_account: &AuthAccount,
         messages: &[Message],
-    ) -> anyhow::Result<StdFee> {
+    ) -> Result<StdFee, TerraRustAPIError> {
         match &self.gas_options {
-            None => Err(TerraRustAPIError::NoGasOpts.into()),
+            None => Err(TerraRustAPIError::NoGasOpts),
 
             Some(gas) => {
                 match &gas.fees {
@@ -386,7 +386,7 @@ impl Terra {
         from: &PrivateKey,
         messages: Vec<Message>,
         memo: Option<String>,
-    ) -> anyhow::Result<(StdSignMsg, Vec<StdSignature>)> {
+    ) -> Result<(StdSignMsg, Vec<StdSignature>), TerraRustAPIError> {
         let account_number = auth_account.account_number;
         let sequence = auth_account.sequence.unwrap_or(0);
         let messages_len = messages.len();
@@ -430,7 +430,7 @@ impl Terra {
         from: &PrivateKey,
         messages: Vec<Message>,
         memo: Option<String>,
-    ) -> anyhow::Result<(StdSignMsg, Vec<StdSignature>)> {
+    ) -> Result<(StdSignMsg, Vec<StdSignature>), TerraRustAPIError> {
         let from_public = from.public_key(secp);
         let from_account = from_public.account()?;
         let auth = self.auth().account(&from_account).await?;
@@ -452,14 +452,14 @@ impl Terra {
         from: &PrivateKey,
         messages: Vec<Message>,
         memo: Option<String>,
-    ) -> anyhow::Result<TXResultSync> {
+    ) -> Result<TXResultSync, TerraRustAPIError> {
         let (std_sign_msg, sigs) = self
             .generate_transaction_to_broadcast(secp, from, messages, memo)
             .await?;
         let resp = self.tx().broadcast_sync(&std_sign_msg, &sigs).await?;
 
         match resp.code {
-            Some(code) => Err(TxResultError(code, resp.txhash, resp.raw_log).into()),
+            Some(code) => Err(TxResultError(code, resp.txhash, resp.raw_log)),
             None => Ok(resp),
         }
     }
@@ -470,7 +470,7 @@ impl Terra {
         from: &PrivateKey,
         messages: Vec<Message>,
         memo: Option<String>,
-    ) -> anyhow::Result<TXResultAsync> {
+    ) -> Result<TXResultAsync, TerraRustAPIError> {
         let (std_sign_msg, sigs) = self
             .generate_transaction_to_broadcast(secp, from, messages, memo)
             .await?;
@@ -479,15 +479,15 @@ impl Terra {
     }
 
     /// fetch the address book for the production network
-    pub async fn production_address_book() -> anyhow::Result<AddressBook> {
+    pub async fn production_address_book() -> Result<AddressBook, TerraRustAPIError> {
         Self::address_book(NETWORK_PROD_ADDRESS_BOOK).await
     }
     /// fetch the address book for the testnet network
-    pub async fn testnet_address_book() -> anyhow::Result<AddressBook> {
+    pub async fn testnet_address_book() -> Result<AddressBook, TerraRustAPIError> {
         Self::address_book(NETWORK_TEST_ADDRESS_BOOK).await
     }
     /// fetch a address book json structure
-    pub async fn address_book(addr_url: &str) -> anyhow::Result<AddressBook> {
+    pub async fn address_book(addr_url: &str) -> Result<AddressBook, TerraRustAPIError> {
         if let Some(file_name) = addr_url.strip_prefix("file://") {
             let file = File::open(file_name).unwrap();
             let add: AddressBook = serde_json::from_reader(file)?;
@@ -510,7 +510,7 @@ mod tst {
     use bitcoin::secp256k1::Secp256k1;
 
     #[test]
-    pub fn test_send() -> anyhow::Result<()> {
+    pub fn test_send() -> Result<(), TerraRustAPIError> {
         let str_1 = "island relax shop such yellow opinion find know caught erode blue dolphin behind coach tattoo light focus snake common size analyst imitate employ walnut";
         let secp = Secp256k1::new();
         let pk = PrivateKey::from_words(&secp, str_1, 0, 0)?;
@@ -559,7 +559,7 @@ mod tst {
     }
 
     #[test]
-    pub fn test_wasm() -> anyhow::Result<()> {
+    pub fn test_wasm() -> Result<(), TerraRustAPIError> {
         let key_words = "sell raven long age tooth still predict idea quit march gasp bamboo hurdle problem voyage east tiger divide machine brain hole tiger find smooth";
         let secp = Secp256k1::new();
         let private = PrivateKey::from_words(&secp, key_words, 0, 0)?;
@@ -615,7 +615,7 @@ mod tst {
     }
 
     #[tokio::test]
-    pub async fn test_address_book() -> anyhow::Result<()> {
+    pub async fn test_address_book() -> Result<(), TerraRustAPIError> {
         let prod = Terra::production_address_book().await?;
         assert!(prod.addrs.len() > 0);
         let test = Terra::testnet_address_book().await?;

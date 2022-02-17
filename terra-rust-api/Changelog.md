@@ -2,7 +2,7 @@
 ## Debt
 ### support Variant::Bech32m in keygen? (https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki) 
 ## 1.2
-### 1.2.7 - 17-Feb-22
+### 1.2.8 - 17-Feb-22
 * upgraded to bitcoin 0.27.1
 * changed Secp256 args to be a bit more minimalistic (in prep for Secp256 0.21.x)
 * switching errors from anyhow::Result to TerraRustApiError (still compatible)

@@ -23,7 +23,7 @@ impl<'a> TX<'a> {
         &self,
         std_sign_msg: &StdSignMsg,
         sigs: &[StdSignature],
-    ) -> anyhow::Result<TXResultAsync> {
+    ) -> Result<TXResultAsync, TerraRustAPIError> {
         let std_tx: StdTx = StdTx::from_StdSignMsg(std_sign_msg, sigs, "async");
 
         //  let js_sig = serde_json::to_string(&std_tx)?;
@@ -39,7 +39,7 @@ impl<'a> TX<'a> {
         &self,
         std_sign_msg: &StdSignMsg,
         sigs: &[StdSignature],
-    ) -> anyhow::Result<TXResultSync> {
+    ) -> Result<TXResultSync, TerraRustAPIError> {
         let std_tx: StdTx = StdTx::from_StdSignMsg(std_sign_msg, sigs, "sync");
         //    let js_sig = serde_json::to_string(&std_tx)?;
         log::info!("TX broadcast #messages ={}", &std_tx.tx.msg.len());
@@ -58,7 +58,7 @@ impl<'a> TX<'a> {
         &self,
         std_sign_msg: &StdSignMsg,
         sigs: &[StdSignature],
-    ) -> anyhow::Result<TXResultBlock> {
+    ) -> Result<TXResultBlock, TerraRustAPIError> {
         log::warn!("Broadcast_block is not recommended to be used in production situations");
         let std_tx: StdTx = StdTx::from_StdSignMsg(std_sign_msg, sigs, "block");
         //    let js_sig = serde_json::to_string(&std_tx)?;
@@ -122,7 +122,7 @@ impl<'a> TX<'a> {
         msgs: &[Message],
         gas_adjustment: f64,
         gas_prices: &[&Coin],
-    ) -> anyhow::Result<LCDResult<TxFeeResult>> {
+    ) -> Result<LCDResult<TxFeeResult>, TerraRustAPIError> {
         let tx_est = TxEstimate::create(
             &self.terra.chain_id,
             sender,
