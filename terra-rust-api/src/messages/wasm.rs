@@ -2,6 +2,7 @@ use crate::core_types::{Coin, MsgInternal};
 use crate::terra_u64_format;
 use std::path::Path;
 
+use crate::errors::TerraRustAPIError;
 use crate::messages::Message;
 use serde::Serialize;
 
@@ -117,7 +118,7 @@ impl MsgInstantiateContract {
         code_id: u64,
         init_msg: &str,
         init_coins: Vec<Coin>,
-    ) -> anyhow::Result<Message> {
+    ) -> Result<Message, TerraRustAPIError> {
         // panic!("This message does not function");
 
         let contents: serde_json::Value = serde_json::from_str(init_msg)?;
@@ -143,7 +144,7 @@ impl MsgInstantiateContract {
         code_id: u64,
         init_file: &Path,
         init_coins: Vec<Coin>,
-    ) -> anyhow::Result<Message> {
+    ) -> Result<Message, TerraRustAPIError> {
         let contents = std::fs::read_to_string(init_file)?;
         let new_contents = contents
             .replace("##SENDER##", sender)

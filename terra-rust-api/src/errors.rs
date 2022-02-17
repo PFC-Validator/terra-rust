@@ -9,6 +9,10 @@ pub enum TerraRustAPIError {
     ReqwestError(#[from] ::reqwest::Error),
     #[error("Decimal Conversion Error")]
     RustDecimal(#[from] ::rust_decimal::Error),
+    #[error("JSON Conversion Error")]
+    SerdeJson(#[from] ::serde_json::Error),
+    #[error("I/O  Error")]
+    IOErr(#[from] ::std::io::Error),
     #[error("Terra `{0}` CLI Error")]
     Terra(String),
     #[error("Terra `{0}` LCD - {1}")]
