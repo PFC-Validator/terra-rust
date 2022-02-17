@@ -110,7 +110,7 @@ checksum = "9a41df6ad9642c5c15ae312dd3d074de38fd3eb7cc87ad4ce10f90292a83fe4d"
 dependencies = [
  "bech32",
  "bitcoin_hashes",
- "secp256k1 0.20.3",
+ "secp256k1",
 ]
 
 [[package]]
@@ -1558,15 +1558,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "secp256k1"
-version = "0.21.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab7883017d5b21f011ef8040ea9c6c7ac90834c0df26a69e4c0b06276151f125"
-dependencies = [
- "secp256k1-sys",
-]
-
-[[package]]
 name = "secp256k1-sys"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1824,7 +1815,7 @@ dependencies = [
  "reqwest",
  "rust_decimal",
  "rust_decimal_macros",
- "secp256k1 0.20.3",
+ "secp256k1",
  "serde",
  "serde_json",
  "terra-rust-api",
@@ -1859,7 +1850,7 @@ dependencies = [
  "rust_decimal",
  "rust_decimal_macros",
  "rustc-serialize",
- "secp256k1 0.20.3",
+ "secp256k1",
  "serde",
  "serde_json",
  "subtle-encoding",
@@ -1873,10 +1864,8 @@ version = "1.0.3"
 dependencies = [
  "anyhow",
  "clap",
- "keyring",
  "log",
  "reqwest",
- "secp256k1 0.21.2",
  "terra-rust-api",
  "terra-rust-wallet",
  "thiserror",
@@ -1890,7 +1879,7 @@ dependencies = [
  "keyring",
  "log",
  "reqwest",
- "secp256k1 0.20.3",
+ "secp256k1",
  "serde",
  "serde_json",
  "terra-rust-api",
