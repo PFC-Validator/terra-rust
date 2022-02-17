@@ -156,7 +156,7 @@ mod tst {
     pub fn tst_gen_mnemonic() -> Result<(), TerraRustAPIError> {
         // this test just makes sure the default will call it.
         let s = Secp256k1::new();
-        PrivateKey::new(&s).and_then(|_| Ok(()))
+        PrivateKey::new(&s).map(|_| ())
     }
     #[test]
     pub fn tst_words() -> anyhow::Result<()> {
