@@ -112,7 +112,7 @@ impl PublicKey {
                         })
                     } else {
                         //     eprintln!("{}", hex::encode(&vu8));
-                        Err(TerraRustAPIError::ConversionED25519.into())
+                        Err(TerraRustAPIError::ConversionED25519)
                     }
                 })
 

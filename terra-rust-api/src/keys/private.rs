@@ -64,7 +64,7 @@ impl PrivateKey {
             Ok(phrase) => {
                 PrivateKey::gen_private_key_phrase(secp, phrase, account, index, LUNA_COIN_TYPE, "")
             }
-            Err(_) => Err(TerraRustAPIError::Phrasing.into()),
+            Err(_) => Err(TerraRustAPIError::Phrasing),
         }
     }
 
@@ -78,7 +78,7 @@ impl PrivateKey {
             Ok(phrase) => {
                 PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, LUNA_COIN_TYPE, seed_pass)
             }
-            Err(_) => Err(TerraRustAPIError::Phrasing.into()),
+            Err(_) => Err(TerraRustAPIError::Phrasing),
         }
     }
 
@@ -153,7 +153,7 @@ mod tst {
     use super::*;
 
     #[test]
-    pub fn tst_gen_mnemonic() -> anyhow::Result<()> {
+    pub fn tst_gen_mnemonic() -> Result<(), TerraRustAPIError> {
         // this test just makes sure the default will call it.
         let s = Secp256k1::new();
         PrivateKey::new(&s).and_then(|_| Ok(()))
