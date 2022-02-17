@@ -1,7 +1,8 @@
 # Changes
 ## 1.1
-### 1.1.3 - 17-Feb-21
-* Secp256k parameter passing 
+### 1.1.4 - 17-Feb-21
+* Secp256k parameter passing
+* switch from anyhow::Result to TerraRustWalletError
 ### 1.1.2
 * error returns
 ### 1.1.1
