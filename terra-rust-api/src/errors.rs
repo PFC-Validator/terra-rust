@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 use reqwest::StatusCode;
+use std::string::FromUtf8Error;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -15,6 +16,10 @@ pub enum TerraRustAPIError {
     IOErr(#[from] ::std::io::Error),
     #[error(transparent)]
     ED25519(#[from] ::ed25519_dalek::ed25519::Error),
+    #[error(transparent)]
+    SubtleError(#[from] ::subtle_encoding::Error),
+    #[error(transparent)]
+    UTF8Error(#[from] FromUtf8Error),
     #[error(transparent)]
     BitCoinBip32(#[from] ::bitcoin::util::bip32::Error),
     #[error(transparent)]

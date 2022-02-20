@@ -23,7 +23,7 @@ impl MsgExecuteContract {
         contract: &str,
         execute_msg: &serde_json::Value,
         coins: &[Coin],
-    ) -> anyhow::Result<Message> {
+    ) -> Result<Message, TerraRustAPIError> {
         let internal = MsgExecuteContract {
             sender: sender.into(),
             contract: contract.into(),
@@ -41,7 +41,7 @@ impl MsgExecuteContract {
         contract: &str,
         execute_msg_json: &str,
         coins: &[Coin],
-    ) -> anyhow::Result<Message> {
+    ) -> Result<Message, TerraRustAPIError> {
         let exec_b64: serde_json::Value = serde_json::from_str(execute_msg_json)?;
         MsgExecuteContract::create_from_value(sender, contract, &exec_b64, coins)
     }
@@ -57,7 +57,10 @@ pub struct MsgStoreCode {
 impl MsgInternal for MsgStoreCode {}
 impl MsgStoreCode {
     /// use provided base64 exec message
-    pub fn create_from_b64(sender: &str, wasm_byte_code: &str) -> anyhow::Result<Message> {
+    pub fn create_from_b64(
+        sender: &str,
+        wasm_byte_code: &str,
+    ) -> Result<Message, TerraRustAPIError> {
         let internal = MsgStoreCode {
             sender: sender.into(),
             wasm_byte_code: wasm_byte_code.into(),
@@ -68,7 +71,7 @@ impl MsgStoreCode {
         })
     }
     /// use provided base64 exec message
-    pub fn create_from_file(sender: &str, file_name: &Path) -> anyhow::Result<Message> {
+    pub fn create_from_file(sender: &str, file_name: &Path) -> Result<Message, TerraRustAPIError> {
         let file_contents = std::fs::read(file_name)?;
         let exec_b64 = base64::encode(file_contents);
         MsgStoreCode::create_from_b64(sender, &exec_b64)
@@ -146,14 +149,23 @@ impl MsgInstantiateContract {
         init_coins: Vec<Coin>,
     ) -> Result<Message, TerraRustAPIError> {
         let contents = std::fs::read_to_string(init_file)?;
-        let new_contents = contents
+        let new_contents = Self::replace_parameters(sender, admin.clone(), code_id, &contents);
+        Self::create_from_json(sender, admin, code_id, &new_contents, init_coins)
+    }
+    /// replace parts of the string with current values
+    pub fn replace_parameters(
+        sender: &str,
+        admin: Option<String>,
+        code_id: u64,
+        instantiate_str: &str,
+    ) -> String {
+        let part_1 = instantiate_str
             .replace("##SENDER##", sender)
             .replace("##CODE_ID##", &format!("{}", code_id));
-        let admin_contents = match admin.clone() {
-            Some(admin_str) => new_contents.replace("##ADMIN##", &admin_str),
-            None => new_contents.replace("##ADMIN##", ""),
-        };
-        Self::create_from_json(sender, admin, code_id, &admin_contents, init_coins)
+        match admin {
+            Some(admin_str) => part_1.replace("##ADMIN##", &admin_str),
+            None => part_1.replace("##ADMIN##", ""),
+        }
     }
 }
 
@@ -175,7 +187,7 @@ impl MsgMigrateContract {
         contract: &str,
         new_code_id: u64,
         migrate_msg: &str,
-    ) -> anyhow::Result<Message> {
+    ) -> Result<Message, TerraRustAPIError> {
         let contents: serde_json::Value = serde_json::from_str(migrate_msg)?;
 
         let internal = MsgMigrateContract {
@@ -196,14 +208,23 @@ impl MsgMigrateContract {
         contract: &str,
         new_code_id: u64,
         migrate_file: &Path,
-    ) -> anyhow::Result<Message> {
+    ) -> Result<Message, TerraRustAPIError> {
         let contents = std::fs::read_to_string(migrate_file)?;
-        let new_contents = contents
-            .replace("##ADMIN##", admin)
-            .replace("##CONTRACT##", contract)
-            .replace("##NEW_CODE_ID##", &format!("{}", new_code_id));
+        let new_contents = Self::replace_parameters(admin, contract, new_code_id, &contents);
 
         Self::create_from_json(admin, contract, new_code_id, &new_contents)
+    }
+    /// switches ##SENDER##, ##ADMIN##, ##CODE_ID## with respective values
+    pub fn replace_parameters(
+        admin: &str,
+        contract: &str,
+        new_code_id: u64,
+        migrate_str: &str,
+    ) -> String {
+        migrate_str
+            .replace("##ADMIN##", admin)
+            .replace("##CONTRACT##", contract)
+            .replace("##NEW_CODE_ID##", &format!("{}", new_code_id))
     }
 }
 

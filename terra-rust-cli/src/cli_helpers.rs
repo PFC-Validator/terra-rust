@@ -1,6 +1,9 @@
 use crate::errors::TerraRustCLIError;
 use anyhow::Result;
 use clap::{Arg, ArgMatches, Parser};
+use std::fs::File;
+use std::io::{BufReader, Read};
+use std::path::Path;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::{GasOptions, Terra};
 use terra_rust_wallet::Wallet;
@@ -254,5 +257,25 @@ pub fn get_arg_value<'a>(cli: &'a ArgMatches, id: &str) -> Result<&'a str, Terra
         Ok(val)
     } else {
         Err(TerraRustCLIError::MissingArgument(id.to_string()))
+    }
+}
+/// convert a input parameter into json.
+/// input can either be a json string, a file, or '-' to read stdin.
+///
+pub fn get_json_block(in_str: &str) -> anyhow::Result<serde_json::Value> {
+    if in_str.starts_with('{') {
+        Ok(serde_json::from_str::<serde_json::Value>(in_str)?)
+    } else if in_str == "-" {
+        let input = std::io::stdin();
+        let mut input = input.lock();
+        let mut str_buf = String::new();
+        input.read_to_string(&mut str_buf)?;
+
+        Ok(serde_json::from_str(&str_buf)?)
+    } else {
+        let p = Path::new(in_str);
+        let file = File::open(p)?;
+        let rdr = BufReader::new(file);
+        Ok(serde_json::from_reader(rdr)?)
     }
 }

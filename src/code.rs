@@ -1,12 +1,12 @@
 use anyhow::Result;
-use secp256k1::{All, Secp256k1};
+use secp256k1::Secp256k1;
 use std::path::Path;
-use terra_rust_api::{Message, PrivateKey, Terra};
+use terra_rust_api::Terra;
 
 use crate::{NAME, VERSION};
 use clap::{Parser, Subcommand};
 use terra_rust_api::core_types::Coin;
-use terra_rust_api::messages::wasm::{MsgInstantiateContract, MsgMigrateContract, MsgStoreCode};
+use terra_rust_api::messages::wasm::{MsgInstantiateContract, MsgMigrateContract};
 use terra_rust_wallet::Wallet;
 #[derive(Parser)]
 /// set code
@@ -91,6 +91,11 @@ pub enum CodeEnum {
 impl CodeCommand {
     pub async fn parse(self, terra: &Terra, wallet: &Wallet<'_>, seed: Option<&str>) -> Result<()> {
         let secp = Secp256k1::new();
+        let memo = Some(format!(
+            "PFC-{}/{}",
+            NAME.unwrap_or("TERRARUST"),
+            VERSION.unwrap_or("DEV")
+        ));
         match self.command {
             CodeEnum::Store {
                 sender,
@@ -98,7 +103,11 @@ impl CodeCommand {
                 retries,
             } => {
                 let from_key = wallet.get_private_key(&secp, &sender, seed)?;
-                let hash = do_store(terra, &secp, &from_key, wasm).await?;
+                let hash = terra
+                    .wasm()
+                    .store(&secp, &from_key, &wasm, memo)
+                    .await?
+                    .txhash;
                 let code_id = get_attribute_tx(
                     terra,
                     &hash,
@@ -141,7 +150,11 @@ impl CodeCommand {
                 let code_id = if let Ok(code_id) = wasm.parse::<u64>() {
                     code_id
                 } else {
-                    let hash = do_store(terra, &secp, &from_key, wasm).await?;
+                    let hash = terra
+                        .wasm()
+                        .store(&secp, &from_key, &wasm, memo.clone())
+                        .await?
+                        .txhash;
                     let code_id = get_attribute_tx(
                         terra,
                         &hash,
@@ -154,9 +167,20 @@ impl CodeCommand {
 
                     code_id.parse::<u64>()?
                 };
-                let hash =
-                    do_instantiate(terra, &secp, &from_key, code_id, json, coin_vec, admin_key)
-                        .await?;
+                let contents = MsgInstantiateContract::replace_parameters(
+                    &from_key.public_key(&secp).account()?,
+                    admin_key.clone(),
+                    code_id,
+                    &std::fs::read_to_string(json)?,
+                );
+
+                let hash = terra
+                    .wasm()
+                    .instantiate(
+                        &secp, &from_key, code_id, contents, coin_vec, admin_key, memo,
+                    )
+                    .await?
+                    .txhash;
                 let contract = get_attribute_tx(
                     terra,
                     &hash,
@@ -180,7 +204,11 @@ impl CodeCommand {
                 let new_code_id = if let Ok(code_id) = wasm.parse::<u64>() {
                     code_id
                 } else {
-                    let hash = do_store(terra, &secp, &from_key, wasm).await?;
+                    let hash = terra
+                        .wasm()
+                        .store(&secp, &from_key, &wasm, memo.clone())
+                        .await?
+                        .txhash;
                     let code_id = get_attribute_tx(
                         terra,
                         &hash,
@@ -192,8 +220,24 @@ impl CodeCommand {
                     .await?;
                     code_id.parse::<u64>()?
                 };
-                let hash =
-                    do_migrate(terra, &secp, &from_key, &contract, new_code_id, json_file).await?;
+                let contents = if let Some(json_filename) = json_file {
+                    let json = Path::new(&json_filename);
+
+                    Some(MsgMigrateContract::replace_parameters(
+                        &from_key.public_key(&secp).account()?,
+                        &contract,
+                        new_code_id,
+                        &std::fs::read_to_string(json)?,
+                    ))
+                } else {
+                    None
+                };
+
+                let hash = terra
+                    .wasm()
+                    .migrate(&secp, &from_key, &contract, new_code_id, contents, memo)
+                    .await?
+                    .txhash;
 
                 let tx = terra
                     .tx()
@@ -223,114 +267,6 @@ impl CodeCommand {
         }
         Ok(())
     }
-}
-async fn do_store(
-    terra: &Terra,
-    secp: &Secp256k1<All>,
-    from: &PrivateKey,
-    wasm: String,
-) -> Result<String> {
-    let from_public_key = from.public_key(secp);
-
-    let wasm_path = Path::new(&wasm);
-
-    let store_message = MsgStoreCode::create_from_file(&from_public_key.account()?, wasm_path)?;
-    let messages: Vec<Message> = vec![store_message];
-
-    let resp = terra
-        .submit_transaction_sync(
-            secp,
-            from,
-            messages,
-            Some(format!(
-                "PFC-{}/{}",
-                NAME.unwrap_or("TERRARUST"),
-                VERSION.unwrap_or("DEV")
-            )),
-        )
-        .await?;
-    log::info!("{:?}", &resp);
-    Ok(resp.txhash)
-}
-
-async fn do_migrate(
-    terra: &Terra,
-    secp: &Secp256k1<All>,
-    from: &PrivateKey,
-    contract: &str,
-    new_code_id: u64,
-    migrate_file: Option<String>,
-) -> Result<String> {
-    let from_public_key = from.public_key(secp);
-
-    let migrate_message = if let Some(migrate_path) = migrate_file {
-        MsgMigrateContract::create_from_file(
-            &from_public_key.account()?,
-            contract,
-            new_code_id,
-            Path::new(&migrate_path),
-        )?
-    } else {
-        MsgMigrateContract::create_from_json(
-            &from_public_key.account()?,
-            contract,
-            new_code_id,
-            "{}",
-        )?
-    };
-
-    let messages: Vec<Message> = vec![migrate_message];
-
-    let resp = terra
-        .submit_transaction_sync(
-            secp,
-            from,
-            messages,
-            Some(format!(
-                "PFC-{}/{}",
-                NAME.unwrap_or("TERRARUST"),
-                VERSION.unwrap_or("DEV")
-            )),
-        )
-        .await?;
-    log::info!("{:?}", &resp);
-    Ok(resp.txhash)
-}
-
-async fn do_instantiate(
-    terra: &Terra,
-    secp: &Secp256k1<All>,
-    from: &PrivateKey,
-    code_id: u64,
-    json: &Path,
-    coins: Vec<Coin>,
-    admin: Option<String>,
-) -> Result<String> {
-    let from_public_key = from.public_key(secp);
-    let init_message = MsgInstantiateContract::create_from_file(
-        &from_public_key.account()?,
-        admin,
-        code_id,
-        json,
-        coins,
-    )?;
-    let messages: Vec<Message> = vec![init_message];
-
-    let resp = terra
-        .submit_transaction_sync(
-            secp,
-            from,
-            messages,
-            Some(format!(
-                "PFC-{}/{}",
-                NAME.unwrap_or("TERRARUST"),
-                VERSION.unwrap_or("DEV")
-            )),
-        )
-        .await?;
-    log::info!("{:?}", &resp);
-
-    Ok(resp.txhash)
 }
 
 async fn get_attribute_tx(

@@ -17,7 +17,7 @@ default-run="terra-rust"
 members = [
     "terra-rust-api",
     "terra-rust-wallet",
-    "terra-rust-cli"
+    "terra-rust-cli",
 ]
 exclude = [
 ]
@@ -40,6 +40,9 @@ path= "src/bin/terra_exec.rs"
 name="terra-query"
 path= "src/bin/terra_query.rs"
 
+[[bin]]
+name="cargo-terra"
+path="src/bin/cargo_terra.rs"
 
 [dependencies]
 terra-rust-api = { path = "./terra-rust-api", version = "1.2", default-features = false }
