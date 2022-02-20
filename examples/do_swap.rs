@@ -186,6 +186,8 @@ impl MsgSwap {
         };
         let swap = MsgSwap { swap: swap_data };
         let swap_json = serde_json::to_string(&swap)?;
-        MsgExecuteContract::create_from_json(sender, contract, &swap_json, coins)
+        Ok(MsgExecuteContract::create_from_json(
+            sender, contract, &swap_json, coins,
+        )?)
     }
 }
