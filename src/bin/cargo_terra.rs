@@ -70,7 +70,7 @@ async fn run(args: Vec<String>) -> Result<()> {
 
     match matches.subcommand() {
         Some(("migrate", migrate)) => {
-            let contract = cli_helpers::get_arg_value(&migrate, "contract")?;
+            let contract = cli_helpers::get_arg_value(migrate, "contract")?;
 
             if !contract.starts_with("terra1") {
                 anyhow::bail!("invalid contract address");
@@ -78,7 +78,7 @@ async fn run(args: Vec<String>) -> Result<()> {
             let terra = cli_helpers::lcd_from_args(&matches).await?;
             let secp = Secp256k1::new();
             let private = get_private_key(&secp, &matches)?;
-            let wasm = cli_helpers::get_arg_value(&migrate, "wasm")?;
+            let wasm = cli_helpers::get_arg_value(migrate, "wasm")?;
             let code_id = if let Ok(code_id) = wasm.parse::<u64>() {
                 code_id
             } else {
@@ -142,7 +142,7 @@ async fn run(args: Vec<String>) -> Result<()> {
             let terra = cli_helpers::lcd_from_args(&matches).await?;
             let secp = Secp256k1::new();
             let private = get_private_key(&secp, &matches)?;
-            let wasm = cli_helpers::get_arg_value(&instantiate, "wasm")?;
+            let wasm = cli_helpers::get_arg_value(instantiate, "wasm")?;
             let coins = if let Some(coin_str) = instantiate.value_of("coins") {
                 Coin::parse_coins(coin_str)?
             } else {
@@ -177,7 +177,7 @@ async fn run(args: Vec<String>) -> Result<()> {
                 } else {
                     let wallet = cli_helpers::wallet_from_args(&matches)?;
                     let seed = matches.value_of("seed");
-                    let admin_key = wallet.get_public_key(&secp, &admin, seed)?;
+                    let admin_key = wallet.get_public_key(&secp, admin, seed)?;
                     let admin_account = admin_key.account()?;
                     Some(admin_account)
                 }
@@ -232,7 +232,7 @@ async fn run(args: Vec<String>) -> Result<()> {
             println!("Contract: {} running  code {}", contract, code_id);
         }
         Some(("exec", exec)) => {
-            let contract = cli_helpers::get_arg_value(&exec, "contract")?;
+            let contract = cli_helpers::get_arg_value(exec, "contract")?;
 
             if !contract.starts_with("terra1") {
                 anyhow::bail!("invalid contract address");
@@ -262,7 +262,7 @@ async fn run(args: Vec<String>) -> Result<()> {
             println!("{}", resp);
         }
         Some(("query", query)) => {
-            let contract = cli_helpers::get_arg_value(&query, "contract")?;
+            let contract = cli_helpers::get_arg_value(query, "contract")?;
 
             if !contract.starts_with("terra1") {
                 anyhow::bail!("invalid contract address");
