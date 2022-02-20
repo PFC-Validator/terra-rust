@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::{App, Arg, ArgMatches, Subcommand};
+use clap::{Arg, ArgMatches, Subcommand};
 use dotenv::dotenv;
 use secp256k1::{Context, Secp256k1, Signing};
 use terra_rust_api::core_types::Coin;
@@ -13,7 +13,7 @@ pub const NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
 
 #[derive(Subcommand)]
 #[allow(clippy::upper_case_acronyms)]
-enum Command {
+enum TerraCommands {
     Migrate {
         contract: String,
         wasm: String,
@@ -41,7 +41,7 @@ async fn run(args: Vec<String>) -> Result<()> {
         NAME.unwrap_or("TERRARUST"),
         VERSION.unwrap_or("DEV")
     ));
-    let cli: App = cli_helpers::gen_cli("terra", "cargo-terra").args(&[
+    let cli: clap::Command = cli_helpers::gen_cli("terra", "cargo-terra").args(&[
         Arg::new("phrase")
             .long("phrase")
             .takes_value(true)
@@ -63,7 +63,7 @@ async fn run(args: Vec<String>) -> Result<()> {
             .default_value("3")
             .help("amount of seconds before retying to fetch hash"),
     ]);
-    let matches: ArgMatches = Command::augment_subcommands(cli).get_matches_from(args);
+    let matches: ArgMatches = TerraCommands::augment_subcommands(cli).get_matches_from(args);
 
     let sleep = cli_helpers::get_arg_value(&matches, "sleep")?.parse::<u64>()?;
     let retries = cli_helpers::get_arg_value(&matches, "retries")?.parse::<usize>()?;

@@ -143,8 +143,8 @@ impl<T: clap::FromArgMatches + clap::Subcommand> Cli<T> {
     }
 }
 #[allow(dead_code)]
-pub fn gen_cli_read_only<'a>(app_name: &'a str, bin_name: &'a str) -> clap::App<'a> {
-    clap::App::new(app_name)
+pub fn gen_cli_read_only<'a>(app_name: &'a str, bin_name: &'a str) -> clap::Command<'a> {
+    clap::Command::new(app_name)
         .bin_name(bin_name)
         .arg(
             Arg::new("lcd")
@@ -175,7 +175,7 @@ pub fn gen_cli_read_only<'a>(app_name: &'a str, bin_name: &'a str) -> clap::App<
         )
 }
 #[allow(dead_code)]
-pub fn gen_cli<'a>(app_name: &'a str, bin_name: &'a str) -> clap::App<'a> {
+pub fn gen_cli<'a>(app_name: &'a str, bin_name: &'a str) -> clap::Command<'a> {
     gen_cli_read_only(app_name,bin_name).args(&[
         Arg::new("wallet").long("wallet").takes_value(true).value_name("wallet").env("TERRARUST_WALLET").default_value("default").help( "the default wallet to look for keys in"),
         Arg::new("seed").long("seed").takes_value(true).value_name("seed").env("TERRARUST_SEED_PHRASE").default_value("").help(  "the seed phrase to use with this private key"),
