@@ -278,8 +278,7 @@ async fn run(args: Vec<String>) -> Result<()> {
             println!("{}", serde_json::to_string_pretty(&result)?)
         }
         _ => {
-            eprintln!("got {:?}", matches.subcommand());
-            panic!("no command found. This is a coding bug")
+            println!("try --help")
         }
     }
     Ok(())
@@ -328,7 +327,7 @@ async fn main() {
     if args.len() > 1 && args[1] == "terra" {
         args.remove(1);
     }
-    println!("args[1]={}", args[1]);
+
     if let Err(ref err) = run(args).await {
         log::error!("{}", err);
         err.chain()

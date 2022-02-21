@@ -68,8 +68,8 @@ pub enum TerraRustAPIError {
     GasPriceError(String),
     #[error("Attempting to fetch validator set in parts, and failed Height mismatch {0} {1}")]
     TendermintValidatorSet(u64, u64),
-    #[error("Transaction not found after {0} attempts")]
-    TXNotFound(usize),
+    #[error("Transaction {0} not found after {1} attempts")]
+    TXNotFound(String, usize),
     #[error("unknown Terra-Rust API error")]
     Unknown,
     #[error("Generic Error {0}")]

@@ -113,7 +113,7 @@ impl<'a> TX<'a> {
                 }
             }
         }
-        Err(TXNotFound(max_times))
+        Err(TXNotFound(hash.to_string(), max_times))
     }
     /// Estimate the StdFee structure based on the gas used
     pub async fn estimate_fee(

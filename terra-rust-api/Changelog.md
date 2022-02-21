@@ -2,7 +2,8 @@
 ## Debt
 ### support Variant::Bech32m in keygen? (https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki) 
 ## 1.2
-### 1.2.10 - 20-Feb-22
+### 1.2.11 - 20-Feb-22
+* fix TxNotFound error
 ### 1.2.9 
 * move store/instantiate/migrate commands to API (from cli)
 ### 1.2.8 - 17-Feb-22

@@ -1814,7 +1814,7 @@ dependencies = [
 
 [[package]]
 name = "terra-rust-api"
-version = "1.2.10"
+version = "1.2.11"
 dependencies = [
  "anyhow",
  "base64",
@@ -1848,7 +1848,7 @@ dependencies = [
 
 [[package]]
 name = "terra-rust-cli"
-version = "1.0.4"
+version = "1.0.5"
 dependencies = [
  "anyhow",
  "clap",
