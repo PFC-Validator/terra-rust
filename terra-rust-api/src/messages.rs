@@ -25,4 +25,3 @@ pub struct Message {
     #[allow(missing_docs)]
     value: serde_json::Value,
 }
-// impl<'a> Msg for Message<'a> {}

@@ -1,8 +1,11 @@
 use reqwest::StatusCode;
 //use crate::client::core_types::Msg;
+#[allow(deprecated)]
+use crate::client::tx_types::TXResultBlock;
 use crate::client::tx_types::{
-    TXResultAsync, TXResultBlock, TXResultSync, TxEstimate, TxFeeResult, V1TXSResult,
+    TXResultAsync, TXResultSync, TxEstimate, TxFeeResult, V1TXResult, V1TXSResult,
 };
+
 use crate::core_types::{Coin, StdSignMsg, StdSignature, StdTx};
 use crate::errors::TerraRustAPIError;
 use crate::errors::TerraRustAPIError::TXNotFound;
@@ -35,6 +38,7 @@ impl<'a> TX<'a> {
     }
     /// perform a sync submission to the blockchain. This will return more validation logic than async
     /// but you wait. It is still not guaranteed to create a blockchain transaction
+    #[allow(deprecated)]
     pub async fn broadcast_sync(
         &self,
         std_sign_msg: &StdSignMsg,
@@ -54,6 +58,7 @@ impl<'a> TX<'a> {
     }
     /// perform a 'blocking' submission to the blockchain. This will only return once the transaction
     /// is executed on the blockchain. This is great for debugging, but not recommended to be used otherwise
+    #[allow(deprecated)]
     pub async fn broadcast_block(
         &self,
         std_sign_msg: &StdSignMsg,
@@ -68,7 +73,12 @@ impl<'a> TX<'a> {
             .await?;
         Ok(response)
     }
+    #[deprecated(
+        since = "1.2.12",
+        note = "terra has deprecated this API endpoint. use get_v1"
+    )]
     /// get TX result
+    #[allow(deprecated)]
     pub async fn get(&self, hash: &str) -> Result<TXResultBlock, TerraRustAPIError> {
         let resp = self
             .terra
@@ -76,7 +86,20 @@ impl<'a> TX<'a> {
             .await?;
         Ok(resp)
     }
-    /// get TX result
+    /// use v1 API
+    pub async fn get_v1(&self, hash: &str) -> Result<V1TXResult, TerraRustAPIError> {
+        let resp = self
+            .terra
+            .send_cmd::<V1TXResult>(&format!("/cosmos/tx/v1beta1/txs/{}", hash), None)
+            .await?;
+        Ok(resp)
+    }
+    #[deprecated(
+        since = "1.2.12",
+        note = "terra has deprecated this API endpoint. Use get_and_wait_v1"
+    )]
+    /// get TX result, retrying a few times.
+    #[allow(deprecated)]
     pub async fn get_and_wait(
         &self,
         hash: &str,
@@ -85,6 +108,7 @@ impl<'a> TX<'a> {
     ) -> Result<TXResultBlock, TerraRustAPIError> {
         let mut times = 0;
         while times < max_times {
+            #[allow(deprecated)]
             let tx = self.get(hash).await;
 
             match tx {
@@ -115,6 +139,46 @@ impl<'a> TX<'a> {
         }
         Err(TXNotFound(hash.to_string(), max_times))
     }
+    /// get TX result, retrying a few times.
+    pub async fn get_and_wait_v1(
+        &self,
+        hash: &str,
+        max_times: usize,
+        sleep_amount: tokio::time::Duration,
+    ) -> Result<V1TXResult, TerraRustAPIError> {
+        let mut times = 0;
+        while times < max_times {
+            let tx = self.get_v1(hash).await;
+
+            match tx {
+                Ok(tx_response) => return Ok(tx_response),
+                Err(e) => {
+                    times += 1;
+                    match &e {
+                        TerraRustAPIError::TerraLCDResponse(statuscode, out) => {
+                            if statuscode == &StatusCode::NOT_FOUND {
+                                log::debug!(
+                                    "Transaction not applied .. retry #{} sleeping {} seconds",
+                                    times,
+                                    sleep_amount.as_secs()
+                                );
+                                tokio::time::sleep(sleep_amount).await;
+                            } else {
+                                log::error!("Invalid Response TX: {} {}", statuscode, out);
+                                break;
+                            }
+                        }
+                        _ => {
+                            log::error!("Invalid Response TX: {:?}", e);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        Err(TXNotFound(hash.to_string(), max_times))
+    }
+
     /// Estimate the StdFee structure based on the gas used
     pub async fn estimate_fee(
         &self,
@@ -143,6 +207,34 @@ impl<'a> TX<'a> {
         let resp = self
             .terra
             .post_cmd::<TxEstimate, LCDResult<TxFeeResult>>("/txs/estimate_fee", &tx_est)
+            .await?;
+        Ok(resp)
+    }
+    /// simulate transaction for estimating gas usage
+    pub async fn simulate_v1(
+        &self,
+        sender: &str,
+        msgs: &[Message],
+        gas_adjustment: f64,
+        gas_prices: &[&Coin],
+    ) -> Result<LCDResult<TxFeeResult>, TerraRustAPIError> {
+        let tx_est = TxEstimate::create(
+            &self.terra.chain_id,
+            sender,
+            msgs,
+            gas_adjustment,
+            gas_prices,
+        );
+
+        log::debug!(
+            "simulate Transaction = {:#?} #messages={}",
+            tx_est.base_req,
+            tx_est.msgs.len()
+        );
+
+        let resp = self
+            .terra
+            .post_cmd::<TxEstimate, LCDResult<TxFeeResult>>("/cosmos/tx/v1beta1/simulate", &tx_est)
             .await?;
         Ok(resp)
     }

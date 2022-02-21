@@ -97,8 +97,9 @@ pub struct TXBlock {
     pub value: TXBlockValue,
 }
 
-#[allow(clippy::upper_case_acronyms)]
+#[allow(deprecated, clippy::upper_case_acronyms)]
 #[derive(Deserialize, Serialize, Debug)]
+
 pub struct TXResultBlock {
     #[serde(with = "terra_u64_format")]
     pub height: u64,
@@ -115,9 +116,12 @@ pub struct TXResultBlock {
     // pub gas_used: u64,
     pub tx: Option<TXBlock>,
 }
+#[allow(deprecated)]
 impl TXResultBlock {
     /// find a attribute's value from TX logs.
     /// returns: msg_index and value
+
+    #[allow(deprecated)]
     pub fn get_attribute_from_result_logs(
         &self,
 
@@ -154,6 +158,7 @@ impl TXResultBlock {
         response
     }
     /// get the list of event types from a TX record
+    #[allow(deprecated)]
     pub fn get_events(&self, event_type: &str) -> Vec<TxResultBlockEvent> {
         let mut response: Vec<TxResultBlockEvent> = Default::default();
 
@@ -246,7 +251,7 @@ pub struct V1TXResponse {
     pub code: usize,
     pub data: String,
     pub raw_log: String,
-    pub logs: Vec<serde_json::Value>,
+    pub logs: Option<Vec<TxResultBlockMsg>>,
     pub info: String,
     #[serde(with = "terra_u64_format")]
     pub gas_wanted: u64,
@@ -257,7 +262,66 @@ pub struct V1TXResponse {
     pub timestamp: DateTime<Utc>,
     pub events: Option<Vec<serde_json::Value>>,
 }
+impl V1TXResponse {
+    /// find a attribute's value from TX logs.
+    /// returns: msg_index and value
 
+    pub fn get_attribute_from_logs(
+        &self,
+
+        event_type: &str,
+        attribute_key: &str,
+    ) -> Vec<(usize, String)> {
+        let mut response: Vec<(usize, String)> = Default::default();
+
+        if let Some(logs) = &self.logs {
+            for log_part in logs {
+                let msg_index = log_part.msg_index.unwrap_or_default();
+                let events = &log_part.events;
+                //      log::info!("logs{:?}", events);
+                let events_filtered = events
+                    .iter()
+                    .filter(|event| event.s_type == event_type)
+                    .collect::<Vec<_>>();
+                //      log::info!("Filtered Events {:?}", events_filtered);
+                if let Some(event) = events_filtered.first() {
+                    let attributes_filtered = event
+                        .attributes
+                        .iter()
+                        .filter(|attr| attr.key == attribute_key)
+                        .map(|f| f.value.clone())
+                        .flatten()
+                        .collect::<Vec<_>>();
+
+                    if let Some(attr_key) = attributes_filtered.first() {
+                        response.push((msg_index, attr_key.clone()));
+                    }
+                }
+            }
+        }
+
+        response
+    }
+    /// get the list of event types from a TX record
+    pub fn get_events(&self, event_type: &str) -> Vec<TxResultBlockEvent> {
+        let mut response: Vec<TxResultBlockEvent> = Default::default();
+
+        if let Some(logs) = &self.logs {
+            for log_part in logs {
+                let events = &log_part.events;
+                //      log::info!("logs{:?}", events);
+                let events_filtered = events
+                    .iter()
+                    .filter(|event| event.s_type == event_type)
+                    .collect::<Vec<_>>();
+                for event in events_filtered {
+                    response.push(event.clone());
+                }
+            }
+        }
+        response
+    }
+}
 #[derive(Deserialize, Serialize, Debug)]
 pub struct V1Pagination {
     pub next_key: Option<String>,
@@ -270,4 +334,9 @@ pub struct V1TXSResult {
     pub txs: Vec<V1TX>,
     pub tx_responses: Vec<V1TXResponse>,
     pub pagination: V1Pagination,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct V1TXResult {
+    pub tx: V1TX,
+    pub tx_response: V1TXResponse,
 }

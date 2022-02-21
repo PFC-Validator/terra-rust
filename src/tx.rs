@@ -1,4 +1,3 @@
-use anyhow::Result;
 use clap::{Parser, Subcommand};
 use terra_rust_api::Terra;
 
@@ -26,10 +25,10 @@ pub struct TxCommand {
     command: TxEnum,
 }
 impl TxCommand {
-    pub async fn parse(self, terra: &Terra) -> Result<()> {
+    pub async fn parse(self, terra: &Terra) -> anyhow::Result<()> {
         match self.command {
             TxEnum::Hash { hash } => {
-                let tx = terra.tx().get(&hash).await?;
+                let tx = terra.tx().get_v1(&hash).await?;
                 println!("{}", serde_json::to_string_pretty(&tx)?);
             }
             TxEnum::Block {

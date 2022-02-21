@@ -241,11 +241,12 @@ impl CodeCommand {
 
                 let tx = terra
                     .tx()
-                    .get_and_wait(&hash, retries, tokio::time::Duration::from_secs(3))
+                    .get_and_wait_v1(&hash, retries, tokio::time::Duration::from_secs(3))
                     .await?;
 
-                let codes =
-                    tx.get_attribute_from_result_logs("migrate_contract", "contract_address");
+                let codes = tx
+                    .tx_response
+                    .get_attribute_from_logs("migrate_contract", "contract_address");
                 let contract = if let Some(code) = codes.first() {
                     code.1.clone()
                 } else {
@@ -255,7 +256,9 @@ impl CodeCommand {
                     );
                 };
 
-                let codes = tx.get_attribute_from_result_logs("migrate_contract", "code_id");
+                let codes = tx
+                    .tx_response
+                    .get_attribute_from_logs("migrate_contract", "code_id");
                 let code_id = if let Some(code) = codes.first() {
                     code.1.clone()
                 } else {
@@ -277,8 +280,10 @@ async fn get_attribute_tx(
     event_type: &str,
     attribute_key: &str,
 ) -> Result<String> {
-    let tx = terra.tx().get_and_wait(hash, retries, sleep).await?;
-    let codes = tx.get_attribute_from_result_logs(event_type, attribute_key);
+    let tx = terra.tx().get_and_wait_v1(hash, retries, sleep).await?;
+    let codes = tx
+        .tx_response
+        .get_attribute_from_logs(event_type, attribute_key);
     if let Some(code) = codes.first() {
         Ok(code.1.clone())
     } else {
