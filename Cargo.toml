@@ -1,6 +1,6 @@
 [package]
 name = "terra-rust"
-version = "1.1.6-alpha.0"
+version = "1.1.6"
 authors = ["PFC-Validator <PFC-Validator@protonmail.com>"]
 edition = "2018"
 readme = "README.md"
