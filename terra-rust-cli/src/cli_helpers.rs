@@ -182,7 +182,7 @@ pub fn gen_cli<'a>(app_name: &'a str, bin_name: &'a str) -> clap::Command<'a> {
         Arg::new("fees").long("fees").takes_value(true).value_name("fees").default_value("").help(   "the fees to use. This will override gas parameters if specified."),
         Arg::new("gas").long("gas").takes_value(true).value_name("gas").default_value("auto").help(   "the gas amount to use 'auto' to estimate"),
         Arg::new("gas-prices").long("gas-prices").takes_value(true).value_name("gas-prices").default_value("auto").help(    "the gas price to use to calculate fee. Format is NNNtoken eg. 1000uluna. note we only support a single price for now. if auto. it will use FCD"),
-        Arg::new("gas-denom").long("gas-denom").takes_value(true).value_name("gas-denom").default_value("ukrw").help(    "the denomination/currency to use to pay fee. Format is uXXXX."),
+        Arg::new("gas-denom").long("gas-denom").takes_value(true).value_name("gas-denom").env("TERRARUST_GAS_DENOM").default_value("ukrw").help(    "the denomination/currency to use to pay fee. Format is uXXXX."),
         Arg::new("gas-adjustment").long("gas-adjustment").takes_value(true).value_name("gas-adjustment").default_value("1.4").help(    "the adjustment to multiply the estimate to calculate the fee"),
     ])
 }
