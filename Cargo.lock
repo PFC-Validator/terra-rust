@@ -816,9 +816,9 @@ dependencies = [
 
 [[package]]
 name = "keyring"
-version = "0.10.4"
+version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a49a8b156a663b0b6898a845f056dd2502d8f0b3bde9686b59cfb4fdbc1d4777"
+checksum = "894a58932447ecc241a3545135bdfd26ac0e611295b391904ce0b085310ab38c"
 dependencies = [
  "byteorder",
  "secret-service",
@@ -1863,7 +1863,7 @@ dependencies = [
 
 [[package]]
 name = "terra-rust-wallet"
-version = "1.1.4"
+version = "1.1.5"
 dependencies = [
  "anyhow",
  "keyring",

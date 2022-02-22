@@ -10,7 +10,7 @@ pub enum TerraRustWalletError {
     #[error(transparent)]
     SerdeJsonError(#[from] ::serde_json::Error),
     #[error(transparent)]
-    KeyringErrorAdapter(#[from] ::keyring::KeyringError),
+    KeyringErrorAdapter(#[from] ::keyring::Error),
     #[error(transparent)]
     TerraRustAPIError(#[from] TerraRustAPIError),
     #[error("Terra Wallet `{key}` Key not found Error")]
@@ -32,8 +32,8 @@ pub enum TerraRustWalletError {
 #[error(transparent)]
 pub struct KeyringErrorAdapter(anyhow::Error);
 
-impl From<keyring::KeyringError> for KeyringErrorAdapter {
-    fn from(e: keyring::KeyringError) -> Self {
+impl From<keyring::Error> for KeyringErrorAdapter {
+    fn from(e: keyring::Error) -> Self {
         KeyringErrorAdapter(anyhow::anyhow!("Keyring error: {:?}", e))
     }
 }
