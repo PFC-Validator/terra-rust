@@ -1837,7 +1837,6 @@ dependencies = [
  "rust-crypto",
  "rust_decimal",
  "rust_decimal_macros",
- "rustc-serialize",
  "secp256k1",
  "serde",
  "serde_json",

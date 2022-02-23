@@ -81,7 +81,7 @@ pub mod messages;
 extern crate lazy_static;
 #[macro_use]
 extern crate erased_serde;
-extern crate rustc_serialize;
+//extern crate rustc_serialize;
 //
 //#[macro_use]
 //extern crate error_chain;

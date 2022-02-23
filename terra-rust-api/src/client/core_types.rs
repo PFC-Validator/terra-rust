@@ -8,7 +8,7 @@ use rust_decimal::Decimal;
 
 use crate::errors::TerraRustAPIError;
 use crate::messages::Message;
-use rustc_serialize::base64::{ToBase64, STANDARD};
+//use base64::{ToBase64, STANDARD};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -154,7 +154,7 @@ pub struct PubKeySig {
 impl PubKeySig {
     /// create from Public key structure
     pub fn create(bpub: &bitcoin::util::key::PublicKey) -> PubKeySig {
-        let v = bpub.key.serialize().to_base64(STANDARD);
+        let v = base64::encode(bpub.key.serialize()); //.to_base64(STANDARD);
         PubKeySig {
             stype: "tendermint/PubKeySecp256k1".to_string(),
             value: v,
@@ -173,7 +173,7 @@ impl StdSignature {
     /// the signature generated and the public key
     pub fn create(sig: &[u8; 64], bpub: &bitcoin::util::key::PublicKey) -> StdSignature {
         StdSignature {
-            signature: sig.to_base64(STANDARD),
+            signature: base64::encode(sig), //.to_base64(STANDARD),
             pub_key: PubKeySig::create(bpub),
         }
     }

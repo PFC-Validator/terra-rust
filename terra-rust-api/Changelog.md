@@ -4,6 +4,7 @@
 ## 1.2
 ### 1.2.13
 * V1 hash retrieval has different error code when hash not found
+* rustc_serialize removed and using regular base64 module
 ### 1.2.12
 * add V1 hash retrieval.
 ### 1.2.11 - 20-Feb-22
