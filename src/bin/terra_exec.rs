@@ -21,13 +21,6 @@ async fn run() -> Result<()> {
                 .env("TERRARUST_CONTRACT")
                 .required(true)
                 .help("the contract address"),
-            Arg::new("sender")
-                .long("sender")
-                .takes_value(true)
-                .value_name("sender")
-                .env("TERRARUST_SENDER")
-                .required(true)
-                .help("the sender account"),
             Arg::new("coins")
                 .long("coins")
                 .takes_value(true)
@@ -42,12 +35,12 @@ async fn run() -> Result<()> {
         ])
         .get_matches();
 
-    let wallet = cli_helpers::wallet_from_args(&cli)?;
+    //  let wallet = cli_helpers::wallet_from_args(&cli)?;
     let terra = cli_helpers::lcd_from_args(&cli).await?;
 
     let json_str = cli.value_of("json").expect("json be in the CLI");
-    let seed = cli.value_of("seed");
-    let sender = cli.value_of("sender").expect("Need someone to exec from");
+    // let seed = cli.value_of("seed");
+    //let sender = cli.value_of("sender").expect("Need someone to exec from");
     let coins_str = cli.value_of("coins");
     let contract = cli.value_of("contract").expect("Need a contract");
 
@@ -55,7 +48,7 @@ async fn run() -> Result<()> {
 
     let secp = Secp256k1::new();
 
-    let from_key = wallet.get_private_key(&secp, sender, seed)?;
+    let from_key = cli_helpers::get_private_key(&secp, &cli)?;
     let from_public_key = from_key.public_key(&secp);
 
     let coins = if let Some(coins) = coins_str {

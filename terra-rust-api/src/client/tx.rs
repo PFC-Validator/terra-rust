@@ -156,7 +156,7 @@ impl<'a> TX<'a> {
                     times += 1;
                     match &e {
                         TerraRustAPIError::TerraLCDResponse(statuscode, out) => {
-                            if statuscode == &StatusCode::NOT_FOUND {
+                            if statuscode == &StatusCode::BAD_REQUEST {
                                 log::debug!(
                                     "Transaction not applied .. retry #{} sleeping {} seconds",
                                     times,

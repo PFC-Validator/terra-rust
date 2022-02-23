@@ -1,11 +1,12 @@
 use crate::errors::TerraRustCLIError;
-use anyhow::Result;
+//use anyhow::{ Result};
 use clap::{Arg, ArgMatches, Parser};
+use secp256k1::{Context, Secp256k1, Signing};
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::Path;
 use terra_rust_api::core_types::Coin;
-use terra_rust_api::{GasOptions, Terra};
+use terra_rust_api::{GasOptions, PrivateKey, Terra};
 use terra_rust_wallet::Wallet;
 
 /// your terra swiss army knife
@@ -104,7 +105,7 @@ pub struct Cli<T: clap::FromArgMatches + clap::Subcommand> {
     pub cmd: T,
 }
 impl<T: clap::FromArgMatches + clap::Subcommand> Cli<T> {
-    pub async fn gas_opts(&self) -> Result<GasOptions> {
+    pub async fn gas_opts(&self) -> Result<GasOptions, TerraRustCLIError> {
         if self.gas_price == "auto" {
             let client = reqwest::Client::new();
             let gas_opts = GasOptions::create_with_fcd(
@@ -184,6 +185,14 @@ pub fn gen_cli<'a>(app_name: &'a str, bin_name: &'a str) -> clap::Command<'a> {
         Arg::new("gas-prices").long("gas-prices").takes_value(true).value_name("gas-prices").default_value("auto").help(    "the gas price to use to calculate fee. Format is NNNtoken eg. 1000uluna. note we only support a single price for now. if auto. it will use FCD"),
         Arg::new("gas-denom").long("gas-denom").takes_value(true).value_name("gas-denom").env("TERRARUST_GAS_DENOM").default_value("ukrw").help(    "the denomination/currency to use to pay fee. Format is uXXXX."),
         Arg::new("gas-adjustment").long("gas-adjustment").takes_value(true).value_name("gas-adjustment").default_value("1.4").help(    "the adjustment to multiply the estimate to calculate the fee"),
+        Arg::new("sender").long("sender").takes_value(true).value_name("sender").help( "wallet that is sending the command")
+        .env("TERRARUST_SENDER"),
+        Arg::new("phrase")
+            .long("phrase")
+            .takes_value(true)
+            .value_name("phrase")
+            .required(false)
+            .help("the phrase words for the key"),
     ])
 }
 #[allow(dead_code)]
@@ -252,6 +261,22 @@ pub fn lcd_no_tx_from_args(cli: &ArgMatches) -> Result<Terra, TerraRustCLIError>
     Ok(Terra::lcd_client_no_tx(lcd, chain_id))
 }
 
+pub fn get_private_key<C: Context + Signing>(
+    secp: &Secp256k1<C>,
+    matches: &ArgMatches,
+) -> Result<PrivateKey, TerraRustCLIError> {
+    if let Some(phrase) = matches.value_of("phrase") {
+        if let Some(seed) = matches.value_of("seed") {
+            Ok(PrivateKey::from_words_seed(secp, phrase, seed)?)
+        } else {
+            Ok(PrivateKey::from_words(secp, phrase, 0, 0)?)
+        }
+    } else {
+        let wallet = wallet_from_args(matches)?;
+        let sender = get_arg_value(matches, "sender")?;
+        Ok(wallet.get_private_key(secp, sender, matches.value_of("seed"))?)
+    }
+}
 pub fn get_arg_value<'a>(cli: &'a ArgMatches, id: &str) -> Result<&'a str, TerraRustCLIError> {
     if let Some(val) = cli.value_of(id) {
         Ok(val)

@@ -1,10 +1,10 @@
 use anyhow::Result;
 use clap::{Arg, ArgMatches, Subcommand};
 use dotenv::dotenv;
-use secp256k1::{Context, Secp256k1, Signing};
+use secp256k1::Secp256k1;
 use terra_rust_api::core_types::Coin;
 use terra_rust_api::messages::wasm::{MsgInstantiateContract, MsgMigrateContract};
-use terra_rust_api::{Message, MsgExecuteContract, PrivateKey, Terra};
+use terra_rust_api::{Message, MsgExecuteContract, Terra};
 use terra_rust_cli::cli_helpers;
 /// VERSION number of package
 pub const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
@@ -42,12 +42,6 @@ async fn run(args: Vec<String>) -> Result<()> {
         VERSION.unwrap_or("DEV")
     ));
     let cli: clap::Command = cli_helpers::gen_cli("terra", "cargo-terra").args(&[
-        Arg::new("phrase")
-            .long("phrase")
-            .takes_value(true)
-            .value_name("phrase")
-            .required(false)
-            .help("the phrase words for the key"),
         Arg::new("retries")
             .long("retries")
             .takes_value(true)
@@ -77,7 +71,7 @@ async fn run(args: Vec<String>) -> Result<()> {
             }
             let terra = cli_helpers::lcd_from_args(&matches).await?;
             let secp = Secp256k1::new();
-            let private = get_private_key(&secp, &matches)?;
+            let private = cli_helpers::get_private_key(&secp, &matches)?;
             let wasm = cli_helpers::get_arg_value(migrate, "wasm")?;
             let code_id = if let Ok(code_id) = wasm.parse::<u64>() {
                 code_id
@@ -145,7 +139,7 @@ async fn run(args: Vec<String>) -> Result<()> {
         Some(("instantiate", instantiate)) => {
             let terra = cli_helpers::lcd_from_args(&matches).await?;
             let secp = Secp256k1::new();
-            let private = get_private_key(&secp, &matches)?;
+            let private = cli_helpers::get_private_key(&secp, &matches)?;
             let wasm = cli_helpers::get_arg_value(instantiate, "wasm")?;
             let coins = if let Some(coin_str) = instantiate.value_of("coins") {
                 Coin::parse_coins(coin_str)?
@@ -246,7 +240,7 @@ async fn run(args: Vec<String>) -> Result<()> {
             }
             let terra = cli_helpers::lcd_from_args(&matches).await?;
             let secp = Secp256k1::new();
-            let private = get_private_key(&secp, &matches)?;
+            let private = cli_helpers::get_private_key(&secp, &matches)?;
             let coins = if let Some(coin_str) = exec.value_of("coins") {
                 Coin::parse_coins(coin_str)?
             } else {
@@ -289,23 +283,6 @@ async fn run(args: Vec<String>) -> Result<()> {
         }
     }
     Ok(())
-}
-
-fn get_private_key<C: Context + Signing>(
-    secp: &Secp256k1<C>,
-    matches: &ArgMatches,
-) -> Result<PrivateKey> {
-    if let Some(phrase) = matches.value_of("phrase") {
-        if let Some(seed) = matches.value_of("seed") {
-            Ok(PrivateKey::from_words_seed(secp, phrase, seed)?)
-        } else {
-            Ok(PrivateKey::from_words(secp, phrase, 0, 0)?)
-        }
-    } else {
-        let wallet = cli_helpers::wallet_from_args(matches)?;
-        let sender = cli_helpers::get_arg_value(matches, "sender")?;
-        Ok(wallet.get_private_key(secp, sender, matches.value_of("seed"))?)
-    }
 }
 
 async fn get_attribute_tx(

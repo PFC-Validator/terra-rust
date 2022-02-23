@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use terra_rust_api::errors::TerraRustAPIError;
 use terra_rust_api::Terra;
 
 /// Input to the /txs/XXXX query
@@ -28,8 +29,14 @@ impl TxCommand {
     pub async fn parse(self, terra: &Terra) -> anyhow::Result<()> {
         match self.command {
             TxEnum::Hash { hash } => {
-                let tx = terra.tx().get_v1(&hash).await?;
-                println!("{}", serde_json::to_string_pretty(&tx)?);
+                let tx_r = terra.tx().get_v1(&hash).await;
+                match tx_r {
+                    Ok(tx) => println!("{}", serde_json::to_string_pretty(&tx)?),
+                    Err(e) => match e {
+                        TerraRustAPIError::TerraLCDResponse(s, x) => println!("{}/{}", s, x),
+                        _ => println!("{:?}", e),
+                    },
+                }
             }
             TxEnum::Block {
                 height,

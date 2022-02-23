@@ -2,6 +2,7 @@
 
 use std::num::{ParseFloatError, ParseIntError};
 use terra_rust_api::errors::TerraRustAPIError;
+use terra_rust_wallet::errors::TerraRustWalletError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -14,6 +15,8 @@ pub enum TerraRustCLIError {
     NumberFloatErr(#[from] ParseFloatError),
     #[error("Number Int Error")]
     NumberIntErr(#[from] ParseIntError),
-    #[error("TerraRustAPIError Error")]
+    #[error(transparent)]
     TerraRustAPIError(#[from] TerraRustAPIError),
+    #[error(transparent)]
+    TerraRustWalletError(#[from] TerraRustWalletError),
 }
