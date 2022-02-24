@@ -40,7 +40,7 @@ pub async fn run_it(cli: &ArgMatches) -> Result<()> {
     //let cli = app.get_matches();
 
     //  let wallet = cli_helpers::wallet_from_args(&cli)?;
-    let terra = cli_helpers::lcd_from_args(&cli).await?;
+    let terra = cli_helpers::lcd_from_args(cli).await?;
 
     let json_str = cli.value_of("json").expect("json be in the CLI");
     //let json_str = cli.value_of("json").expect("json be in the CLI");
@@ -51,7 +51,7 @@ pub async fn run_it(cli: &ArgMatches) -> Result<()> {
 
     let secp = Secp256k1::new();
 
-    let from_key = cli_helpers::get_private_key(&secp, &cli)?;
+    let from_key = cli_helpers::get_private_key(&secp, cli)?;
     let from_public_key = from_key.public_key(&secp);
 
     let coins = if let Some(coins) = coins_str {
