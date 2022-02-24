@@ -145,8 +145,8 @@ impl TXResultBlock {
                         .attributes
                         .iter()
                         .filter(|attr| attr.key == attribute_key)
-                        .map(|f| f.value.clone())
-                        .flatten()
+                        .filter_map(|f| f.value.clone())
+                        //.flatten()
                         .collect::<Vec<_>>();
 
                     if let Some(attr_key) = attributes_filtered.first() {
@@ -289,8 +289,8 @@ impl V1TXResponse {
                         .attributes
                         .iter()
                         .filter(|attr| attr.key == attribute_key)
-                        .map(|f| f.value.clone())
-                        .flatten()
+                        .filter_map(|f| f.value.clone())
+                        //  .flatten()
                         .collect::<Vec<_>>();
 
                     if let Some(attr_key) = attributes_filtered.first() {
