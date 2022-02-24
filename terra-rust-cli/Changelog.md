@@ -1,5 +1,7 @@
 # Changes
 ## 1.0
+### 1.0.6 - 25-Feb-2022
+* additional helpers for reading private key
 ### 1.0.4 - 21-Feb-2022
 * remove depreciation warnings
 ### 1.0.3 - 20-Feb-2022
