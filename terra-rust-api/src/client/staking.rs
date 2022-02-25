@@ -24,6 +24,24 @@ impl Staking<'_> {
             .send_cmd::<LCDResult<Vec<Validator>>>("/staking/validators", None)
             .await?)
     }
+    /// Get list of validators at a given height
+    pub async fn validators_at_height(
+        &self,
+        height: u64,
+        limit: Option<u64>,
+    ) -> anyhow::Result<LCDResult<Vec<Validator>>> {
+        Ok(self
+            .terra
+            .send_cmd::<LCDResult<Vec<Validator>>>(
+                &format!(
+                    "/staking/validators?height={}&limit={}",
+                    height,
+                    limit.unwrap_or(200u64)
+                ),
+                None,
+            )
+            .await?)
+    }
     pub async fn validator_by_moniker(&self, moniker: &str) -> anyhow::Result<Option<Validator>> {
         let lst = self
             .terra
