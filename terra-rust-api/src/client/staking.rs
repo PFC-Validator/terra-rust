@@ -10,7 +10,7 @@ impl Staking<'_> {
     pub fn create(terra: &'_ Terra) -> Staking<'_> {
         Staking { terra }
     }
-    pub async fn validator(&self, key: &str) -> anyhow::Result<LCDResult<Validator>> {
+    pub async fn validator(&self, key: &str) -> Result<LCDResult<Validator>, TerraRustAPIError> {
         //   let url = self.terra.url.to_owned() + "/staking/validators/" + key;
         Ok(self
             .terra
@@ -18,7 +18,7 @@ impl Staking<'_> {
             .await?)
     }
     /// Get list of validators
-    pub async fn validators(&self) -> anyhow::Result<LCDResult<Vec<Validator>>> {
+    pub async fn validators(&self) -> Result<LCDResult<Vec<Validator>>, TerraRustAPIError> {
         Ok(self
             .terra
             .send_cmd::<LCDResult<Vec<Validator>>>("/staking/validators", None)
@@ -29,7 +29,7 @@ impl Staking<'_> {
         &self,
         height: u64,
         limit: Option<u64>,
-    ) -> anyhow::Result<LCDResult<Vec<Validator>>> {
+    ) -> Result<LCDResult<Vec<Validator>>, TerraRustAPIError> {
         Ok(self
             .terra
             .send_cmd::<LCDResult<Vec<Validator>>>(
@@ -42,7 +42,10 @@ impl Staking<'_> {
             )
             .await?)
     }
-    pub async fn validator_by_moniker(&self, moniker: &str) -> anyhow::Result<Option<Validator>> {
+    pub async fn validator_by_moniker(
+        &self,
+        moniker: &str,
+    ) -> Result<Option<Validator>, TerraRustAPIError> {
         let lst = self
             .terra
             .send_cmd::<LCDResult<Vec<Validator>>>("/staking/validators", None)
