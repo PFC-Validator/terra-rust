@@ -2,8 +2,9 @@
 ## Debt
 ### support Variant::Bech32m in keygen? (https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki) 
 ## 1.2
-### 1.2.15 -25-Feb-22
+### 1.2.16 -25-Feb-22
 * validators_at_height() function
+* RPCValidatorUpdate / power is optional
 ### 1.2.13 - 25-Feb-22
 * V1 hash retrieval has different error code when hash not found
 * rustc_serialize removed and using regular base64 module

@@ -1,6 +1,6 @@
 use crate::client::client_types::{
     base64_encoded_format, base64_opt_encoded_format, terra_datetime_format, terra_i64_format,
-    terra_u64_format,
+    terra_opt_u64_format, terra_u64_format,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -138,8 +138,8 @@ pub struct RPCPubKey {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct RPCValidatorUpdate {
     pub pub_key: RPCPubKeyOuter,
-    #[serde(with = "terra_u64_format")]
-    pub power: u64,
+    #[serde(with = "terra_opt_u64_format")]
+    pub power: Option<u64>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
