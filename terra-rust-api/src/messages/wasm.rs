@@ -81,7 +81,7 @@ impl MsgStoreCode {
 #[derive(Serialize, Debug)]
 /// Message: Exec Contract
 pub struct MsgInstantiateContract {
-    pub admin: String,
+    pub admin: Option<String>,
     #[serde(with = "terra_u64_format")]
     pub code_id: u64,
     pub sender: String,
@@ -128,7 +128,7 @@ impl MsgInstantiateContract {
         //let exec_b64 = base64::encode(contents.to_string());
 
         let internal = MsgInstantiateContract {
-            admin: admin.unwrap_or_else(|| "".into()),
+            admin, //: admin.unwrap_or_else(|| "".into()),
             code_id,
             sender: sender.into(),
             init_coins,

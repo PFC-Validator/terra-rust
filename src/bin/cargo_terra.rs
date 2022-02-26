@@ -171,7 +171,7 @@ async fn run(args: Vec<String>) -> Result<()> {
                 } else if admin == "same" {
                     Some(private.public_key(&secp).account()?)
                 } else if admin == "none" {
-                    None
+                    todo!("Admin of none/empty not supported")
                 } else {
                     let wallet = cli_helpers::wallet_from_args(&matches)?;
                     let seed = matches.value_of("seed");
@@ -180,7 +180,7 @@ async fn run(args: Vec<String>) -> Result<()> {
                     Some(admin_account)
                 }
             } else {
-                None
+                todo!("Admin of none/empty not supported")
             };
 
             let init_json = cli_helpers::get_arg_value(instantiate, "json")?;
