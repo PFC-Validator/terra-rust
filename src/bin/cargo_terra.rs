@@ -24,6 +24,9 @@ enum TerraCommands {
         exec: String,
         coins: Option<String>,
     },
+    Store {
+        wasm: String,
+    },
     Instantiate {
         wasm: String,
         json: String,
@@ -231,6 +234,29 @@ async fn run(args: Vec<String>) -> Result<()> {
             };
 
             println!("Contract: {} running  code {}", contract, code_id);
+        }
+        Some(("store", store)) => {
+            let terra = cli_helpers::lcd_from_args(&matches).await?;
+            let secp = Secp256k1::new();
+            let private = cli_helpers::get_private_key(&secp, &matches)?;
+            let wasm = cli_helpers::get_arg_value(store, "wasm")?;
+
+            let hash = terra
+                .wasm()
+                .store(&secp, &private, wasm, memo.clone())
+                .await?
+                .txhash;
+            let code_id = get_attribute_tx(
+                &terra,
+                &hash,
+                retries,
+                tokio::time::Duration::from_secs(sleep),
+                "store_code",
+                "code_id",
+            )
+            .await?;
+
+            println!("Contract: stored with code {}", code_id);
         }
         Some(("exec", exec)) => {
             let contract = cli_helpers::get_arg_value(exec, "contract")?;
