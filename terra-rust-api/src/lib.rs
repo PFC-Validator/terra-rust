@@ -96,7 +96,7 @@ pub use addressbook::AddressBook;
 pub use client::lcd_types::{LCDResult, LCDResultVec, LCDTypeValue};
 pub use client::{auth_types, client_types, core_types, staking_types, tendermint_types};
 pub use client::{GasOptions, Terra};
-pub use keys::{PrivateKey, PublicKey};
+pub use keys::{PrivateKey, PublicKey, Signature};
 pub use messages::bank;
 pub use messages::wasm::MsgExecuteContract;
 pub use messages::Message;

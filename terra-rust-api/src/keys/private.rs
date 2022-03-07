@@ -127,6 +127,7 @@ impl PrivateKey {
         blob: &str,
     ) -> Result<StdSignature, TerraRustAPIError> {
         let pub_k = &self.private_key.private_key.public_key(secp);
+
         let priv_k = self.private_key.private_key.key;
         let mut sha = Sha256::new();
         let mut sha_result: [u8; 32] = [0; 32];

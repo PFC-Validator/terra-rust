@@ -4,6 +4,7 @@ use bitcoin::bech32::{decode, encode, u5, FromBase32, ToBase32, Variant};
 use crypto::digest::Digest;
 use crypto::ripemd160::Ripemd160;
 use crypto::sha2::Sha256;
+
 pub use ed25519_dalek::PublicKey as Ed25519;
 use serde::{Deserialize, Serialize};
 static BECH32_PUBKEY_DATA_PREFIX_SECP256K1: [u8; 5] = [0xeb, 0x5a, 0xe9, 0x87, 0x21]; // "eb5ae98721";
@@ -383,6 +384,7 @@ mod tst {
     use dotenv::dotenv;
     #[allow(unused_imports)]
     use env_logger;
+
     #[test]
     pub fn tst_conv() -> anyhow::Result<()> {
         let pub_key = PublicKey::from_account("terra1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztv3qqm")?;

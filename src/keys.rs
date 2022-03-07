@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::io::{self, BufRead};
-use terra_rust_api::PrivateKey;
+use terra_rust_api::{PrivateKey, Signature};
 
 use secp256k1::Secp256k1;
 use terra_rust_wallet::Wallet;
@@ -41,6 +41,27 @@ pub enum KeysEnum {
     Get {
         #[clap(name = "name", help = "the key with this name.")]
         name: String,
+    },
+    /// Sign a arbitrary string
+    ///
+    Sign {
+        #[clap(name = "signer", help = "the signer to sign the message.")]
+        signer: String,
+        #[clap(name = "message", help = "the message to sign.")]
+        message: String,
+    },
+    /// Sign a arbitrary string
+    ///
+    Verify {
+        #[clap(
+            name = "public_key",
+            help = "the public key raw value (just the hex string)."
+        )]
+        public_key: String,
+        #[clap(name = "signature", help = "the signature")]
+        signature: String,
+        #[clap(name = "message", help = "the message to verify.")]
+        message: String,
     },
     /// List keys in the wallet
     List,
@@ -119,6 +140,24 @@ impl KeysCommand {
             KeysEnum::List => {
                 let keys = wallet.list()?;
                 println!("{:#?}", keys);
+            }
+            KeysEnum::Sign { signer, message } => {
+                let secp = Secp256k1::new();
+
+                let from_key = wallet.get_private_key(&secp, &signer, seed)?;
+                // let signature = from_key.sign(&secp, &cli.message)?;
+                let signature = from_key.sign(&secp, &message)?;
+                println!("Signature: {}", signature.signature);
+                println!("Public Key: {}", signature.pub_key.value);
+            }
+            KeysEnum::Verify {
+                public_key,
+                signature,
+                message,
+            } => {
+                let secp = Secp256k1::new();
+                Signature::verify(&secp, &public_key, &signature, &message)?;
+                println!("OK");
             }
         }
         Ok(())
