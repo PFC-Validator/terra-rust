@@ -1,6 +1,8 @@
 use crate::errors::TerraRustCLIError;
-//use anyhow::{ Result};
+use crate::errors::TerraRustCLIError::MissingEnv;
 use clap::{Arg, ArgMatches, Parser};
+use lazy_static::lazy_static;
+use regex::{Captures, Regex};
 use secp256k1::{Context, Secp256k1, Signing};
 use std::fs::File;
 use std::io::{BufReader, Read};
@@ -277,6 +279,7 @@ pub fn get_private_key<C: Context + Signing>(
         Ok(wallet.get_private_key(secp, sender, matches.value_of("seed"))?)
     }
 }
+
 pub fn get_arg_value<'a>(cli: &'a ArgMatches, id: &str) -> Result<&'a str, TerraRustCLIError> {
     if let Some(val) = cli.value_of(id) {
         Ok(val)
@@ -284,10 +287,49 @@ pub fn get_arg_value<'a>(cli: &'a ArgMatches, id: &str) -> Result<&'a str, Terra
         Err(TerraRustCLIError::MissingArgument(id.to_string()))
     }
 }
+/// expand json with environmental values
+pub fn expand_block(
+    in_str: &str,
+    sender_account: Option<String>,
+) -> Result<String, TerraRustCLIError> {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"###(.*?)###").expect("unable to compile regex");
+    }
+    let mut missing_env: Option<String> = None;
+    let caps = RE.replace_all(&in_str, |captures: &Captures| match &captures[1] {
+        "" => String::from("%"),
+        "SENDER" => {
+            if let Some(sender) = sender_account.clone() {
+                sender.clone()
+            } else {
+                missing_env = Some("SENDER".to_string());
+                "-".to_string()
+            }
+        }
+        varname => {
+            if varname.starts_with("E:") {
+                let env_var = varname.split_at(2).1;
+                if let Ok(value) = std::env::var(env_var) {
+                    value
+                } else {
+                    missing_env = Some(env_var.to_string());
+                    format!("###_err_{}###", env_var)
+                }
+            } else {
+                format!("###{}###", varname)
+            }
+        }
+    });
+    if let Some(env) = missing_env {
+        Err(MissingEnv(env))
+    } else {
+        Ok(caps.to_string())
+    }
+}
 /// convert a input parameter into json.
 /// input can either be a json string, a file, or '-' to read stdin.
 ///
-pub fn get_json_block(in_str: &str) -> anyhow::Result<serde_json::Value> {
+pub fn get_json_block(in_str: &str) -> Result<serde_json::Value, TerraRustCLIError> {
     if in_str.starts_with('{') {
         Ok(serde_json::from_str::<serde_json::Value>(in_str)?)
     } else if in_str == "-" {
@@ -302,5 +344,87 @@ pub fn get_json_block(in_str: &str) -> anyhow::Result<serde_json::Value> {
         let file = File::open(p)?;
         let rdr = BufReader::new(file);
         Ok(serde_json::from_reader(rdr)?)
+    }
+}
+/// convert a input parameter into json, expanding the JSON returned with environment variables
+/// input can either be a json string, a file, or '-' to read stdin.
+///
+pub fn get_json_block_expanded(
+    in_str: &str,
+    sender: Option<String>,
+) -> Result<serde_json::Value, TerraRustCLIError> {
+    let json = get_json_block(in_str)?;
+    let in_str = serde_json::to_string(&json)?;
+    let out_str = expand_block(&in_str, sender)?;
+    Ok(serde_json::from_str(&out_str)?)
+}
+
+#[cfg(test)]
+mod tst {
+    use super::*;
+    use std::env;
+    #[test]
+    pub fn test() -> anyhow::Result<()> {
+        assert_eq!(
+            "mary had a little lamb",
+            expand_block("mary had a little lamb", Some("sender".into()))?
+        );
+        assert_eq!(
+            "mary had a ###little lamb",
+            expand_block("mary had a ###little lamb", Some("sender".into()))?
+        );
+        assert_eq!(
+            "mary had a sender lamb",
+            expand_block("mary had a ###SENDER### lamb", Some("sender".into()))?
+        );
+        env::set_var("FOO", "BAR");
+        assert_eq!(
+            "mary had a BAR lamb",
+            expand_block("mary had a ###E:FOO### lamb", Some("sender".into()))?
+        );
+        assert_eq!(
+            "mary had a BAR ###lamb",
+            expand_block("mary had a ###E:FOO### ###lamb", Some("sender".into()))?
+        );
+        assert_eq!(
+            "mary BAR a ###FOO### ###lamb",
+            expand_block(
+                "mary ###E:FOO### a ###FOO### ###lamb",
+                Some("sender".into())
+            )?
+        );
+        assert_eq!(
+            "mary BAR a BAR ###lamb",
+            expand_block(
+                "mary ###E:FOO### a ###E:FOO### ###lamb",
+                Some("sender".into())
+            )?
+        );
+        assert_eq!(
+            "mary BAR sender BAR ###lamb",
+            expand_block(
+                "mary ###E:FOO### ###SENDER### ###E:FOO### ###lamb",
+                Some("sender".into())
+            )?
+        );
+        env::set_var("XYZ", "aXYZc");
+        assert_eq!(
+            "mary BAR sender aXYZc ###lamb",
+            expand_block(
+                "mary ###E:FOO### ###SENDER### ###E:XYZ### ###lamb",
+                Some("sender".into())
+            )?
+        );
+        assert_eq!(
+            "mary BAR xxx aXYZc ###lamb",
+            expand_block("mary ###E:FOO### xxx ###E:XYZ### ###lamb", None)?
+        );
+        assert!(expand_block(
+            "mary ###E:FOO### ###SENDER### ###E:AAA### ###lamb",
+            Some("sender".into())
+        )
+        .is_err());
+        assert!(expand_block("mary ###E:FOO### ###SENDER### ###lamb", None).is_err());
+        Ok(())
     }
 }

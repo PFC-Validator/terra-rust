@@ -97,9 +97,12 @@ async fn run(args: Vec<String>) -> Result<()> {
             };
 
             let json = if let Some(migrate_json) = migrate.value_of("migrate") {
-                let json_block = cli_helpers::get_json_block(migrate_json)?.to_string();
+                let account = private.public_key(&secp).account()?;
+                let json_block =
+                    cli_helpers::get_json_block_expanded(migrate_json, Some(account.clone()))?
+                        .to_string();
                 Some(MsgMigrateContract::replace_parameters(
-                    &private.public_key(&secp).account()?,
+                    &account,
                     contract,
                     code_id,
                     &json_block,
@@ -187,9 +190,12 @@ async fn run(args: Vec<String>) -> Result<()> {
             };
 
             let init_json = cli_helpers::get_arg_value(instantiate, "json")?;
-            let json = cli_helpers::get_json_block(init_json)?.to_string();
+            let sender_account = private.public_key(&secp).account()?;
+            let json =
+                cli_helpers::get_json_block_expanded(init_json, Some(sender_account.clone()))?
+                    .to_string();
             let init_json_parsed = MsgInstantiateContract::replace_parameters(
-                &private.public_key(&secp).account()?,
+                &sender_account,
                 admin.clone(),
                 code_id,
                 &json,
@@ -273,13 +279,11 @@ async fn run(args: Vec<String>) -> Result<()> {
                 vec![]
             };
             let exec_str = cli_helpers::get_arg_value(exec, "exec")?;
-            let json = cli_helpers::get_json_block(exec_str)?;
-            let exec_message = MsgExecuteContract::create_from_value(
-                &private.public_key(&secp).account()?,
-                contract,
-                &json,
-                &coins,
-            )?;
+            let sender_account = private.public_key(&secp).account()?;
+            let json =
+                cli_helpers::get_json_block_expanded(exec_str, Some(sender_account.clone()))?;
+            let exec_message =
+                MsgExecuteContract::create_from_value(&sender_account, contract, &json, &coins)?;
             let messages: Vec<Message> = vec![exec_message];
 
             let resp = terra
@@ -296,7 +300,7 @@ async fn run(args: Vec<String>) -> Result<()> {
             }
             let terra = cli_helpers::lcd_no_tx_from_args(&matches)?;
             let query_str = cli_helpers::get_arg_value(query, "query")?;
-            let query_json = cli_helpers::get_json_block(query_str)?.to_string();
+            let query_json = cli_helpers::get_json_block_expanded(query_str, None)?.to_string();
             let result = terra
                 .wasm()
                 .query::<serde_json::Value>(contract, &query_json)

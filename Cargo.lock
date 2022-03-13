@@ -1847,11 +1847,13 @@ dependencies = [
 
 [[package]]
 name = "terra-rust-cli"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "anyhow",
  "clap",
+ "lazy_static",
  "log",
+ "regex",
  "reqwest",
  "secp256k1",
  "serde",

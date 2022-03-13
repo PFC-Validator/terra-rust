@@ -19,4 +19,10 @@ pub enum TerraRustCLIError {
     TerraRustAPIError(#[from] TerraRustAPIError),
     #[error(transparent)]
     TerraRustWalletError(#[from] TerraRustWalletError),
+    #[error(transparent)]
+    SerdeJson(#[from] ::serde_json::Error),
+    #[error(transparent)]
+    Regex(#[from] ::regex::Error),
+    #[error("missing environment variable {0}")]
+    MissingEnv(String),
 }

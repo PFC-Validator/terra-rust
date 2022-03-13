@@ -23,7 +23,7 @@ async fn run() -> anyhow::Result<()> {
     let terra = cli_helpers::lcd_no_tx_from_args(&cli)?;
     let contract = cli_helpers::get_arg_value(&cli, "contract")?;
     let json_str = cli_helpers::get_arg_value(&cli, "json")?;
-    let json: serde_json::Value = cli_helpers::get_json_block(json_str)?;
+    let json: serde_json::Value = cli_helpers::get_json_block_expanded(json_str, None)?;
 
     //    let json: serde_json::Value = serde_json::from_str(json_str)?;
 

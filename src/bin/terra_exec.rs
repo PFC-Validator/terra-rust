@@ -46,13 +46,12 @@ pub async fn run_it(cli: &ArgMatches) -> Result<()> {
     //let json_str = cli.value_of("json").expect("json be in the CLI");
     let coins_str = cli.value_of("coins");
     let contract = cli.value_of("contract").expect("Need a contract");
-
-    let json: serde_json::Value = cli_helpers::get_json_block(json_str)?;
-
     let secp = Secp256k1::new();
-
     let from_key = cli_helpers::get_private_key(&secp, cli)?;
     let from_public_key = from_key.public_key(&secp);
+    let sender_account = from_public_key.account()?;
+    let json: serde_json::Value =
+        cli_helpers::get_json_block_expanded(json_str, Some(sender_account))?;
 
     let coins = if let Some(coins) = coins_str {
         Coin::parse_coins(coins)?
