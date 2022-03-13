@@ -296,11 +296,11 @@ pub fn expand_block(
         static ref RE: Regex = Regex::new(r"###(.*?)###").expect("unable to compile regex");
     }
     let mut missing_env: Option<String> = None;
-    let caps = RE.replace_all(&in_str, |captures: &Captures| match &captures[1] {
+    let caps = RE.replace_all(in_str, |captures: &Captures| match &captures[1] {
         "" => String::from("%"),
         "SENDER" => {
             if let Some(sender) = sender_account.clone() {
-                sender.clone()
+                sender
             } else {
                 missing_env = Some("SENDER".to_string());
                 "-".to_string()
