@@ -294,7 +294,7 @@ pub fn expand_block(
 ) -> Result<String, TerraRustCLIError> {
     lazy_static! {
         static ref RE: Regex =
-            Regex::new(r"###(E:[a-zA-Z0-9]*?|SENDER)###").expect("unable to compile regex");
+            Regex::new(r"###(E:[a-zA-Z0-9_]*?|SENDER)###").expect("unable to compile regex");
     }
     let mut missing_env: Option<String> = None;
     let caps = RE.replace_all(in_str, |captures: &Captures| match &captures[1] {

@@ -1,6 +1,6 @@
 # Changes
 ## 1.0
-### 1.0.8 - 15-Mar-2022
+### 1.0.9 - 15-Mar-2022
 * ###SENDER### will only be replaced if sender is specified. Tighten Regex
 ### 1.0.7 - 13-Mar-2022
 * new functions 'get_json_block_expanded/expand_block' replaces ###E:xxx### with environment variable xxx &amp; ###SENDER### with sender
