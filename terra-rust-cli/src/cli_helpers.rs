@@ -293,7 +293,8 @@ pub fn expand_block(
     sender_account: Option<String>,
 ) -> Result<String, TerraRustCLIError> {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"###(.*?)###").expect("unable to compile regex");
+        static ref RE: Regex =
+            Regex::new(r"###(E:[a-zA-Z0-9]*?|SENDER)###").expect("unable to compile regex");
     }
     let mut missing_env: Option<String> = None;
     let caps = RE.replace_all(in_str, |captures: &Captures| match &captures[1] {
@@ -302,8 +303,8 @@ pub fn expand_block(
             if let Some(sender) = sender_account.clone() {
                 sender
             } else {
-                missing_env = Some("SENDER".to_string());
-                "-".to_string()
+                //  missing_env = Some("SENDER".to_string());
+                "###SENDER###".to_string()
             }
         }
         varname => {
@@ -416,6 +417,13 @@ mod tst {
             )?
         );
         assert_eq!(
+            "mary BAR sender aXYZc ###E:lamb aXYZc",
+            expand_block(
+                "mary ###E:FOO### ###SENDER### ###E:XYZ### ###E:lamb ###E:XYZ###",
+                Some("sender".into())
+            )?
+        );
+        assert_eq!(
             "mary BAR xxx aXYZc ###lamb",
             expand_block("mary ###E:FOO### xxx ###E:XYZ### ###lamb", None)?
         );
@@ -424,7 +432,10 @@ mod tst {
             Some("sender".into())
         )
         .is_err());
-        assert!(expand_block("mary ###E:FOO### ###SENDER### ###lamb", None).is_err());
+        assert_eq!(
+            "mary ###SENDER### ###lamb aXYZc",
+            expand_block("mary ###SENDER### ###lamb ###E:XYZ###", None)?
+        );
         Ok(())
     }
 }

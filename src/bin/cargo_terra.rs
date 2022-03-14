@@ -226,7 +226,7 @@ async fn run(args: Vec<String>) -> Result<()> {
             } else {
                 panic!(
                     "{}/{} not present in TX log",
-                    "migrate_contract", "contract_address"
+                    "instantiate_contract", "contract_address"
                 );
             };
 
@@ -236,7 +236,10 @@ async fn run(args: Vec<String>) -> Result<()> {
             let code_id = if let Some(code) = codes.first() {
                 code.1.clone()
             } else {
-                panic!("{}/{} not present in TX log", "migrate_contract", "code_id");
+                panic!(
+                    "{}/{} not present in TX log",
+                    "instantiate_contract", "code_id"
+                );
             };
 
             println!("Contract: {} running  code {}", contract, code_id);
