@@ -47,6 +47,7 @@ pub struct WalletListInternal {
 /// Wallet operations based on Keyring API
 ///
 /// stores key names in another 'username/password' to facilitate listing keys, and deletion of ALL keys in a wallet
+#[derive(Clone)]
 pub struct Wallet<'a> {
     pub name: &'a str,
 }

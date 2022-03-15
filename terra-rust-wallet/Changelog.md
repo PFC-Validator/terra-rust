@@ -1,5 +1,7 @@
 # Changes
 ## 1.1
+### 1.1.5 - 15-Mar-21
+* Make Wallet Cloneable
 ### 1.1.4 - 17-Feb-21
 * Secp256k parameter passing
 * switch from anyhow::Result to TerraRustWalletError
