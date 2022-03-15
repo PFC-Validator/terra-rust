@@ -1,6 +1,6 @@
 # Changes
 ## 1.0
-### 1.0.10 - 15-Mar-2022
+### 1.0.11 - 15-Mar-2022
 * seed_from_args / wallet_opt_from_args functions
 * expand block now expands A:key and O:key to account/operator address for key in wallet
 ### 1.0.9 - 15-Mar-2022

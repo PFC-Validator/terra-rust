@@ -342,10 +342,11 @@ pub fn expand_block<C: secp256k1::Signing + secp256k1::Context>(
 ) -> Result<String, TerraRustCLIError> {
     lazy_static! {
         static ref RE: Regex =
-            Regex::new(r"###(E:[a-zA-Z0-9_]*?|A:[a-zA-Z0-9_]|O:[a-zA-Z0-9_]|SENDER)###")
+            Regex::new(r"###(E:[a-zA-Z0-9_]*?|A:[a-zA-Z0-9_]*?|O:[a-zA-Z0-9_]*?|SENDER)###")
                 .expect("unable to compile regex");
     }
     let mut missing_env: Option<String> = None;
+
     let caps = RE.replace_all(in_str, |captures: &Captures| match &captures[1] {
         "" => String::from("%"),
         "SENDER" => {
@@ -576,4 +577,29 @@ mod tst {
         );
         Ok(())
     }
+
+    /*
+    // this won't work on other machines
+    #[test]
+    pub fn test_account() -> anyhow::Result<()> {
+        let secp = secp256k1::Secp256k1::new();
+        let wallet = Wallet::new("rpc")?;
+        assert_eq!(
+            "abc terra17lmam6zguazs5q5u6z5mmx76uj63gldnse2pdp def",
+            expand_block(
+                "abc ###A:test2### def",
+                None,
+                &secp,
+                Some(wallet.clone()),
+                None
+            )?
+        );
+        assert_eq!(
+            "abc terravaloper17lmam6zguazs5q5u6z5mmx76uj63gldnskxuaj def",
+            expand_block("abc ###O:test2### def", None, &secp, Some(wallet), None)?
+        );
+        Ok(())
+    }
+
+     */
 }
