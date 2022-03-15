@@ -50,8 +50,15 @@ pub async fn run_it(cli: &ArgMatches) -> Result<()> {
     let from_key = cli_helpers::get_private_key(&secp, cli)?;
     let from_public_key = from_key.public_key(&secp);
     let sender_account = from_public_key.account()?;
-    let json: serde_json::Value =
-        cli_helpers::get_json_block_expanded(json_str, Some(sender_account))?;
+    let wallet = cli_helpers::wallet_from_args(cli)?;
+    let seed = cli_helpers::seed_from_args(cli);
+    let json: serde_json::Value = cli_helpers::get_json_block_expanded(
+        json_str,
+        Some(sender_account),
+        &secp,
+        Some(wallet),
+        seed,
+    )?;
 
     let coins = if let Some(coins) = coins_str {
         Coin::parse_coins(coins)?

@@ -150,6 +150,24 @@ pub fn gen_cli_read_only<'a>(app_name: &'a str, bin_name: &'a str) -> clap::Comm
     clap::Command::new(app_name)
         .bin_name(bin_name)
         .arg(
+            Arg::new("wallet")
+                .long("wallet")
+                .takes_value(true)
+                .value_name("wallet")
+                .env("TERRARUST_WALLET")
+                .default_value("default")
+                .help("the default wallet to look for keys in"),
+        )
+        .arg(
+            Arg::new("seed")
+                .long("seed")
+                .takes_value(true)
+                .value_name("seed")
+                .env("TERRARUST_SEED_PHRASE")
+                .default_value("")
+                .help("the seed phrase to use with this private key"),
+        )
+        .arg(
             Arg::new("lcd")
                 .long("lcd")
                 .value_name("lcd")
@@ -180,8 +198,6 @@ pub fn gen_cli_read_only<'a>(app_name: &'a str, bin_name: &'a str) -> clap::Comm
 #[allow(dead_code)]
 pub fn gen_cli<'a>(app_name: &'a str, bin_name: &'a str) -> clap::Command<'a> {
     gen_cli_read_only(app_name,bin_name).args(&[
-        Arg::new("wallet").long("wallet").takes_value(true).value_name("wallet").env("TERRARUST_WALLET").default_value("default").help( "the default wallet to look for keys in"),
-        Arg::new("seed").long("seed").takes_value(true).value_name("seed").env("TERRARUST_SEED_PHRASE").default_value("").help(  "the seed phrase to use with this private key"),
         Arg::new("fees").long("fees").takes_value(true).value_name("fees").default_value("").help(   "the fees to use. This will override gas parameters if specified."),
         Arg::new("gas").long("gas").takes_value(true).value_name("gas").default_value("auto").help(   "the gas amount to use 'auto' to estimate"),
         Arg::new("gas-prices").long("gas-prices").takes_value(true).value_name("gas-prices").default_value("auto").help(    "the gas price to use to calculate fee. Format is NNNtoken eg. 1000uluna. note we only support a single price for now. if auto. it will use FCD"),
@@ -247,6 +263,18 @@ pub fn wallet_from_args(cli: &ArgMatches) -> Result<Wallet, TerraRustCLIError> {
     Ok(Wallet::create(wallet))
 }
 
+pub fn wallet_opt_from_args(matches: &ArgMatches) -> Option<Wallet> {
+    matches.value_of("wallet").map(Wallet::create)
+}
+
+pub fn seed_from_args(matches: &ArgMatches) -> Option<&str> {
+    if let Some(seed) = matches.value_of("seed") {
+        Some(seed)
+    } else {
+        None
+    }
+}
+
 #[allow(dead_code)]
 pub async fn lcd_from_args(cli: &ArgMatches) -> Result<Terra, TerraRustCLIError> {
     let gas_opts = gas_opts(cli).await?;
@@ -287,14 +315,35 @@ pub fn get_arg_value<'a>(cli: &'a ArgMatches, id: &str) -> Result<&'a str, Terra
         Err(TerraRustCLIError::MissingArgument(id.to_string()))
     }
 }
+
+fn hack_get_wallet_pub_key<C: secp256k1::Signing + secp256k1::Context>(
+    secp: &Secp256k1<C>,
+    wallet: &Wallet,
+    seed: Option<&str>,
+    key: &str,
+) -> Option<(String, String)> {
+    if let Ok(public_key) = wallet.get_public_key(secp, key, seed) {
+        if let Ok(account) = public_key.account() {
+            if let Ok(operator) = public_key.operator_address() {
+                return Some((account, operator));
+            }
+        }
+    }
+    None
+}
 /// expand json with environmental values
-pub fn expand_block(
+
+pub fn expand_block<C: secp256k1::Signing + secp256k1::Context>(
     in_str: &str,
     sender_account: Option<String>,
+    secp: &Secp256k1<C>,
+    wallet: Option<Wallet>,
+    seed: Option<&str>,
 ) -> Result<String, TerraRustCLIError> {
     lazy_static! {
         static ref RE: Regex =
-            Regex::new(r"###(E:[a-zA-Z0-9_]*?|SENDER)###").expect("unable to compile regex");
+            Regex::new(r"###(E:[a-zA-Z0-9_]*?|A:[a-zA-Z0-9_]|O:[a-zA-Z0-9_]|SENDER)###")
+                .expect("unable to compile regex");
     }
     let mut missing_env: Option<String> = None;
     let caps = RE.replace_all(in_str, |captures: &Captures| match &captures[1] {
@@ -315,6 +364,30 @@ pub fn expand_block(
                 } else {
                     missing_env = Some(env_var.to_string());
                     format!("###_err_{}###", env_var)
+                }
+            } else if let Some(wallet_entry) = wallet.clone() {
+                if varname.starts_with("A:") {
+                    let key_name = varname.split_at(2).1;
+                    if let Some((account, _operator)) =
+                        hack_get_wallet_pub_key(secp, &wallet_entry, seed, key_name)
+                    {
+                        account
+                    } else {
+                        missing_env = Some(varname.to_string());
+                        format!("###_err_{}###", varname)
+                    }
+                } else if varname.starts_with("O:") {
+                    let key_name = varname.split_at(2).1;
+                    if let Some((_account, operator)) =
+                        hack_get_wallet_pub_key(secp, &wallet_entry, seed, key_name)
+                    {
+                        operator
+                    } else {
+                        missing_env = Some(varname.to_string());
+                        format!("###_err_{}###", varname)
+                    }
+                } else {
+                    format!("###{}###", varname)
                 }
             } else {
                 format!("###{}###", varname)
@@ -350,13 +423,16 @@ pub fn get_json_block(in_str: &str) -> Result<serde_json::Value, TerraRustCLIErr
 /// convert a input parameter into json, expanding the JSON returned with environment variables
 /// input can either be a json string, a file, or '-' to read stdin.
 ///
-pub fn get_json_block_expanded(
+pub fn get_json_block_expanded<C: secp256k1::Signing + secp256k1::Context>(
     in_str: &str,
     sender: Option<String>,
+    secp: &Secp256k1<C>,
+    wallet: Option<Wallet>,
+    seed: Option<&str>,
 ) -> Result<serde_json::Value, TerraRustCLIError> {
     let json = get_json_block(in_str)?;
     let in_str = serde_json::to_string(&json)?;
-    let out_str = expand_block(&in_str, sender)?;
+    let out_str = expand_block(&in_str, sender, secp, wallet, seed)?;
     Ok(serde_json::from_str(&out_str)?)
 }
 
@@ -364,48 +440,89 @@ pub fn get_json_block_expanded(
 mod tst {
     use super::*;
     use std::env;
+
     #[test]
     pub fn test() -> anyhow::Result<()> {
+        let secp = secp256k1::Secp256k1::new();
         assert_eq!(
             "mary had a little lamb",
-            expand_block("mary had a little lamb", Some("sender".into()))?
+            expand_block(
+                "mary had a little lamb",
+                Some("sender".into()),
+                &secp,
+                None,
+                None
+            )?
         );
         assert_eq!(
             "mary had a ###little lamb",
-            expand_block("mary had a ###little lamb", Some("sender".into()))?
+            expand_block(
+                "mary had a ###little lamb",
+                Some("sender".into()),
+                &secp,
+                None,
+                None
+            )?
         );
         assert_eq!(
             "mary had a sender lamb",
-            expand_block("mary had a ###SENDER### lamb", Some("sender".into()))?
+            expand_block(
+                "mary had a ###SENDER### lamb",
+                Some("sender".into()),
+                &secp,
+                None,
+                None
+            )?
         );
         env::set_var("FOO", "BAR");
         assert_eq!(
             "mary had a BAR lamb",
-            expand_block("mary had a ###E:FOO### lamb", Some("sender".into()))?
+            expand_block(
+                "mary had a ###E:FOO### lamb",
+                Some("sender".into()),
+                &secp,
+                None,
+                None
+            )?
         );
         assert_eq!(
             "mary had a BAR ###lamb",
-            expand_block("mary had a ###E:FOO### ###lamb", Some("sender".into()))?
+            expand_block(
+                "mary had a ###E:FOO### ###lamb",
+                Some("sender".into()),
+                &secp,
+                None,
+                None
+            )?
         );
         assert_eq!(
             "mary BAR a ###FOO### ###lamb",
             expand_block(
                 "mary ###E:FOO### a ###FOO### ###lamb",
-                Some("sender".into())
+                Some("sender".into()),
+                &secp,
+                None,
+                None
             )?
         );
         assert_eq!(
             "mary BAR a BAR ###lamb",
             expand_block(
                 "mary ###E:FOO### a ###E:FOO### ###lamb",
-                Some("sender".into())
+                Some("sender".into()),
+                &secp,
+                None,
+                None
             )?
         );
         assert_eq!(
             "mary BAR sender BAR ###lamb",
             expand_block(
                 "mary ###E:FOO### ###SENDER### ###E:FOO### ###lamb",
-                Some("sender".into())
+                Some("sender".into()),
+                &secp,
+                None,
+                None
             )?
         );
         env::set_var("XYZ", "aXYZc");
@@ -413,28 +530,49 @@ mod tst {
             "mary BAR sender aXYZc ###lamb",
             expand_block(
                 "mary ###E:FOO### ###SENDER### ###E:XYZ### ###lamb",
-                Some("sender".into())
+                Some("sender".into()),
+                &secp,
+                None,
+                None
             )?
         );
         assert_eq!(
             "mary BAR sender aXYZc ###E:lamb aXYZc",
             expand_block(
                 "mary ###E:FOO### ###SENDER### ###E:XYZ### ###E:lamb ###E:XYZ###",
-                Some("sender".into())
+                Some("sender".into()),
+                &secp,
+                None,
+                None
             )?
         );
         assert_eq!(
             "mary BAR xxx aXYZc ###lamb",
-            expand_block("mary ###E:FOO### xxx ###E:XYZ### ###lamb", None)?
+            expand_block(
+                "mary ###E:FOO### xxx ###E:XYZ### ###lamb",
+                None,
+                &secp,
+                None,
+                None
+            )?
         );
         assert!(expand_block(
             "mary ###E:FOO### ###SENDER### ###E:AAA### ###lamb",
-            Some("sender".into())
+            Some("sender".into()),
+            &secp,
+            None,
+            None
         )
         .is_err());
         assert_eq!(
             "mary ###SENDER### ###lamb aXYZc",
-            expand_block("mary ###SENDER### ###lamb ###E:XYZ###", None)?
+            expand_block(
+                "mary ###SENDER### ###lamb ###E:XYZ###",
+                None,
+                &secp,
+                None,
+                None
+            )?
         );
         Ok(())
     }

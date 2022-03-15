@@ -75,6 +75,9 @@ async fn run(args: Vec<String>) -> Result<()> {
             let terra = cli_helpers::lcd_from_args(&matches).await?;
             let secp = Secp256k1::new();
             let private = cli_helpers::get_private_key(&secp, &matches)?;
+            let wallet = cli_helpers::wallet_from_args(&matches)?;
+            let seed = cli_helpers::seed_from_args(&matches);
+
             let wasm = cli_helpers::get_arg_value(migrate, "wasm")?;
             let code_id = if let Ok(code_id) = wasm.parse::<u64>() {
                 code_id
@@ -98,9 +101,14 @@ async fn run(args: Vec<String>) -> Result<()> {
 
             let json = if let Some(migrate_json) = migrate.value_of("migrate") {
                 let account = private.public_key(&secp).account()?;
-                let json_block =
-                    cli_helpers::get_json_block_expanded(migrate_json, Some(account.clone()))?
-                        .to_string();
+                let json_block = cli_helpers::get_json_block_expanded(
+                    migrate_json,
+                    Some(account.clone()),
+                    &secp,
+                    Some(wallet),
+                    seed,
+                )?
+                .to_string();
                 Some(MsgMigrateContract::replace_parameters(
                     &account,
                     contract,
@@ -146,6 +154,9 @@ async fn run(args: Vec<String>) -> Result<()> {
             let terra = cli_helpers::lcd_from_args(&matches).await?;
             let secp = Secp256k1::new();
             let private = cli_helpers::get_private_key(&secp, &matches)?;
+            let wallet = cli_helpers::wallet_from_args(&matches)?;
+            let seed = cli_helpers::seed_from_args(&matches);
+
             let wasm = cli_helpers::get_arg_value(instantiate, "wasm")?;
             let coins = if let Some(coin_str) = instantiate.value_of("coins") {
                 Coin::parse_coins(coin_str)?
@@ -191,9 +202,14 @@ async fn run(args: Vec<String>) -> Result<()> {
 
             let init_json = cli_helpers::get_arg_value(instantiate, "json")?;
             let sender_account = private.public_key(&secp).account()?;
-            let json =
-                cli_helpers::get_json_block_expanded(init_json, Some(sender_account.clone()))?
-                    .to_string();
+            let json = cli_helpers::get_json_block_expanded(
+                init_json,
+                Some(sender_account.clone()),
+                &secp,
+                Some(wallet),
+                seed,
+            )?
+            .to_string();
             let init_json_parsed = MsgInstantiateContract::replace_parameters(
                 &sender_account,
                 admin.clone(),
@@ -276,6 +292,9 @@ async fn run(args: Vec<String>) -> Result<()> {
             let terra = cli_helpers::lcd_from_args(&matches).await?;
             let secp = Secp256k1::new();
             let private = cli_helpers::get_private_key(&secp, &matches)?;
+            let wallet = cli_helpers::wallet_from_args(&matches)?;
+            let seed = cli_helpers::seed_from_args(&matches);
+
             let coins = if let Some(coin_str) = exec.value_of("coins") {
                 Coin::parse_coins(coin_str)?
             } else {
@@ -283,8 +302,13 @@ async fn run(args: Vec<String>) -> Result<()> {
             };
             let exec_str = cli_helpers::get_arg_value(exec, "exec")?;
             let sender_account = private.public_key(&secp).account()?;
-            let json =
-                cli_helpers::get_json_block_expanded(exec_str, Some(sender_account.clone()))?;
+            let json = cli_helpers::get_json_block_expanded(
+                exec_str,
+                Some(sender_account.clone()),
+                &secp,
+                Some(wallet),
+                seed,
+            )?;
             let exec_message =
                 MsgExecuteContract::create_from_value(&sender_account, contract, &json, &coins)?;
             let messages: Vec<Message> = vec![exec_message];
@@ -297,13 +321,19 @@ async fn run(args: Vec<String>) -> Result<()> {
         }
         Some(("query", query)) => {
             let contract = cli_helpers::get_arg_value(query, "contract")?;
+            let secp = Secp256k1::new();
+
+            let wallet = cli_helpers::wallet_opt_from_args(&matches);
+            let seed = cli_helpers::seed_from_args(&matches);
 
             if !contract.starts_with("terra1") {
                 anyhow::bail!("invalid contract address");
             }
             let terra = cli_helpers::lcd_no_tx_from_args(&matches)?;
             let query_str = cli_helpers::get_arg_value(query, "query")?;
-            let query_json = cli_helpers::get_json_block_expanded(query_str, None)?.to_string();
+            let query_json =
+                cli_helpers::get_json_block_expanded(query_str, None, &secp, wallet, seed)?
+                    .to_string();
             let result = terra
                 .wasm()
                 .query::<serde_json::Value>(contract, &query_json)
