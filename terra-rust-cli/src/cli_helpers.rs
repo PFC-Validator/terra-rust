@@ -345,7 +345,7 @@ pub fn expand_block<C: secp256k1::Signing + secp256k1::Context>(
 ) -> Result<String, TerraRustCLIError> {
     lazy_static! {
         static ref RE: Regex = Regex::new(
-            r"###(E:[a-zA-Z0-9_]*?|A:[a-zA-Z0-9_]*?|O:[a-zA-Z0-9_]*?|V:[a-zA-Z0-9]*?|SENDER)###"
+            r"###(E:[a-zA-Z0-9_]*?|A:[a-zA-Z0-9_]*?|O:[a-zA-Z0-9_]*?|V:[a-zA-Z0-9_]*?|SENDER)###"
         )
         .expect("unable to compile regex");
     }
