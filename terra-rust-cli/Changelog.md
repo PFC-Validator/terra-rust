@@ -1,5 +1,7 @@
 # Changes
 ## 1.0
+### 1.0.12 - 16-Mar-2002
+* expand block now can expand from a list of variables 'V:xxx' passed into command. optionally ignoring the failure (so we can multipass)
 ### 1.0.11 - 15-Mar-2022
 * seed_from_args / wallet_opt_from_args functions
 * expand block now expands A:key and O:key to account/operator address for key in wallet

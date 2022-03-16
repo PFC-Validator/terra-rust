@@ -58,6 +58,8 @@ pub async fn run_it(cli: &ArgMatches) -> Result<()> {
         &secp,
         Some(wallet),
         seed,
+        None,
+        false,
     )?;
 
     let coins = if let Some(coins) = coins_str {

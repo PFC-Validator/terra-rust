@@ -27,7 +27,7 @@ async fn run() -> anyhow::Result<()> {
     let wallet = cli_helpers::wallet_opt_from_args(&cli);
     let seed = cli_helpers::seed_from_args(&cli);
     let json: serde_json::Value =
-        cli_helpers::get_json_block_expanded(json_str, None, &secp, wallet, seed)?;
+        cli_helpers::get_json_block_expanded(json_str, None, &secp, wallet, seed, None, false)?;
 
     //    let json: serde_json::Value = serde_json::from_str(json_str)?;
 

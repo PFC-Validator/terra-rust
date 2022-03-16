@@ -4,6 +4,7 @@ use clap::{Arg, ArgMatches, Parser};
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 use secp256k1::{Context, Secp256k1, Signing};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::Path;
@@ -339,11 +340,14 @@ pub fn expand_block<C: secp256k1::Signing + secp256k1::Context>(
     secp: &Secp256k1<C>,
     wallet: Option<Wallet>,
     seed: Option<&str>,
+    variables: Option<HashMap<String, String>>,
+    fail_if_variable_not_present: bool,
 ) -> Result<String, TerraRustCLIError> {
     lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"###(E:[a-zA-Z0-9_]*?|A:[a-zA-Z0-9_]*?|O:[a-zA-Z0-9_]*?|SENDER)###")
-                .expect("unable to compile regex");
+        static ref RE: Regex = Regex::new(
+            r"###(E:[a-zA-Z0-9_]*?|A:[a-zA-Z0-9_]*?|O:[a-zA-Z0-9_]*?|V:[a-zA-Z0-9]*?|SENDER)###"
+        )
+        .expect("unable to compile regex");
     }
     let mut missing_env: Option<String> = None;
 
@@ -386,6 +390,23 @@ pub fn expand_block<C: secp256k1::Signing + secp256k1::Context>(
                     } else {
                         missing_env = Some(varname.to_string());
                         format!("###_err_{}###", varname)
+                    }
+                } else if varname.starts_with("V:") {
+                    let key_name = varname.split_at(2).1;
+                    if let Some(vars) = variables.clone() {
+                        if let Some(value) = vars.get(key_name) {
+                            value.to_string()
+                        } else if fail_if_variable_not_present {
+                            missing_env = Some(varname.to_string());
+                            format!("###_err_{}###", varname)
+                        } else {
+                            format!("###{}###", varname)
+                        }
+                    } else if fail_if_variable_not_present {
+                        missing_env = Some(varname.to_string());
+                        format!("###_err_{}###", varname)
+                    } else {
+                        format!("###{}###", varname)
                     }
                 } else {
                     format!("###{}###", varname)
@@ -430,10 +451,20 @@ pub fn get_json_block_expanded<C: secp256k1::Signing + secp256k1::Context>(
     secp: &Secp256k1<C>,
     wallet: Option<Wallet>,
     seed: Option<&str>,
+    variables: Option<HashMap<String, String>>,
+    fail_if_variable_not_present: bool,
 ) -> Result<serde_json::Value, TerraRustCLIError> {
     let json = get_json_block(in_str)?;
     let in_str = serde_json::to_string(&json)?;
-    let out_str = expand_block(&in_str, sender, secp, wallet, seed)?;
+    let out_str = expand_block(
+        &in_str,
+        sender,
+        secp,
+        wallet,
+        seed,
+        variables,
+        fail_if_variable_not_present,
+    )?;
     Ok(serde_json::from_str(&out_str)?)
 }
 
@@ -452,7 +483,9 @@ mod tst {
                 Some("sender".into()),
                 &secp,
                 None,
-                None
+                None,
+                None,
+                false
             )?
         );
         assert_eq!(
@@ -462,7 +495,9 @@ mod tst {
                 Some("sender".into()),
                 &secp,
                 None,
-                None
+                None,
+                None,
+                false
             )?
         );
         assert_eq!(
@@ -472,7 +507,9 @@ mod tst {
                 Some("sender".into()),
                 &secp,
                 None,
-                None
+                None,
+                None,
+                false
             )?
         );
         env::set_var("FOO", "BAR");
@@ -483,7 +520,9 @@ mod tst {
                 Some("sender".into()),
                 &secp,
                 None,
-                None
+                None,
+                None,
+                false
             )?
         );
         assert_eq!(
@@ -493,7 +532,9 @@ mod tst {
                 Some("sender".into()),
                 &secp,
                 None,
-                None
+                None,
+                None,
+                false
             )?
         );
         assert_eq!(
@@ -503,7 +544,9 @@ mod tst {
                 Some("sender".into()),
                 &secp,
                 None,
-                None
+                None,
+                None,
+                false
             )?
         );
         assert_eq!(
@@ -513,7 +556,9 @@ mod tst {
                 Some("sender".into()),
                 &secp,
                 None,
-                None
+                None,
+                None,
+                false
             )?
         );
         assert_eq!(
@@ -523,7 +568,9 @@ mod tst {
                 Some("sender".into()),
                 &secp,
                 None,
-                None
+                None,
+                None,
+                false
             )?
         );
         env::set_var("XYZ", "aXYZc");
@@ -534,7 +581,9 @@ mod tst {
                 Some("sender".into()),
                 &secp,
                 None,
-                None
+                None,
+                None,
+                false
             )?
         );
         assert_eq!(
@@ -544,7 +593,9 @@ mod tst {
                 Some("sender".into()),
                 &secp,
                 None,
-                None
+                None,
+                None,
+                false
             )?
         );
         assert_eq!(
@@ -554,7 +605,9 @@ mod tst {
                 None,
                 &secp,
                 None,
-                None
+                None,
+                None,
+                false
             )?
         );
         assert!(expand_block(
@@ -562,7 +615,9 @@ mod tst {
             Some("sender".into()),
             &secp,
             None,
-            None
+            None,
+            None,
+            false
         )
         .is_err());
         assert_eq!(
@@ -572,7 +627,9 @@ mod tst {
                 None,
                 &secp,
                 None,
-                None
+                None,
+                None,
+                false
             )?
         );
         Ok(())
@@ -602,4 +659,50 @@ mod tst {
     }
 
      */
+    #[test]
+    pub fn test_vars() -> anyhow::Result<()> {
+        let secp = secp256k1::Secp256k1::new();
+        let wallet = Wallet::new("rpc")?;
+        env::set_var("XYZ", "aXYZc");
+        let vars: HashMap<String, String> = [("XYZ".to_string(), "def".to_string())]
+            .iter()
+            .cloned()
+            .collect();
+        assert_eq!(
+            "abc aXYZc def def",
+            expand_block(
+                "abc ###E:XYZ### ###V:XYZ### def",
+                None,
+                &secp,
+                Some(wallet.clone()),
+                None,
+                Some(vars.clone()),
+                true
+            )?
+        );
+        assert_eq!(
+            "abc aXYZc ###V:AYZ### def",
+            expand_block(
+                "abc ###E:XYZ### ###V:AYZ### def",
+                None,
+                &secp,
+                Some(wallet.clone()),
+                None,
+                Some(vars.clone()),
+                false
+            )?
+        );
+        assert!(expand_block(
+            "abc ###E:XYZ### ###V:AYZ### def",
+            None,
+            &secp,
+            Some(wallet.clone()),
+            None,
+            Some(vars),
+            true
+        )
+        .is_err());
+
+        Ok(())
+    }
 }

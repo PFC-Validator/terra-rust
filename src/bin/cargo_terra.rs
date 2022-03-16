@@ -107,6 +107,8 @@ async fn run(args: Vec<String>) -> Result<()> {
                     &secp,
                     Some(wallet),
                     seed,
+                    None,
+                    false,
                 )?
                 .to_string();
                 Some(MsgMigrateContract::replace_parameters(
@@ -208,6 +210,8 @@ async fn run(args: Vec<String>) -> Result<()> {
                 &secp,
                 Some(wallet),
                 seed,
+                None,
+                false,
             )?
             .to_string();
             let init_json_parsed = MsgInstantiateContract::replace_parameters(
@@ -308,6 +312,8 @@ async fn run(args: Vec<String>) -> Result<()> {
                 &secp,
                 Some(wallet),
                 seed,
+                None,
+                false,
             )?;
             let exec_message =
                 MsgExecuteContract::create_from_value(&sender_account, contract, &json, &coins)?;
@@ -331,9 +337,10 @@ async fn run(args: Vec<String>) -> Result<()> {
             }
             let terra = cli_helpers::lcd_no_tx_from_args(&matches)?;
             let query_str = cli_helpers::get_arg_value(query, "query")?;
-            let query_json =
-                cli_helpers::get_json_block_expanded(query_str, None, &secp, wallet, seed)?
-                    .to_string();
+            let query_json = cli_helpers::get_json_block_expanded(
+                query_str, None, &secp, wallet, seed, None, false,
+            )?
+            .to_string();
             let result = terra
                 .wasm()
                 .query::<serde_json::Value>(contract, &query_json)
