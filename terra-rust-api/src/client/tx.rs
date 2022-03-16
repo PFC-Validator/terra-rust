@@ -46,8 +46,9 @@ impl<'a> TX<'a> {
     ) -> Result<TXResultSync, TerraRustAPIError> {
         let std_tx: StdTx = StdTx::from_StdSignMsg(std_sign_msg, sigs, "sync");
         //    let js_sig = serde_json::to_string(&std_tx)?;
-        log::info!("TX broadcast #messages ={}", &std_tx.tx.msg.len());
+        log::debug!("TX broadcast #messages ={}", &std_tx.tx.msg.len());
         if self.terra.debug {
+            log::info!("TX broadcast #messages ={}", &std_tx.tx.msg.len());
             log::debug!("{}", serde_json::to_string(&std_tx)?);
         }
         let response = self
