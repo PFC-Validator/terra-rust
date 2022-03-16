@@ -2,6 +2,8 @@
 ## Debt
 ### support Variant::Bech32m in keygen? (https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki) 
 ## 1.2
+### 1.2.19 - 16-Mar-22
+* change annoying info message to debug
 ### 1.2.18 - 8-Mar-22
 * Add Signature::verify API call (just a wrapper to secp)
 ### 1.2.17 -25-Feb-22
