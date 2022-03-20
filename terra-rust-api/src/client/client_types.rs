@@ -9,6 +9,7 @@ pub mod terra_datetime_format {
     const FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f";
     const FORMAT_TZ_SUPPLIED: &str = "%Y-%m-%dT%H:%M:%S.%f%:z";
     const FORMAT_SHORT_Z: &str = "%Y-%m-%dT%H:%M:%SZ";
+    const FORMAT_SHORT_Z2: &str = "%Y-%m-%dT%H:%M:%S.%fZ";
 
     // The signature of a serialize_with function must follow the pattern:
     //
@@ -48,13 +49,18 @@ pub mod terra_datetime_format {
         };
 
         let sliced = &s[0..slice_len];
+
         match NaiveDateTime::parse_from_str(sliced, FORMAT) {
             Err(_e) => match NaiveDateTime::parse_from_str(&s, FORMAT_TZ_SUPPLIED) {
                 Err(_e2) => match NaiveDateTime::parse_from_str(sliced, FORMAT_SHORT_Z) {
-                    Err(_e3) => {
-                        eprintln!("DateTime Fail {} {:#?}", s, _e);
-                        Err(serde::de::Error::custom(_e))
-                    }
+                    // block 6877827 has this
+                    Err(_e3) => match NaiveDateTime::parse_from_str(&s, FORMAT_SHORT_Z2) {
+                        Err(_e4) => {
+                            eprintln!("DateTime Fail {} {:#?}", s, _e4);
+                            Err(serde::de::Error::custom(_e4))
+                        }
+                        Ok(dt) => Ok(Utc.from_utc_datetime(&dt)),
+                    },
                     Ok(dt) => Ok(Utc.from_utc_datetime(&dt)),
                 },
                 Ok(dt) => Ok(Utc.from_utc_datetime(&dt)),
@@ -72,6 +78,7 @@ pub mod terra_opt_datetime_format {
     const FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f";
     const FORMAT_TZ_SUPPLIED: &str = "%Y-%m-%dT%H:%M:%S.%f%:z";
     const FORMAT_SHORT_Z: &str = "%Y-%m-%dT%H:%M:%SZ";
+    const FORMAT_SHORT_Z2: &str = "%Y-%m-%dT%H:%M:%S.%fZ";
 
     // The signature of a serialize_with function must follow the pattern:
     //
@@ -122,8 +129,13 @@ pub mod terra_opt_datetime_format {
                             Err(_e2) => match NaiveDateTime::parse_from_str(sliced, FORMAT_SHORT_Z)
                             {
                                 Err(_e3) => {
-                                    eprintln!("DateTime Fail {} {:#?}", s, _e);
-                                    Err(serde::de::Error::custom(_e))
+                                    match NaiveDateTime::parse_from_str(&s, FORMAT_SHORT_Z2) {
+                                        Err(_e4) => {
+                                            eprintln!("DateTime Fail {} {:#?}", s, _e);
+                                            Err(serde::de::Error::custom(_e))
+                                        }
+                                        Ok(dt) => Ok(Some(Utc.from_utc_datetime(&dt))),
+                                    }
                                 }
                                 Ok(dt) => Ok(Some(Utc.from_utc_datetime(&dt))),
                             },
